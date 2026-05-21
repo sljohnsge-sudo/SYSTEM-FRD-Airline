@@ -8,6 +8,13 @@ from amadeus import Client, ResponseError
 app = Flask(__name__)
 app.secret_key = "travel_portal_secret_key_amadeus_b2b"
 
+@app.after_request
+def add_header(response):
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '-1'
+    return response
+
 # Helper for decimal JSON serialization
 class DecimalEncoder:
     @staticmethod
@@ -198,6 +205,35 @@ LOCATION_MAPPING = {
     "TORONTO": "YYZ"
 }
 
+AIRLINE_MAPPING = {
+    "UL": "SriLankan Airlines",
+    "EK": "Emirates",
+    "QR": "Qatar Airways",
+    "SQ": "Singapore Airlines",
+    "6E": "IndiGo",
+    "BA": "British Airways",
+    "EY": "Etihad Airways",
+    "WY": "Oman Air",
+    "GF": "Gulf Air",
+    "AI": "Air India",
+    "MH": "Malaysia Airlines",
+    "TG": "Thai Airways",
+    "TK": "Turkish Airlines",
+    "QF": "Qantas",
+    "LH": "Lufthansa",
+    "CX": "Cathay Pacific",
+    "MS": "EgyptAir",
+    "FZ": "flydubai",
+    "G9": "Air Arabia",
+    "CZ": "China Southern Airlines",
+    "MU": "China Eastern Airlines",
+    "OD": "Batik Air Malaysia",
+    "JQ": "Jetstar Airways",
+    "W2": "FlexFlight",
+    "X1": "Hahn Air Technologies",
+    "A1": "Air One"
+}
+
 POPULAR_LOCATIONS = [
     {"city": "Colombo", "code": "CMB", "name": "Bandaranaike Intl Arpt", "country": "SRI LANKA", "country_code": "LK"},
     {"city": "Jaffna", "code": "JAF", "name": "Jaffna Intl Arpt", "country": "SRI LANKA", "country_code": "LK"},
@@ -352,13 +388,14 @@ def api_locations_search():
         
     return jsonify({"success": True, "groups": sorted_groups})
 
-# API: Search Flights (GDS, LCC, NDC consolidated)
+# API: Search Flights (GDS, LCC, NDC consolidated with round-trip support)
 @app.route("/api/flights/search", methods=["GET"])
 def api_flights_search():
     origin_input = request.args.get("origin", "").strip()
     destination_input = request.args.get("destination", "").strip()
     flight_type = request.args.get("flight_type", "ALL") # ALL, GDS, LCC, NDC
     date_str = request.args.get("date", "").strip()
+    return_date_str = request.args.get("return_date", "").strip()
     
     # Initialize Amadeus client to resolve locations and query flight offers
     amadeus = None
@@ -381,6 +418,7 @@ def api_flights_search():
         destination = destination_input.upper()
     
     amadeus_flight_ids = []
+    amadeus_return_flight_ids = []
     
     # Pre-fetch live GDS flights from Amadeus API and cache them in local database
     if flight_type in ["ALL", "GDS"] and origin and destination and date_str:
@@ -398,7 +436,8 @@ def api_flights_search():
             for f in response.data:
                 segments = f['itineraries'][0]['segments']
                 flight_no = f"{segments[0]['carrierCode']}-{segments[0]['number']}"
-                airline = segments[0]['carrierCode']
+                carrier_code = segments[0]['carrierCode']
+                airline = AIRLINE_MAPPING.get(carrier_code, carrier_code)
                 price_val = Decimal(str(f['price']['total']))
                 # Keep first 19 chars for mysql datetime format (YYYY-MM-DD HH:MM:SS)
                 dept = segments[0]['departure']['at'].replace('T', ' ')[:19]
@@ -416,13 +455,47 @@ def api_flights_search():
                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'GDS', %s)
                     """, (flight_no, airline, origin, destination, dept, arr, price_val, f.get('numberOfBookableSeats', 9), seg_count))
                     amadeus_flight_ids.append(cursor.lastrowid)
+                    
+            # Pre-fetch return flights if return date is specified
+            if return_date_str:
+                try:
+                    return_response = amadeus.shopping.flight_offers_search.get(
+                        originLocationCode=destination,
+                        destinationLocationCode=origin,
+                        departureDate=return_date_str,
+                        adults=1,
+                        max=10
+                    )
+                    for f in return_response.data:
+                        segments = f['itineraries'][0]['segments']
+                        flight_no = f"{segments[0]['carrierCode']}-{segments[0]['number']}"
+                        carrier_code = segments[0]['carrierCode']
+                        airline = AIRLINE_MAPPING.get(carrier_code, carrier_code)
+                        price_val = Decimal(str(f['price']['total']))
+                        dept = segments[0]['departure']['at'].replace('T', ' ')[:19]
+                        arr = segments[-1]['arrival']['at'].replace('T', ' ')[:19]
+                        seg_count = len(segments)
+                        
+                        cursor.execute("SELECT id FROM flights WHERE flight_number = %s AND departure_time = %s", (flight_no, dept))
+                        row = cursor.fetchone()
+                        if row:
+                            amadeus_return_flight_ids.append(row[0])
+                        else:
+                            cursor.execute("""
+                                INSERT INTO flights (flight_number, airline, origin, destination, departure_time, arrival_time, price, seats_available, flight_type, segment_count)
+                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'GDS', %s)
+                            """, (flight_no, airline, destination, origin, dept, arr, price_val, f.get('numberOfBookableSeats', 9), seg_count))
+                            amadeus_return_flight_ids.append(cursor.lastrowid)
+                except Exception as ex:
+                    print("Amadeus Return API error:", ex)
+                    
             conn.commit()
             cursor.close()
             conn.close()
         except Exception as e:
             print("Amadeus API error:", e)
  
-    # Query only the retrieved Amadeus flight IDs if parameters are fully specified
+    # Query outbound flights
     if origin and destination and date_str:
         if amadeus_flight_ids:
             format_strings = ','.join(['%s'] * len(amadeus_flight_ids))
@@ -430,7 +503,13 @@ def api_flights_search():
             params = amadeus_flight_ids
             flights = query_db(query, tuple(params))
         else:
-            flights = []
+            query = "SELECT * FROM flights WHERE origin = %s AND destination = %s AND DATE(departure_time) = %s"
+            params = [origin, destination, date_str]
+            if flight_type != "ALL":
+                query += " AND flight_type = %s"
+                params.append(flight_type)
+            query += " ORDER BY price ASC"
+            flights = query_db(query, tuple(params))
     else:
         # Fallback for initial load or general listing to keep other non-search components operational
         query = "SELECT * FROM flights WHERE 1=1"
@@ -449,12 +528,84 @@ def api_flights_search():
             params.append(flight_type)
         query += " ORDER BY price ASC"
         flights = query_db(query, tuple(params))
-    
-    # Format decimals for JSON
-    for f in flights:
-        f["price"] = float(f["price"])
-        f["departure_time"] = f["departure_time"].isoformat()
-        f["arrival_time"] = f["arrival_time"].isoformat()
+        
+    # Query return flights if return date is specified
+    return_flights = []
+    if return_date_str and origin and destination:
+        if amadeus_return_flight_ids:
+            format_strings = ','.join(['%s'] * len(amadeus_return_flight_ids))
+            query = f"SELECT * FROM flights WHERE id IN ({format_strings}) ORDER BY price ASC"
+            params = amadeus_return_flight_ids
+            return_flights = query_db(query, tuple(params))
+        else:
+            query = "SELECT * FROM flights WHERE origin = %s AND destination = %s AND DATE(departure_time) = %s"
+            params = [destination, origin, return_date_str]
+            if flight_type != "ALL":
+                query += " AND flight_type = %s"
+                params.append(flight_type)
+            query += " ORDER BY price ASC"
+            return_flights = query_db(query, tuple(params))
+            
+        # Fallback clone return flights if no return flights found but outbound flights exist
+        if not return_flights and flights:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+            for f in flights:
+                ret_flight_no = f"RET-{f['flight_number']}"
+                dept_dt = datetime.datetime.strptime(return_date_str, "%Y-%m-%d") + datetime.timedelta(hours=14)
+                arr_dt = dept_dt + datetime.timedelta(hours=3)
+                
+                cursor.execute("SELECT * FROM flights WHERE flight_number = %s AND origin = %s", (ret_flight_no, destination))
+                existing = cursor.fetchone()
+                if existing:
+                    return_flights.append(existing)
+                else:
+                    cursor.execute("""
+                        INSERT INTO flights (flight_number, airline, origin, destination, departure_time, arrival_time, price, seats_available, flight_type, segment_count)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """, (ret_flight_no, f["airline"], destination, origin, dept_dt, arr_dt, Decimal(str(f["price"])), f["seats_available"], f["flight_type"], f["segment_count"]))
+                    
+                    new_id = cursor.lastrowid
+                    cursor.execute("SELECT * FROM flights WHERE id = %s", (new_id,))
+                    new_f = cursor.fetchone()
+                    return_flights.append(new_f)
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+    # Serialize helper
+    def serialize_flight(f):
+        f_copy = f.copy()
+        if isinstance(f_copy["price"], Decimal):
+            f_copy["price"] = float(f_copy["price"])
+        if isinstance(f_copy["departure_time"], (datetime.datetime, datetime.date)):
+            f_copy["departure_time"] = f_copy["departure_time"].isoformat()
+        if isinstance(f_copy["arrival_time"], (datetime.datetime, datetime.date)):
+            f_copy["arrival_time"] = f_copy["arrival_time"].isoformat()
+        return f_copy
+        
+    # Pair flights if return_date is specified
+    if return_date_str and return_flights:
+        paired_flights = []
+        for out_f in flights:
+            matching_ret = None
+            for ret_f in return_flights:
+                if ret_f["airline"] == out_f["airline"]:
+                    matching_ret = ret_f
+                    break
+            if not matching_ret:
+                matching_ret = return_flights[0]
+                
+            out_serialized = serialize_flight(out_f)
+            ret_serialized = serialize_flight(matching_ret)
+            
+            # Combine pricing and structure
+            out_serialized["return_flight"] = ret_serialized
+            out_serialized["price"] = out_serialized["price"] + ret_serialized["price"]
+            paired_flights.append(out_serialized)
+        flights = paired_flights
+    else:
+        flights = [serialize_flight(f) for f in flights]
         
     return jsonify({"success": True, "flights": flights})
 
@@ -468,7 +619,13 @@ def api_flights_book():
     flight_id = data.get("flight_id")
     passenger_name = data.get("passenger_name")
     seat_number = data.get("seat_number", "14A")
+    passport_number = data.get("passport_number")
+    mobile = data.get("mobile")
+    email = data.get("email")
     ticket_now = data.get("ticket_now", False) # True = Ticketed, False = Non-Ticketed reservation
+    
+    return_flight_id = data.get("return_flight_id")
+    return_seat_number = data.get("return_seat_number", "14F")
     
     if not flight_id or not passenger_name:
         return jsonify({"success": False, "error": "Flight and passenger name are required"}), 400
@@ -486,25 +643,46 @@ def api_flights_book():
         if flight["seats_available"] <= 0:
             return jsonify({"success": False, "error": "No seats available on this flight"}), 400
             
+        return_flight = None
+        if return_flight_id:
+            cursor.execute("SELECT * FROM flights WHERE id = %s", (return_flight_id,))
+            return_flight = cursor.fetchone()
+            if not return_flight:
+                return jsonify({"success": False, "error": "Return flight not found"}), 404
+            if return_flight["seats_available"] <= 0:
+                return jsonify({"success": False, "error": "No seats available on return flight"}), 400
+            
         # Get issuance markup
         cursor.execute("SELECT amount FROM service_fees WHERE transaction_type = 'issuance'")
         fee = cursor.fetchone()
         markup = Decimal(str(fee["amount"])) if fee else Decimal("15.00")
         
-        orig_price = flight["price"]
-        total_price = orig_price + markup
+        if return_flight:
+            orig_price = flight["price"] + return_flight["price"]
+            total_price = orig_price + (2 * markup)
+        else:
+            orig_price = flight["price"]
+            total_price = orig_price + markup
         
         # Check credit balance
         cursor.execute("SELECT credit_balance FROM users WHERE id = %s", (session["user_id"],))
         agent_credit = cursor.fetchone()["credit_balance"]
         
-        # If user chooses to ticket immediately, credit must be checked
         booking_status = "ticketed" if ticket_now else "non-ticketed"
         
-        if booking_status == "ticketed" and agent_credit < total_price:
+        # Calculate the actual payment amount to deduct/charge
+        payment_method = data.get("payment_method", "credit")
+        active_booking_path = data.get("active_booking_path", "ticket")
+        
+        if active_booking_path == "hold":
+            payment_to_charge = Decimal("2.00")
+        else:
+            payment_to_charge = total_price
+            
+        if payment_method == "credit" and agent_credit < payment_to_charge:
             return jsonify({
                 "success": False, 
-                "error": "Insufficient credit balance to ticket this booking. Please top up your account.",
+                "error": "Insufficient credit balance to process this payment. Please top up your account.",
                 "code": "INSUFFICIENT_CREDIT"
             }), 400
             
@@ -513,24 +691,42 @@ def api_flights_book():
         cursor.execute("""
             INSERT INTO bookings (agent_id, booking_type, status, total_price, invoice_number, created_at)
             VALUES (%s, 'flight', %s, %s, %s, NOW())
-        """, (session["user_id"], booking_status, total_price, invoice_number))
+        """, (session["user_id"], booking_status, payment_to_charge, invoice_number))
         
         booking_id = cursor.lastrowid
         
-        # Insert flight booking details
-        cursor.execute("""
-            INSERT INTO flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, (booking_id, flight_id, passenger_name, seat_number, flight["flight_type"], booking_status, orig_price, markup))
+        pnr_reference = f"PNR{random.randint(100000, 999999)}"
+        ticket_number = f"TKT-{random.randint(1000000000, 9999999999)}" if booking_status == "ticketed" else None
         
-        # Deduct credit if ticketed
-        if booking_status == "ticketed":
-            cursor.execute("UPDATE users SET credit_balance = credit_balance - %s WHERE id = %s", (total_price, session["user_id"]))
-            # Deduct seat count
-            cursor.execute("UPDATE flights SET seats_available = seats_available - 1 WHERE id = %s", (flight_id,))
+        # Insert flight booking details (Outbound)
+        cursor.execute("""
+            INSERT INTO flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee, pnr_reference, ticket_number, passport_number, mobile, email)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (booking_id, flight_id, passenger_name, seat_number, flight["flight_type"], booking_status, flight["price"], markup, pnr_reference, ticket_number, passport_number, mobile, email))
+        
+        # Insert flight booking details (Return)
+        if return_flight:
+            return_pnr = f"PNR{random.randint(100000, 999999)}"
+            return_ticket = f"TKT-{random.randint(1000000000, 9999999999)}" if booking_status == "ticketed" else None
+            cursor.execute("""
+                INSERT INTO flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee, pnr_reference, ticket_number, passport_number, mobile, email)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (booking_id, return_flight_id, passenger_name, return_seat_number, return_flight["flight_type"], booking_status, return_flight["price"], markup, return_pnr, return_ticket, passport_number, mobile, email))
             
+        # Deduct wallet if credit option is used
+        if payment_method == "credit":
+            cursor.execute("UPDATE users SET credit_balance = credit_balance - %s WHERE id = %s", (payment_to_charge, session["user_id"]))
+            
+        # If ticketed immediately, deduct seat count and award loyalty points
+        if booking_status == "ticketed":
+            # Deduct seat count for outbound
+            cursor.execute("UPDATE flights SET seats_available = seats_available - 1 WHERE id = %s", (flight_id,))
+            # Deduct seat count for return
+            if return_flight:
+                cursor.execute("UPDATE flights SET seats_available = seats_available - 1 WHERE id = %s", (return_flight_id,))
+                
             # Award loyalty rewards
-            reward_points = int(total_price / 10)
+            reward_points = int(payment_to_charge / 10)
             cursor.execute("""
                 INSERT INTO agent_rewards (agent_id, reward_points, description)
                 VALUES (%s, %s, %s)
@@ -767,16 +963,27 @@ def api_bookings_list():
         b["created_at"] = b["created_at"].isoformat()
         
         if b["booking_type"] == "flight":
-            details = query_db("""
+            segments = query_db("""
                 SELECT flight_bookings.*, flights.flight_number, flights.airline, flights.origin, flights.destination, flights.departure_time 
                 FROM flight_bookings 
                 JOIN flights ON flight_bookings.flight_id = flights.id 
                 WHERE flight_bookings.booking_id = %s
-            """, (b["id"],), one=True)
-            if details:
+                ORDER BY flight_bookings.id ASC
+            """, (b["id"],))
+            if segments:
+                details = segments[0]
                 details["original_price"] = float(details["original_price"])
                 details["service_fee"] = float(details["service_fee"])
                 details["departure_time"] = details["departure_time"].isoformat()
+                
+                # Check for return segment (second row)
+                if len(segments) > 1:
+                    ret_details = segments[1]
+                    ret_details["original_price"] = float(ret_details["original_price"])
+                    ret_details["service_fee"] = float(ret_details["service_fee"])
+                    ret_details["departure_time"] = ret_details["departure_time"].isoformat()
+                    details["return_segment"] = ret_details
+                    
                 b["details"] = details
         else:
             details = query_db("""
@@ -824,15 +1031,17 @@ def api_bookings_ticket():
             
         # Update status
         cursor.execute("UPDATE bookings SET status = 'ticketed' WHERE id = %s", (booking_id,))
-        cursor.execute("UPDATE flight_bookings SET ticket_status = 'ticketed' WHERE booking_id = %s", (booking_id,))
         
         # Deduct credit
         cursor.execute("UPDATE users SET credit_balance = credit_balance - %s WHERE id = %s", (total_price, session["user_id"]))
         
-        # Deduct seat on flight
-        cursor.execute("SELECT flight_id FROM flight_bookings WHERE booking_id = %s", (booking_id,))
-        flight_id = cursor.fetchone()["flight_id"]
-        cursor.execute("UPDATE flights SET seats_available = seats_available - 1 WHERE id = %s", (flight_id,))
+        # Select and ticket all segments
+        cursor.execute("SELECT id, flight_id FROM flight_bookings WHERE booking_id = %s", (booking_id,))
+        segments = cursor.fetchall()
+        for seg in segments:
+            tkt_num = f"TKT-{random.randint(1000000000, 9999999999)}"
+            cursor.execute("UPDATE flight_bookings SET ticket_status = 'ticketed', ticket_number = %s WHERE id = %s", (tkt_num, seg["id"]))
+            cursor.execute("UPDATE flights SET seats_available = seats_available - 1 WHERE id = %s", (seg["flight_id"],))
         
         # Award loyalty points
         reward_points = int(total_price / 10)
@@ -989,10 +1198,11 @@ def api_bookings_refund():
         
         if booking["booking_type"] == "flight":
             cursor.execute("UPDATE flight_bookings SET ticket_status = 'refunded' WHERE booking_id = %s", (booking_id,))
-            # Restore flight seat
+            # Restore flight seats for all segments
             cursor.execute("SELECT flight_id FROM flight_bookings WHERE booking_id = %s", (booking_id,))
-            flight_id = cursor.fetchone()["flight_id"]
-            cursor.execute("UPDATE flights SET seats_available = seats_available + 1 WHERE id = %s", (flight_id,))
+            segments = cursor.fetchall()
+            for seg in segments:
+                cursor.execute("UPDATE flights SET seats_available = seats_available + 1 WHERE id = %s", (seg["flight_id"],))
         else:
             # Hotel Booking refund does not restore rooms dynamically in this simple schema but marks status
             cursor.execute("SELECT room_id FROM hotel_bookings WHERE booking_id = %s", (booking_id,))
@@ -1156,11 +1366,11 @@ def api_support_list():
 # API: Daily Lowest Fares Display (Consolidated LCC/NDC/GDS)
 @app.route("/api/flights/lowest-fares")
 def api_flights_lowest_fares():
-    # Show lowest fare available per destination and airline
+    # Show lowest fare available per destination, airline and flight number
     fares = query_db("""
-        SELECT origin, destination, airline, MIN(price) as lowest_fare, flight_type
+        SELECT origin, destination, airline, flight_number, MIN(price) as lowest_fare, flight_type
         FROM flights
-        GROUP BY origin, destination, airline, flight_type
+        GROUP BY origin, destination, airline, flight_number, flight_type
         ORDER BY lowest_fare ASC
     """)
     for f in fares:
@@ -1624,4 +1834,4 @@ def api_admin_support_resolve():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="127.0.0.1", port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5000)

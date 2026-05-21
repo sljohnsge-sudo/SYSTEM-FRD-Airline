@@ -447,6 +447,60 @@ h1, h2, h3, h4, .brand-font {
     transform: translateY(-1px);
 }
 
+/* Premium Currency Widget styles */
+.currency-widget {
+    background: var(--panel-dark);
+    border: 1px solid var(--border-dark);
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: var(--card-shadow);
+    backdrop-filter: blur(12px);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.currency-widget:hover {
+    border-color: var(--primary);
+    box-shadow: 0 0 15px rgba(0, 242, 254, 0.1);
+}
+
+#currency-select {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-dark);
+    border-radius: 8px;
+    color: #fff;
+    padding: 6px 30px 6px 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.25s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 14px;
+}
+
+#currency-select:hover {
+    border-color: var(--primary);
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+#currency-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+}
+
+#currency-select option {
+    background: #0f1624;
+    color: #fff;
+}
+
 /* Loyalty Points Indicator */
 .loyalty-indicator {
     background: rgba(255, 159, 67, 0.1);
@@ -711,7 +765,7 @@ h1, h2, h3, h4, .brand-font {
 /* Unified search platform */
 .unified-search-panel {
     display: grid;
-    grid-template-columns: repeat(4, 1fr) auto;
+    grid-template-columns: repeat(5, 1fr) auto;
     gap: 16px;
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid var(--border-dark);
@@ -1424,3 +1478,277 @@ h1, h2, h3, h4, .brand-font {
     color: var(--primary);
     letter-spacing: 0.5px;
 }
+
+/* Booking Stepper Wizard CSS */
+.stepper-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    margin-bottom: 25px;
+    padding: 0 10px;
+}
+.stepper-header::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 10%;
+    right: 10%;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.08);
+    z-index: 1;
+}
+.stepper-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    flex: 1;
+}
+.step-node {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #0f1624;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-muted);
+    transition: all 0.3s ease;
+    margin-bottom: 8px;
+}
+.stepper-step.active .step-node {
+    border-color: var(--primary);
+    color: var(--primary);
+    box-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
+    background: rgba(0, 242, 254, 0.1);
+}
+.stepper-step.completed .step-node {
+    border-color: var(--success);
+    color: #fff;
+    background: var(--success);
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.3);
+}
+.step-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+.stepper-step.active .step-label {
+    color: #fff;
+}
+.stepper-step.completed .step-label {
+    color: var(--success);
+}
+.stepper-content-view {
+    display: none;
+    animation: fadeIn 0.3s ease-in-out;
+}
+.stepper-content-view.active {
+    display: block;
+}
+
+/* Summary Card Step 3 styling */
+.booking-summary-card {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--border-dark);
+    border-radius: 12px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.summary-section-title {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--primary);
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+}
+.summary-grid-two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.summary-item-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+.summary-item-value {
+    color: #fff;
+    font-weight: 600;
+    font-size: 13px;
+    word-break: break-all;
+}
+
+/* Terms & Agreement Checkbox box */
+.terms-conditions-box {
+    margin-top: 18px;
+    background: rgba(0, 242, 254, 0.02);
+    border: 1px solid var(--border-dark);
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+.terms-conditions-box input[type="checkbox"] {
+    margin-top: 3px;
+    accent-color: var(--primary);
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+}
+.terms-conditions-box label {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    line-height: 1.4;
+    cursor: pointer;
+    user-select: none;
+}
+.terms-conditions-box label strong {
+    color: var(--text-main);
+}
+
+/* Stepper navigation footer button lock states */
+.modal-footer button[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Custom B2B Booking Option Cards styling */
+.booking-opt-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-dark);
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+.booking-opt-card:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(0, 242, 254, 0.3);
+    transform: translateY(-2px);
+}
+
+.booking-opt-card.active {
+    background: rgba(0, 242, 254, 0.05);
+    border-color: var(--primary);
+    box-shadow: 0 0 15px rgba(0, 242, 254, 0.15);
+}
+
+.opt-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.opt-radio-circle {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.booking-opt-card.active .opt-radio-circle {
+    border-color: var(--primary);
+}
+
+.opt-radio-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: transparent;
+    transition: all 0.3s ease;
+}
+
+.booking-opt-card.active .opt-radio-dot {
+    background: var(--primary);
+}
+
+.opt-card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.opt-card-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.modal-box .route-path-line::before {
+    background: #0f1624 !important;
+}
+
+/* Premium Glassmorphic Currency Switcher Pills */
+.currency-pill {
+    padding: 6px 18px;
+    border-radius: 20px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted);
+}
+.currency-pill:hover:not(.active) {
+    color: #fff !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+.currency-pill.active {
+    box-shadow: 0 0 15px rgba(0, 242, 254, 0.35);
+}
+
+/* Micro-interaction for credit value balance container */
+.credit-details {
+    padding: 2px 8px;
+    border-radius: 8px;
+    transition: all 0.25s ease;
+}
+.credit-details:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+.credit-details:hover .credit-value {
+    color: var(--primary) !important;
+    text-shadow: 0 0 12px rgba(0, 242, 254, 0.4);
+}
+.credit-details .fa-retweet {
+    color: var(--text-muted);
+    font-size: 10px;
+    transition: color 0.25s, transform 0.4s ease;
+}
+.credit-details:hover .fa-retweet {
+    color: var(--primary);
+}
+

@@ -108,6 +108,11 @@ def initialize_database():
                     ticket_status ENUM('ticketed', 'non-ticketed', 'refunded', 'voided') NOT NULL,
                     original_price DECIMAL(10, 2) NOT NULL,
                     service_fee DECIMAL(10, 2) DEFAULT 0.00,
+                    pnr_reference VARCHAR(20) DEFAULT NULL,
+                    ticket_number VARCHAR(30) DEFAULT NULL,
+                    passport_number VARCHAR(50) DEFAULT NULL,
+                    mobile VARCHAR(30) DEFAULT NULL,
+                    email VARCHAR(100) DEFAULT NULL,
                     FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
                     FOREIGN KEY (flight_id) REFERENCES flights(id) ON DELETE CASCADE
                 ) ENGINE=InnoDB;
@@ -199,11 +204,11 @@ def initialize_database():
         flights_data = [
             ('QR-832', 'Qatar Airways', 'DOH', 'LHR', 'GDS', 'Amadeus', 1, 450.00, 48),
             ('EK-348', 'Emirates', 'DXB', 'SIN', 'GDS', 'Sabre', 1, 620.00, 35),
-            ('UL-101', 'SriLankan', 'CMB', 'MLE', 'LCC', 'Amadeus', 1, 150.00, 18),
-            ('SQ-421', 'Singapore Air', 'SIN', 'SYD', 'NDC', 'Amadeus', 2, 750.00, 22),
+            ('UL-101', 'SriLankan Airlines', 'CMB', 'MLE', 'LCC', 'Amadeus', 1, 150.00, 18),
+            ('SQ-421', 'Singapore Airlines', 'SIN', 'SYD', 'NDC', 'Amadeus', 2, 750.00, 22),
             ('6E-451', 'IndiGo', 'DEL', 'CMB', 'LCC', 'Amadeus', 1, 180.00, 60),
             ('BA-117', 'British Airways', 'LHR', 'JFK', 'GDS', 'Amadeus', 1, 550.00, 40),
-            ('UL-308', 'SriLankan', 'CMB', 'SIN', 'GDS', 'Amadeus', 1, 310.00, 28)
+            ('UL-308', 'SriLankan Airlines', 'CMB', 'SIN', 'GDS', 'Amadeus', 1, 310.00, 28)
         ]
         
         now = datetime.datetime.now()
@@ -309,10 +314,12 @@ def initialize_database():
                     """, (agent_id, status, total, invoice_number, created_date))
                     booking_id = cursor.lastrowid
                     
+                    pnr = f"PNR{random.randint(100000, 999999)}"
+                    tkt = f"TKT-{random.randint(1000000000, 9999999999)}" if status == "ticketed" else None
                     cursor.execute("""
-                        INSERT INTO flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                    """, (booking_id, fl_id, random.choice(passenger_names), f"{random.randint(12, 28)}{random.choice(['A','C','F'])}", fl_type, status, orig_price, markup))
+                        INSERT INTO flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee, pnr_reference, ticket_number)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """, (booking_id, fl_id, random.choice(passenger_names), f"{random.randint(12, 28)}{random.choice(['A','C','F'])}", fl_type, status, orig_price, markup, pnr, tkt))
                 
                 else: # hotel booking
                     room = random.choice(rooms_pool)

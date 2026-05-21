@@ -1,8 +1,135 @@
-// Global app state & UI handlers
+// Global app state & UI handlers & Currency settings
+let currentCurrency = localStorage.getItem("app_currency") || "USD";
+const LKR_CONVERSION_RATE = 300.00;
+let activeBookingPath = "ticket";
+
+
+// Helper to format price based on selected currency
+function formatPrice(usdAmount) {
+    usdAmount = parseFloat(usdAmount);
+    if (isNaN(usdAmount)) return "$0.00";
+    if (currentCurrency === "LKR") {
+        const lkrAmount = usdAmount * LKR_CONVERSION_RATE;
+        return `Rs ${lkrAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+    return `$${usdAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+}
+
+// Function to handle global currency changes
+function changeGlobalCurrency(currencyCode) {
+    currentCurrency = currencyCode;
+    localStorage.setItem("app_currency", currencyCode);
+    
+    // Refresh agent UI components that render pricing
+    if (document.getElementById("topbar-credit")) {
+        // Set selector UI dropdown if not matching
+        const curSelect = document.getElementById("currency-select");
+        if (curSelect) {
+            curSelect.value = currencyCode;
+        }
+        
+        // Sync twin-pill visual styles
+        const pillUSD = document.getElementById("currency-pill-usd");
+        const pillLKR = document.getElementById("currency-pill-lkr");
+        if (pillUSD && pillLKR) {
+            if (currencyCode === "USD") {
+                pillUSD.classList.add("active");
+                pillUSD.style.background = "var(--primary-gradient)";
+                pillUSD.style.color = "#fff";
+                
+                pillLKR.classList.remove("active");
+                pillLKR.style.background = "none";
+                pillLKR.style.color = "var(--text-muted)";
+            } else {
+                pillLKR.classList.add("active");
+                pillLKR.style.background = "var(--primary-gradient)";
+                pillLKR.style.color = "#fff";
+                
+                pillUSD.classList.remove("active");
+                pillUSD.style.background = "none";
+                pillUSD.style.color = "var(--text-muted)";
+            }
+        }
+        
+        updateAgentUI();
+        loadAgentDashboardFares();
+        loadBookings();
+        if (typeof currentSelectedFlight !== 'undefined' && currentSelectedFlight) {
+            renderStepperSummary();
+        }
+
+        
+        // Re-render flight search results instantly if search is performed
+        const searchResults = document.getElementById("flight-results-container");
+        if (searchResults && searchResults.innerHTML && !searchResults.innerHTML.includes("Interrogating") && !searchResults.innerHTML.includes("triangle-exclamation")) {
+            if (lastSearchedFlights && lastSearchedFlights.length > 0) {
+                renderFlightSearchResults(lastSearchedFlights);
+            }
+        }
+        
+        // Re-render hotel search results instantly if search is performed
+        const hotelResults = document.getElementById("hotel-results-container");
+        if (hotelResults && hotelResults.innerHTML && !hotelResults.innerHTML.includes("Interrogating") && !hotelResults.innerHTML.includes("triangle-exclamation")) {
+            if (lastSearchedHotels && lastSearchedHotels.length > 0) {
+                renderHotelSearchResults(lastSearchedHotels);
+            }
+        }
+        
+        loadCancellations();
+        loadAgentReports();
+    }
+}
+
+// Toggles the currency between USD and LKR instantly
+function toggleCurrencyInstant() {
+    const nextCurrency = (currentCurrency === "USD") ? "LKR" : "USD";
+    changeGlobalCurrency(nextCurrency);
+    
+    // Play a tiny subtle rotation micro-animation on the swap icon
+    const icon = document.querySelector(".credit-details .fa-retweet");
+    if (icon) {
+        icon.style.transition = "transform 0.4s ease";
+        const currentRotation = icon.style.transform || "rotate(0deg)";
+        const currentDegrees = parseInt(currentRotation.replace(/[^0-9]/g, '')) || 0;
+        const nextDegrees = currentDegrees + 180;
+        icon.style.transform = `rotate(${nextDegrees}deg)`;
+    }
+    
+    showNotification("Currency Swapped", `Display currency set to ${nextCurrency} successfully!`, "info");
+}
 
 document.addEventListener("DOMContentLoaded", function () {
     // Detect role and initialize appropriate components
     if (document.getElementById("topbar-credit")) {
+        // Set dropdown value to cached currency
+        const curSelect = document.getElementById("currency-select");
+        if (curSelect) {
+            curSelect.value = currentCurrency;
+        }
+        
+        // Sync twin-pill visual styles
+        const pillUSD = document.getElementById("currency-pill-usd");
+        const pillLKR = document.getElementById("currency-pill-lkr");
+        if (pillUSD && pillLKR) {
+            if (currentCurrency === "USD") {
+                pillUSD.classList.add("active");
+                pillUSD.style.background = "var(--primary-gradient)";
+                pillUSD.style.color = "#fff";
+                
+                pillLKR.classList.remove("active");
+                pillLKR.style.background = "none";
+                pillLKR.style.color = "var(--text-muted)";
+            } else {
+                pillLKR.classList.add("active");
+                pillLKR.style.background = "var(--primary-gradient)";
+                pillLKR.style.color = "#fff";
+                
+                pillUSD.classList.remove("active");
+                pillUSD.style.background = "none";
+                pillUSD.style.color = "var(--text-muted)";
+            }
+        }
+        
         // Agent initialization
         updateAgentUI();
         loadAgentDashboardFares();
@@ -83,6 +210,8 @@ function switchTab(tabId) {
         loadSupportTickets();
     } else if (tabId === "timatic") {
         loadTimaticLogs();
+    } else if (tabId === "cancellations") {
+        loadCancellations();
     }
 }
 
@@ -92,13 +221,12 @@ function updateAgentUI() {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                const creditStr = `$${data.agent.credit_balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                document.getElementById("topbar-credit").innerText = creditStr;
+                document.getElementById("topbar-credit").innerText = formatPrice(data.agent.credit_balance);
                 document.getElementById("dashboard-reward-points").innerText = `${data.agent.reward_points} PTS`;
                 
                 // If on zero-credit agent page, show insufficient warning toast once
                 if (data.agent.credit_balance <= 0 && data.agent.username === "zero_agent") {
-                    showNotification("Insufficient Credit Warning", "Your agency credit balance is $0.00. Please top up before ticketing flights or booking hotels.", "warning");
+                    showNotification("Insufficient Credit Warning", "Your agency credit balance is " + formatPrice(0) + ". Please top up before ticketing flights or booking hotels.", "warning");
                 }
             }
         });
@@ -122,9 +250,9 @@ function loadAgentDashboardFares() {
                     tbody.innerHTML += `
                         <tr>
                             <td><strong>${f.origin} <i class="fa-solid fa-arrow-right" style="font-size:10px; margin:0 5px; color:var(--primary);"></i> ${f.destination}</strong></td>
-                            <td>${f.airline}</td>
+                            <td>${f.airline} (${f.flight_number})</td>
                             <td><span class="badge-type">${f.flight_type}</span></td>
-                            <td style="color:var(--primary); font-weight:700;">$${f.lowest_fare.toFixed(2)}</td>
+                            <td style="color:var(--primary); font-weight:700;">${formatPrice(f.lowest_fare)}</td>
                             <td>
                                 <button class="btn-action" onclick="bookPromotionalFlight('${f.origin}', '${f.destination}', '${f.flight_type}')">
                                     <i class="fa-solid fa-plane-departure"></i> Book Now
@@ -290,89 +418,311 @@ document.addEventListener("click", function() {
     if (destDropdown) destDropdown.style.display = "none";
 });
 
+// Global variables for Flight Stepper Booking Wizard
+let currentBookingStep = 1;
+let currentSelectedFlight = null;
+let lastSearchedFlights = [];
+let lastSearchedHotels = [];
+let selectedSeat = null;
+
 // Flight Search Logic
 function searchFlights() {
     const origin = document.getElementById("flight-origin").value;
     const dest = document.getElementById("flight-dest").value;
     const type = document.getElementById("flight-channel").value;
     const date = document.getElementById("flight-date") ? document.getElementById("flight-date").value : "";
+    const returnDate = document.getElementById("flight-return-date") ? document.getElementById("flight-return-date").value : "";
     
     const container = document.getElementById("flight-results-container");
     container.innerHTML = `<div style="text-align:center; padding:40px;"><i class="fa-solid fa-circle-notch fa-spin" style="font-size:32px; color:var(--primary);"></i><p style="margin-top:10px;">Interrogating GDS, LCC and NDC API databases...</p></div>`;
     
-    fetch(`/api/flights/search?origin=${origin}&destination=${dest}&flight_type=${type}&date=${date}`)
+    fetch(`/api/flights/search?origin=${origin}&destination=${dest}&flight_type=${type}&date=${date}&return_date=${returnDate}`)
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                container.innerHTML = "";
-                
-                if (data.flights.length === 0) {
-                    container.innerHTML = `
-                        <div style="text-align: center; color: var(--text-muted); padding: 40px 0;">
-                            <i class="fa-solid fa-triangle-exclamation" style="font-size: 32px; margin-bottom: 15px; color: var(--warning);"></i>
-                            <p>No flights matching the routing found. Try CMB to MLE, DOH to LHR, or CMB to SIN.</p>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                data.flights.forEach(f => {
-                    const depDate = new Date(f.departure_time);
-                    const arrDate = new Date(f.arrival_time);
-                    const hours = Math.abs(arrDate - depDate) / 36e5;
-                    const durationStr = `${Math.floor(hours)}h ${Math.round((hours % 1) * 60)}m`;
-                    
-                    container.innerHTML += `
-                        <div class="flight-ticket-card">
-                            <div class="airline-info">
-                                <div class="airline-logo-placeholder"><i class="fa-solid fa-plane"></i></div>
-                                <div>
-                                    <div class="airline-name">${f.airline}</div>
-                                    <div class="flight-number">${f.flight_number} • <span class="badge-type">${f.flight_type}</span></div>
-                                </div>
-                            </div>
-                            
-                            <div class="flight-route-flow">
-                                <div class="route-stop">
-                                    <div class="route-time">${depDate.toLocaleTimeString(undefined, {hour: '2-digit', minute:'2-digit'})}</div>
-                                    <div class="route-airport">${f.origin}</div>
-                                </div>
-                                <div class="route-path-line">
-                                    <span class="route-duration">${durationStr} (${f.segment_count} Segment)</span>
-                                </div>
-                                <div class="route-stop">
-                                    <div class="route-time">${arrDate.toLocaleTimeString(undefined, {hour: '2-digit', minute:'2-digit'})}</div>
-                                    <div class="route-airport">${f.destination}</div>
-                                </div>
-                            </div>
-                            
-                            <div class="flight-fare-booking">
-                                <div class="flight-fare-value">$${(f.price + 15.00).toFixed(2)}</div>
-                                <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px;">Includes $15.00 agency markup</div>
-                                <button class="btn-book-action" onclick="openFlightBookModal(${f.id}, '${f.flight_number}', '${f.airline}', ${(f.price + 15.00).toFixed(2)})">
-                                    <i class="fa-solid fa-circle-check"></i> Book Seat
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
+                lastSearchedFlights = data.flights; // Cache the search results in global state
+                renderFlightSearchResults(lastSearchedFlights);
             }
         });
 }
 
-// Open booking details modal & Generate Seat Selection Grid
-let selectedSeat = null;
+function renderFlightSearchResults(flights) {
+    const container = document.getElementById("flight-results-container");
+    container.innerHTML = "";
+    
+    if (flights.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; color: var(--text-muted); padding: 40px 0;">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 32px; margin-bottom: 15px; color: var(--warning);"></i>
+                <p>No flights matching the routing found. Try CMB to MLE, DOH to LHR, or CMB to SIN.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    flights.forEach(f => {
+        const depDate = new Date(f.departure_time);
+        const arrDate = new Date(f.arrival_time);
+        const hours = Math.abs(arrDate - depDate) / 36e5;
+        const durationStr = `${Math.floor(hours)}h ${Math.round((hours % 1) * 60)}m`;
+        
+        const markupTotal = f.return_flight ? 30.00 : 15.00;
+        const totalPrice = f.price + markupTotal;
+        
+        let returnHTML = '';
+        if (f.return_flight) {
+            const ret = f.return_flight;
+            const retDepDate = new Date(ret.departure_time);
+            const retArrDate = new Date(ret.arrival_time);
+            const retHours = Math.abs(retArrDate - retDepDate) / 36e5;
+            const retDurationStr = `${Math.floor(retHours)}h ${Math.round((retHours % 1) * 60)}m`;
+            
+            returnHTML = `
+                <div style="border-top: 1px dashed rgba(255,255,255,0.1); margin: 15px 0; padding-top: 15px;"></div>
+                <div style="display: flex; gap: 20px; align-items: center;">
+                    <div class="airline-info" style="min-width: 150px; flex-shrink: 0;">
+                        <div class="airline-logo-placeholder" style="background: rgba(0, 242, 254, 0.1);"><i class="fa-solid fa-plane" style="transform: rotate(180deg);"></i></div>
+                        <div>
+                            <div class="airline-name">${ret.airline} (Return)</div>
+                            <div class="flight-number">${ret.flight_number} • <span class="badge-type">${ret.flight_type}</span></div>
+                        </div>
+                    </div>
+                    <div class="flight-route-flow" style="flex-grow: 1;">
+                        <div class="route-stop">
+                            <div class="route-time">${retDepDate.toLocaleTimeString(undefined, {hour: '2-digit', minute:'2-digit'})}</div>
+                            <div class="route-airport">${ret.origin}</div>
+                        </div>
+                        <div class="route-path-line">
+                            <span class="route-duration">${retDurationStr} (${ret.segment_count} Segment)</span>
+                        </div>
+                        <div class="route-stop">
+                            <div class="route-time">${retArrDate.toLocaleTimeString(undefined, {hour: '2-digit', minute:'2-digit'})}</div>
+                            <div class="route-airport">${ret.destination}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        container.innerHTML += `
+            <div class="flight-ticket-card">
+                <div style="flex-grow: 1;">
+                    <div style="display: flex; gap: 20px; align-items: center;">
+                        <div class="airline-info" style="min-width: 150px; flex-shrink: 0;">
+                            <div class="airline-logo-placeholder"><i class="fa-solid fa-plane"></i></div>
+                            <div>
+                                <div class="airline-name">${f.airline} ${f.return_flight ? '(Outbound)' : ''}</div>
+                                <div class="flight-number">${f.flight_number} • <span class="badge-type">${f.flight_type}</span></div>
+                            </div>
+                        </div>
+                        <div class="flight-route-flow" style="flex-grow: 1;">
+                            <div class="route-stop">
+                                <div class="route-time">${depDate.toLocaleTimeString(undefined, {hour: '2-digit', minute:'2-digit'})}</div>
+                                <div class="route-airport">${f.origin}</div>
+                            </div>
+                            <div class="route-path-line">
+                                <span class="route-duration">${durationStr} (${f.segment_count} Segment)</span>
+                            </div>
+                            <div class="route-stop">
+                                <div class="route-time">${arrDate.toLocaleTimeString(undefined, {hour: '2-digit', minute:'2-digit'})}</div>
+                                <div class="route-airport">${f.destination}</div>
+                            </div>
+                        </div>
+                    </div>
+                    ${returnHTML}
+                </div>
+                
+                <div class="flight-fare-booking" style="margin-left: 20px; border-left: 1px solid rgba(255,255,255,0.08); padding-left: 20px;">
+                    <div class="flight-fare-value">${formatPrice(totalPrice)}</div>
+                    <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px;">Includes ${formatPrice(markupTotal)} agency markup</div>
+                    <button class="btn-book-action" onclick="openFlightBookModal(${f.id}, '${f.flight_number}', '${f.airline}', ${totalPrice.toFixed(2)})">
+                        <i class="fa-solid fa-circle-check"></i> Book Seat
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+}
 
+// Trip Type Selector Controller (One-way vs Round-trip)
+function setTripType(type) {
+    const pillRoundtrip = document.getElementById("pill-roundtrip");
+    const pillOneway = document.getElementById("pill-oneway");
+    const returnDateContainer = document.getElementById("return-date-container");
+    const returnDateInput = document.getElementById("flight-return-date");
+    const searchPanel = document.querySelector(".unified-search-panel");
+    
+    if (!pillRoundtrip || !pillOneway) return;
+    
+    if (type === "oneway") {
+        // Update Pills
+        pillRoundtrip.classList.remove("active");
+        pillRoundtrip.style.background = "none";
+        pillRoundtrip.style.color = "var(--text-muted)";
+        
+        pillOneway.classList.add("active");
+        pillOneway.style.background = "var(--primary-gradient)";
+        pillOneway.style.color = "#fff";
+        
+        // Hide return date
+        if (returnDateContainer) {
+            returnDateContainer.style.display = "none";
+        }
+        if (returnDateInput) {
+            returnDateInput.value = "";
+        }
+        
+        // Adjust CSS grid layout columns dynamically to perfectly balance columns
+        if (searchPanel) {
+            searchPanel.style.gridTemplateColumns = "repeat(4, 1fr) auto";
+        }
+    } else {
+        // Update Pills
+        pillOneway.classList.remove("active");
+        pillOneway.style.background = "none";
+        pillOneway.style.color = "var(--text-muted)";
+        
+        pillRoundtrip.classList.add("active");
+        pillRoundtrip.style.background = "var(--primary-gradient)";
+        pillRoundtrip.style.color = "#fff";
+        
+        // Show return date
+        if (returnDateContainer) {
+            returnDateContainer.style.display = "flex";
+        }
+        
+        // Adjust CSS grid layout columns dynamically to original
+        if (searchPanel) {
+            searchPanel.style.gridTemplateColumns = "repeat(5, 1fr) auto";
+        }
+    }
+}
+
+// Open booking details modal & Generate Seat Selection Grid
 function openFlightBookModal(flightId, flNum, airline, totalAmt) {
     document.getElementById("modal-flight-id").value = flightId;
-    document.getElementById("flight-modal-title").innerText = `Book Flight ${flNum} - ${airline} ($${totalAmt})`;
-    document.getElementById("modal-passenger-name").value = "";
+    document.getElementById("flight-modal-title").innerText = `Book Flight ${flNum} - ${airline}`;
     
+    // Clear and reset Step 1 passenger details inputs
+    document.getElementById("modal-passenger-name").value = "";
+    document.getElementById("modal-passport-number").value = "";
+    document.getElementById("modal-passenger-mobile").value = "";
+    document.getElementById("modal-passenger-email").value = "";
+    
+    // Reset Step 3 agreement checkbox and trigger state lock
+    const termsCheck = document.getElementById("modal-terms-agreement");
+    if (termsCheck) {
+        termsCheck.checked = false;
+        toggleBookingButtons();
+    }
+    
+    // Resolve selected flight details from cached array, or create local fallback
+    currentSelectedFlight = lastSearchedFlights.find(f => f.id === flightId);
+    if (!currentSelectedFlight) {
+        currentSelectedFlight = {
+            id: flightId,
+            flight_number: flNum,
+            airline: airline,
+            price: parseFloat(totalAmt) - 15.00,
+            origin: "CMB",
+            destination: "DXB",
+            departure_time: new Date().toISOString(),
+            arrival_time: new Date().toISOString(),
+            flight_type: "GDS"
+        };
+    }
+
+    // Render Selected Flight Card preview at the top of Step 1 Traveler Info
+    const previewContainer = document.getElementById("step-1-flight-card-container");
+    if (previewContainer) {
+        const depDate = new Date(currentSelectedFlight.departure_time);
+        const arrDate = new Date(currentSelectedFlight.arrival_time);
+        const hours = Math.abs(arrDate - depDate) / 36e5;
+        const durationStr = `${Math.floor(hours)}h ${Math.round((hours % 1) * 60)}m`;
+        const isRoundTrip = !!currentSelectedFlight.return_flight;
+        const markupTotal = isRoundTrip ? 30.00 : 15.00;
+        const totalPrice = currentSelectedFlight.price + markupTotal;
+
+        let returnHTML = '';
+        if (isRoundTrip) {
+            const ret = currentSelectedFlight.return_flight;
+            const retDepDate = new Date(ret.departure_time);
+            const retArrDate = new Date(ret.arrival_time);
+            const retHours = Math.abs(retArrDate - retDepDate) / 36e5;
+            const retDurationStr = `${Math.floor(retHours)}h ${Math.round((retHours % 1) * 60)}m`;
+            
+            returnHTML = `
+                <div style="border-top: 1px dashed rgba(255,255,255,0.1); margin: 10px 0; padding-top: 10px;"></div>
+                <div style="display: flex; gap: 20px; align-items: center; font-size: 13px;">
+                    <div class="airline-info" style="min-width: 140px; flex-shrink: 0; display: flex; gap: 8px; align-items: center;">
+                        <div class="airline-logo-placeholder" style="background: rgba(0, 242, 254, 0.1); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-plane" style="transform: rotate(180deg); font-size: 12px;"></i></div>
+                        <div>
+                            <div class="airline-name" style="font-weight: 600; color: #fff;">${ret.airline}</div>
+                            <div class="flight-number" style="font-size: 11px; color: var(--text-muted);">${ret.flight_number} • <span class="badge-type" style="padding: 1px 4px; font-size: 9px;">${ret.flight_type}</span></div>
+                        </div>
+                    </div>
+                    <div class="flight-route-flow" style="flex-grow: 1; display: flex; align-items: center; gap: 10px; justify-content: space-between;">
+                        <div class="route-stop">
+                            <div class="route-time" style="font-weight: 600; color: #fff;">${retDepDate.toLocaleTimeString(undefined, {hour: '2-digit', minute:'2-digit'})}</div>
+                            <div class="route-airport" style="font-size: 11px; color: var(--text-muted); text-align: center;">${ret.origin}</div>
+                        </div>
+                        <div class="route-path-line" style="flex-grow: 1; height: 2px; background: rgba(255,255,255,0.1); position: relative; text-align: center; margin: 0 10px;">
+                            <span class="route-duration" style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--text-muted); white-space: nowrap;">${retDurationStr}</span>
+                        </div>
+                        <div class="route-stop">
+                            <div class="route-time" style="font-weight: 600; color: #fff;">${retArrDate.toLocaleTimeString(undefined, {hour: '2-digit', minute:'2-digit'})}</div>
+                            <div class="route-airport" style="font-size: 11px; color: var(--text-muted); text-align: center;">${ret.destination}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        previewContainer.innerHTML = `
+            <div class="flight-ticket-card" style="margin-bottom: 15px; padding: 15px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; display: flex; flex-direction: column; gap: 10px;">
+                <div style="font-size: 11px; text-transform: uppercase; color: var(--primary); font-weight: 600; letter-spacing: 0.5px;">Selected Flight Details</div>
+                <div style="display: flex; gap: 20px; align-items: center; font-size: 13px;">
+                    <div class="airline-info" style="min-width: 140px; flex-shrink: 0; display: flex; gap: 8px; align-items: center;">
+                        <div class="airline-logo-placeholder" style="background: rgba(0, 242, 254, 0.15); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-plane" style="font-size: 12px;"></i></div>
+                        <div>
+                            <div class="airline-name" style="font-weight: 600; color: #fff;">${currentSelectedFlight.airline} ${isRoundTrip ? '(Outbound)' : ''}</div>
+                            <div class="flight-number" style="font-size: 11px; color: var(--text-muted);">${currentSelectedFlight.flight_number} • <span class="badge-type" style="padding: 1px 4px; font-size: 9px;">${currentSelectedFlight.flight_type}</span></div>
+                        </div>
+                    </div>
+                    <div class="flight-route-flow" style="flex-grow: 1; display: flex; align-items: center; gap: 10px; justify-content: space-between;">
+                        <div class="route-stop">
+                            <div class="route-time" style="font-weight: 600; color: #fff;">${depDate.toLocaleTimeString(undefined, {hour: '2-digit', minute:'2-digit'})}</div>
+                            <div class="route-airport" style="font-size: 11px; color: var(--text-muted); text-align: center;">${currentSelectedFlight.origin}</div>
+                        </div>
+                        <div class="route-path-line" style="flex-grow: 1; height: 2px; background: rgba(255,255,255,0.1); position: relative; text-align: center; margin: 0 10px;">
+                            <span class="route-duration" style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--text-muted); white-space: nowrap;">${durationStr}</span>
+                        </div>
+                        <div class="route-stop">
+                            <div class="route-time" style="font-weight: 600; color: #fff;">${arrDate.toLocaleTimeString(undefined, {hour: '2-digit', minute:'2-digit'})}</div>
+                            <div class="route-airport" style="font-size: 11px; color: var(--text-muted); text-align: center;">${currentSelectedFlight.destination}</div>
+                        </div>
+                    </div>
+                </div>
+                ${returnHTML}
+                <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 12.5px;">
+                    <span style="color: var(--text-muted);">Consolidated Price (with markup):</span>
+                    <strong style="color: var(--success); font-size: 15px;">${formatPrice(totalPrice)}</strong>
+                </div>
+            </div>
+        `;
+    }
+
     // Select seat map container
     const seatMap = document.getElementById("modal-seat-map");
     seatMap.innerHTML = "";
     selectedSeat = null;
     document.getElementById("modal-selected-seat-text").innerText = "None";
+    
+    const isRoundTrip = !!(currentSelectedFlight && currentSelectedFlight.return_flight);
+    const markupTextEl = document.getElementById("modal-seat-markup-text");
+    if (markupTextEl) {
+        markupTextEl.innerText = isRoundTrip ? `+${formatPrice(30.00)}` : `+${formatPrice(15.00)}`;
+    }
     
     // Generate simulated seats: 8 rows of A-B-C-D-E-F (C/D aisle)
     const rows = 8;
@@ -404,7 +754,22 @@ function openFlightBookModal(flightId, flNum, airline, totalAmt) {
                         // Select current
                         seat.classList.add("selected");
                         selectedSeat = seatName;
-                        document.getElementById("modal-selected-seat-text").innerText = seatName;
+                        
+                        if (isRoundTrip) {
+                            const rowNum = parseInt(seatName);
+                            const colLetter = seatName.replace(rowNum, "");
+                            let returnCol = "F";
+                            if (colLetter === "A") returnCol = "F";
+                            else if (colLetter === "B") returnCol = "E";
+                            else if (colLetter === "C") returnCol = "D";
+                            else if (colLetter === "D") returnCol = "C";
+                            else if (colLetter === "E") returnCol = "B";
+                            else if (colLetter === "F") returnCol = "A";
+                            const returnSeat = `${rowNum}${returnCol}`;
+                            document.getElementById("modal-selected-seat-text").innerText = `${seatName} (Outbound) / ${returnSeat} (Return)`;
+                        } else {
+                            document.getElementById("modal-selected-seat-text").innerText = seatName;
+                        }
                     };
                 }
             }
@@ -413,16 +778,256 @@ function openFlightBookModal(flightId, flNum, airline, totalAmt) {
         seatMap.appendChild(rowDiv);
     }
     
+    // Set stepper state to Step 1 (Passenger Details)
+    currentBookingStep = 1;
+    updateStepperUI();
+    
     openModal("flight-book-modal");
 }
 
-// Process booking flight
-function processFlightBooking(ticketNow) {
+// Stepper Navigation Controller
+function navigateStepper(direction) {
+    if (direction === 1) {
+        // Step 1 traveler profile validation
+        if (currentBookingStep === 1) {
+            const passengerName = document.getElementById("modal-passenger-name").value.trim();
+            const passportNumber = document.getElementById("modal-passport-number").value.trim();
+            const mobile = document.getElementById("modal-passenger-mobile").value.trim();
+            const email = document.getElementById("modal-passenger-email").value.trim();
+            
+            if (!passengerName) {
+                showNotification("Field Required", "Please enter the passenger full legal name.", "danger");
+                return;
+            }
+            if (!passportNumber) {
+                showNotification("Field Required", "Please enter the traveler passport number.", "danger");
+                return;
+            }
+            if (!mobile) {
+                showNotification("Field Required", "Please enter the contact mobile number.", "danger");
+                return;
+            }
+            if (!email) {
+                showNotification("Field Required", "Please enter the email address for communications.", "danger");
+                return;
+            }
+            
+            // Basic email pattern matching check
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showNotification("Invalid Entry", "Please enter a valid passenger email address.", "danger");
+                return;
+            }
+        }
+        // Step 2 seat selector validation
+        else if (currentBookingStep === 2) {
+            if (!selectedSeat) {
+                showNotification("Seat Required", "Please select a seat from the interactive seat map layout.", "danger");
+                return;
+            }
+        }
+    }
+    
+    currentBookingStep += direction;
+    if (currentBookingStep < 1) currentBookingStep = 1;
+    if (currentBookingStep > 3) currentBookingStep = 3;
+    
+    updateStepperUI();
+}
+
+// Stepper UI visibility and indicator updates
+function updateStepperUI() {
+    // 1. Update stepper header progress tracker nodes
+    document.querySelectorAll(".stepper-step").forEach((node, idx) => {
+        const stepNum = idx + 1;
+        node.classList.remove("active", "completed");
+        if (stepNum === currentBookingStep) {
+            node.classList.add("active");
+        } else if (stepNum < currentBookingStep) {
+            node.classList.add("completed");
+        }
+    });
+    
+    // 2. Toggle active layout screens
+    document.querySelectorAll(".stepper-content-view").forEach((view, idx) => {
+        const stepNum = idx + 1;
+        if (stepNum === currentBookingStep) {
+            view.classList.add("active");
+        } else {
+            view.classList.remove("active");
+        }
+    });
+    
+    // 3. Toggle stepper footer navigation action buttons
+    const btnBack = document.getElementById("btn-stepper-back");
+    const btnNext = document.getElementById("btn-stepper-next");
+    const btnSave = document.getElementById("btn-stepper-save");
+    const btnTicket = document.getElementById("btn-stepper-ticket");
+    const btnPayment = document.getElementById("btn-stepper-payment");
+    
+    if (btnSave) btnSave.style.display = "none";
+    if (btnTicket) btnTicket.style.display = "none";
+    
+    if (currentBookingStep === 1) {
+        btnBack.style.display = "none";
+        btnNext.style.display = "inline-flex";
+        if (btnPayment) btnPayment.style.display = "none";
+    } else if (currentBookingStep === 2) {
+        btnBack.style.display = "inline-flex";
+        btnNext.style.display = "inline-flex";
+        if (btnPayment) btnPayment.style.display = "none";
+    } else if (currentBookingStep === 3) {
+        btnBack.style.display = "inline-flex";
+        btnNext.style.display = "none";
+        if (btnPayment) btnPayment.style.display = "inline-flex";
+        
+        // Dynamic formatting of confirmation details
+        renderStepperSummary();
+    }
+
+}
+
+// Format and render Step 3 checkout summary list
+function renderStepperSummary() {
+    if (!currentSelectedFlight) return;
+    
+    const f = currentSelectedFlight;
+    
+    // Extract Traveler Inputs
+    const passName = document.getElementById("modal-passenger-name").value.trim();
+    const passPassport = document.getElementById("modal-passport-number").value.trim();
+    const passMobile = document.getElementById("modal-passenger-mobile").value.trim();
+    const passEmail = document.getElementById("modal-passenger-email").value.trim();
+    
+    // Populate Profile Fields
+    document.getElementById("summary-pass-name").innerText = passName || "N/A";
+    document.getElementById("summary-pass-passport").innerText = passPassport || "N/A";
+    document.getElementById("summary-pass-mobile").innerText = passMobile || "N/A";
+    document.getElementById("summary-pass-email").innerText = passEmail || "N/A";
+    
+    // Populate Sector details & dynamic return mapping
+    let routeHTML = `${f.origin} <i class="fa-solid fa-arrow-right" style="color:var(--primary); font-size:11px;"></i> ${f.destination}`;
+    let airlineText = `${f.airline} (${f.flight_number})`;
+    
+    const depDate = new Date(f.departure_time);
+    const arrDate = new Date(f.arrival_time);
+    let timeText = `${depDate.toLocaleTimeString(undefined, {hour: '2-digit', minute:'2-digit'})} - ${arrDate.toLocaleTimeString(undefined, {hour: '2-digit', minute:'2-digit'})}`;
+    
+    let seatText = selectedSeat || "None Selected";
+    let markupTotal = 15.00;
+    
+    if (f.return_flight) {
+        const ret = f.return_flight;
+        routeHTML += ` <span style="margin: 0 8px; color: var(--text-muted);">|</span> ${ret.origin} <i class="fa-solid fa-arrow-right" style="color:var(--primary); font-size:11px;"></i> ${ret.destination}`;
+        airlineText += ` / ${ret.airline} (${ret.flight_number})`;
+        
+        const retDepDate = new Date(ret.departure_time);
+        const retArrDate = new Date(ret.arrival_time);
+        timeText += ` | Return: ${retDepDate.toLocaleTimeString(undefined, {hour: '2-digit', minute:'2-digit'})} - ${retArrDate.toLocaleTimeString(undefined, {hour: '2-digit', minute:'2-digit'})}`;
+        
+        // Calculate return seat number dynamically
+        let returnSeat = "14F";
+        if (selectedSeat) {
+            const row = parseInt(selectedSeat);
+            const col = selectedSeat.replace(row, "");
+            let returnCol = "F";
+            if (col === "A") returnCol = "F";
+            else if (col === "B") returnCol = "E";
+            else if (col === "C") returnCol = "D";
+            else if (col === "D") returnCol = "C";
+            else if (col === "E") returnCol = "B";
+            else if (col === "F") returnCol = "A";
+            returnSeat = `${row}${returnCol}`;
+        }
+        seatText += ` (Outbound) / ${returnSeat} (Return)`;
+        markupTotal = 30.00;
+    }
+    
+    document.getElementById("summary-flight-route").innerHTML = routeHTML;
+    document.getElementById("summary-flight-airline").innerText = airlineText;
+    document.getElementById("summary-flight-type").innerText = f.flight_type;
+    document.getElementById("summary-flight-time").innerText = timeText;
+    document.getElementById("summary-pass-seat").innerText = seatText;
+    
+    // Display payable consolidated price markup
+    let totalAmt;
+    if (activeBookingPath === "hold") {
+        totalAmt = 2.00; // Hold charge is 2 USD / 600 LKR
+    } else {
+        totalAmt = f.price + markupTotal;
+    }
+    document.getElementById("summary-total-fare").innerText = formatPrice(totalAmt);
+    
+    // Dynamically update Hold description to reflect currency charge
+    const holdDesc = document.querySelector("#opt-hold-booking .opt-card-desc");
+    if (holdDesc) {
+        holdDesc.innerHTML = `Secure seats and fare for 24 hours. Hold charge: <strong>${formatPrice(2.00)}</strong> will be charged immediately.`;
+    }
+}
+
+// Selects the booking path (Hold vs Ticket) and updates the UI
+function selectBookingPath(path) {
+    activeBookingPath = path;
+    const holdCard = document.getElementById("opt-hold-booking");
+    const ticketCard = document.getElementById("opt-book-ticket");
+    
+    if (holdCard && ticketCard) {
+        if (path === "hold") {
+            holdCard.classList.add("active");
+            ticketCard.classList.remove("active");
+        } else {
+            ticketCard.classList.add("active");
+            holdCard.classList.remove("active");
+        }
+    }
+    
+    // Refresh stepper summary to update prices
+    renderStepperSummary();
+}
+
+
+// Terms Agreement checkbox change listener
+function toggleBookingButtons() {
+    const agreedCheckbox = document.getElementById("modal-terms-agreement");
+    const agreed = agreedCheckbox ? agreedCheckbox.checked : false;
+    
+    const btnSave = document.getElementById("btn-stepper-save");
+    const btnTicket = document.getElementById("btn-stepper-ticket");
+    const btnPayment = document.getElementById("btn-stepper-payment");
+    
+    if (agreed) {
+        if (btnSave) btnSave.removeAttribute("disabled");
+        if (btnTicket) btnTicket.removeAttribute("disabled");
+        if (btnPayment) btnPayment.removeAttribute("disabled");
+    } else {
+        if (btnSave) btnSave.setAttribute("disabled", "true");
+        if (btnTicket) btnTicket.setAttribute("disabled", "true");
+        if (btnPayment) btnPayment.setAttribute("disabled", "true");
+    }
+}
+
+// Process B2B checkout flight booking (Reservation Hold or Immediate Ticketing)
+function processFlightBooking(ticketNow, paymentMethod = 'credit') {
     const flightId = document.getElementById("modal-flight-id").value;
     const passengerName = document.getElementById("modal-passenger-name").value.trim();
+    const passportNumber = document.getElementById("modal-passport-number").value.trim();
+    const mobile = document.getElementById("modal-passenger-mobile").value.trim();
+    const email = document.getElementById("modal-passenger-email").value.trim();
     
     if (!passengerName) {
         showNotification("Missing Passenger", "Please enter the passenger legal name to proceed.", "danger");
+        return;
+    }
+    if (!passportNumber) {
+        showNotification("Missing Passport", "Please enter the passport number.", "danger");
+        return;
+    }
+    if (!mobile) {
+        showNotification("Missing Mobile", "Please enter the contact mobile number.", "danger");
+        return;
+    }
+    if (!email) {
+        showNotification("Missing Email", "Please enter the passenger email address.", "danger");
         return;
     }
     if (!selectedSeat) {
@@ -430,15 +1035,49 @@ function processFlightBooking(ticketNow) {
         return;
     }
     
+    // Lock agreement validation client-side
+    const agreedCheckbox = document.getElementById("modal-terms-agreement");
+    if (!agreedCheckbox || !agreedCheckbox.checked) {
+        showNotification("Agreement Required", "You must agree to the airline fare rules and terms and conditions.", "danger");
+        return;
+    }
+    
+    const payload = {
+        flight_id: parseInt(flightId),
+        passenger_name: passengerName,
+        passport_number: passportNumber,
+        mobile: mobile,
+        email: email,
+        seat_number: selectedSeat,
+        ticket_now: ticketNow,
+        payment_method: paymentMethod,
+        active_booking_path: activeBookingPath
+    };
+
+    
+    if (currentSelectedFlight && currentSelectedFlight.return_flight) {
+        payload.return_flight_id = parseInt(currentSelectedFlight.return_flight.id);
+        
+        let returnSeat = "14F";
+        if (selectedSeat) {
+            const row = parseInt(selectedSeat);
+            const col = selectedSeat.replace(row, "");
+            let returnCol = "F";
+            if (col === "A") returnCol = "F";
+            else if (col === "B") returnCol = "E";
+            else if (col === "C") returnCol = "D";
+            else if (col === "D") returnCol = "C";
+            else if (col === "E") returnCol = "B";
+            else if (col === "F") returnCol = "A";
+            returnSeat = `${row}${returnCol}`;
+        }
+        payload.return_seat_number = returnSeat;
+    }
+
     fetch("/api/flights/book", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            flight_id: parseInt(flightId),
-            passenger_name: passengerName,
-            seat_number: selectedSeat,
-            ticket_now: ticketNow
-        })
+        body: JSON.stringify(payload)
     })
     .then(res => res.json())
     .then(data => {
@@ -457,6 +1096,7 @@ function processFlightBooking(ticketNow) {
     });
 }
 
+
 // Hotel Search Logic
 function searchHotels() {
     const location = document.getElementById("hotel-location").value;
@@ -467,61 +1107,68 @@ function searchHotels() {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                container.innerHTML = "";
-                
-                if (data.hotels.length === 0) {
-                    container.innerHTML = `
-                        <div style="text-align: center; color: var(--text-muted); padding: 40px 0; grid-column: span 3;">
-                            <i class="fa-solid fa-triangle-exclamation" style="font-size: 32px; margin-bottom: 15px; color: var(--warning);"></i>
-                            <p>No hotels found in the selected location. Try 'London', 'Dubai' or 'Maldives'.</p>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                data.hotels.forEach(h => {
-                    let starIcons = "";
-                    for(let i=0; i<h.rating; i++) starIcons += `<i class="fa-solid fa-star"></i>`;
-                    
-                    let roomsList = "";
-                    if (h.rooms.length === 0) {
-                        roomsList = `<p style="color:var(--danger); font-size:11.5px;">All rooms occupied for these dates</p>`;
-                    } else {
-                        h.rooms.forEach(r => {
-                            roomsList += `
-                                <div class="room-type-item">
-                                    <span>${r.room_type}</span>
-                                    <div style="display:flex; align-items:center; gap:10px;">
-                                        <span class="room-price">$${(r.price_per_night + 25.00).toFixed(2)}/n</span>
-                                        <button class="btn-book-action" style="padding:4px 8px; font-size:11px;" onclick="bookHotelRoom(${r.id}, '${r.room_type}', '${h.name}', ${(r.price_per_night + 25.00).toFixed(2)})">
-                                            Book
-                                        </button>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                    }
-                    
-                    container.innerHTML += `
-                        <div class="hotel-card">
-                            <div class="hotel-image">
-                                <i class="fa-solid fa-hotel"></i>
-                                <span class="hotel-stars">${starIcons}</span>
-                            </div>
-                            <div class="hotel-body">
-                                <div class="hotel-name">${h.name}</div>
-                                <div class="hotel-location"><i class="fa-solid fa-location-dot" style="color:var(--primary);"></i> ${h.location}</div>
-                                <p class="hotel-desc">${h.description}</p>
-                                <div class="hotel-rooms-list">
-                                    <h5 style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Room Selection:</h5>
-                                    ${roomsList}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
+                lastSearchedHotels = data.hotels; // Cache in global state
+                renderHotelSearchResults(lastSearchedHotels);
             }
         });
+}
+
+function renderHotelSearchResults(hotels) {
+    const container = document.getElementById("hotel-results-container");
+    container.innerHTML = "";
+    
+    if (hotels.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; color: var(--text-muted); padding: 40px 0; grid-column: span 3;">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 32px; margin-bottom: 15px; color: var(--warning);"></i>
+                <p>No hotels found in the selected location. Try 'London', 'Dubai' or 'Maldives'.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    hotels.forEach(h => {
+        let starIcons = "";
+        for(let i=0; i<h.rating; i++) starIcons += `<i class="fa-solid fa-star"></i>`;
+        
+        let roomsList = "";
+        if (h.rooms.length === 0) {
+            roomsList = `<p style="color:var(--danger); font-size:11.5px;">All rooms occupied for these dates</p>`;
+        } else {
+            h.rooms.forEach(r => {
+                const totalPrice = r.price_per_night + 25.00;
+                roomsList += `
+                    <div class="room-type-item">
+                        <span>${r.room_type}</span>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span class="room-price">${formatPrice(totalPrice)}/n</span>
+                            <button class="btn-book-action" style="padding:4px 8px; font-size:11px;" onclick="bookHotelRoom(${r.id}, '${r.room_type}', '${h.name}', ${totalPrice.toFixed(2)})">
+                                Book
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        container.innerHTML += `
+            <div class="hotel-card">
+                <div class="hotel-image">
+                    <i class="fa-solid fa-hotel"></i>
+                    <span class="hotel-stars">${starIcons}</span>
+                </div>
+                <div class="hotel-body">
+                    <div class="hotel-name">${h.name}</div>
+                    <div class="hotel-location"><i class="fa-solid fa-location-dot" style="color:var(--primary);"></i> ${h.location}</div>
+                    <p class="hotel-desc">${h.description}</p>
+                    <div class="hotel-rooms-list">
+                        <h5 style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Room Selection:</h5>
+                        ${roomsList}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
 }
 
 // Book hotel room (Instant execution)
@@ -583,10 +1230,28 @@ function loadBookings() {
                     
                     if (b.booking_type === "flight" && b.details) {
                         const d = b.details;
+                        let pnrHTML = d.pnr_reference ? `<br>Ref: <strong style="color:var(--warning); font-family:monospace; font-size:12px;">${d.pnr_reference}</strong>` : '';
+                        let ticketHTML = d.ticket_number ? `<br>Tkt: <strong style="color:var(--success); font-family:monospace; font-size:12px;">${d.ticket_number}</strong>` : (b.status === "non-ticketed" ? `<br><span style="color:var(--text-muted); font-size:11.5px;">Tkt: Not Ticketed</span>` : '');
+                        
+                        let returnSegmentHTML = "";
+                        if (d.return_segment) {
+                            const r = d.return_segment;
+                            let rPnrHTML = r.pnr_reference ? `<br>Ref: <strong style="color:var(--warning); font-family:monospace; font-size:12px;">${r.pnr_reference}</strong>` : '';
+                            let rTicketHTML = r.ticket_number ? `<br>Tkt: <strong style="color:var(--success); font-family:monospace; font-size:12px;">${r.ticket_number}</strong>` : (b.status === "non-ticketed" ? `<br><span style="color:var(--text-muted); font-size:11.5px;">Tkt: Not Ticketed</span>` : '');
+                            returnSegmentHTML = `
+                                <div style="border-top: 1px dashed rgba(255,255,255,0.1); margin: 8px 0; padding-top: 8px;">
+                                    <strong>${r.airline} (${r.flight_number})</strong> (${r.gds_type}) (Return)<br>
+                                    ${r.origin} <i class="fa-solid fa-plane" style="font-size:10px; color:var(--primary); transform: rotate(180deg);"></i> ${r.destination}<br>
+                                    Seat: ${r.seat_number}${rPnrHTML}${rTicketHTML}
+                                </div>
+                            `;
+                        }
+                        
                         detailsHTML = `
-                            <strong>Flight ${d.flight_number}</strong> (${d.gds_type})<br>
+                            <strong>${d.airline} (${d.flight_number})</strong> (${d.gds_type})<br>
                             ${d.origin} <i class="fa-solid fa-plane" style="font-size:10px; color:var(--primary);"></i> ${d.destination}<br>
-                            Seat: ${d.seat_number}
+                            Seat: ${d.seat_number}${pnrHTML}${ticketHTML}
+                            ${returnSegmentHTML}
                         `;
                         
                         if (b.status === "non-ticketed") {
@@ -625,7 +1290,7 @@ function loadBookings() {
                             <td><span class="badge-type">${b.booking_type.toUpperCase()}</span></td>
                             <td>${b.booking_type === 'flight' ? b.details.passenger_name : b.details.guest_name}</td>
                             <td>${detailsHTML}</td>
-                            <td style="font-weight:700; color:var(--primary);">$${b.total_price.toFixed(2)}</td>
+                            <td style="font-weight:700; color:var(--primary);">${formatPrice(b.total_price)}</td>
                             <td style="font-size:12px;">${b.created_at.split('T')[0]}</td>
                             <td><span class="badge ${statusClass}">${b.status}</span></td>
                             <td>${actionHTML}</td>
@@ -677,6 +1342,9 @@ function voidReservation(bookingId) {
         if (data.success) {
             showNotification("Reservation Cancelled", data.message, "success");
             loadBookings();
+            if (typeof loadCancellations === "function") {
+                loadCancellations();
+            }
         } else {
             showNotification("Void Failed", data.error, "danger");
         }
@@ -696,15 +1364,129 @@ function refundBooking(bookingId) {
     .then(data => {
         if (data.success) {
             const d = data.details;
-            const message = `Net Credit Refunded: $${d.net_refund_credited.toFixed(2)}. GDS penalty: $${d.amadeus_cancellation_penalty.toFixed(2)}. Agency refund fee: $${d.refund_service_markup.toFixed(2)}.`;
+            const message = `Net Credit Refunded: ${formatPrice(d.net_refund_credited)}. GDS penalty: ${formatPrice(d.amadeus_cancellation_penalty)}. Agency refund fee: ${formatPrice(d.refund_service_markup)}.`;
             alert("TRF REFUND PROCESSED BY FLIGHT HUB:\n\n" + message);
             showNotification("TRF Refund Processed", "Net refund balance credited to wallet.", "success");
             updateAgentUI();
             loadBookings();
+            if (typeof loadCancellations === "function") {
+                loadCancellations();
+            }
         } else {
             showNotification("Refund Failed", data.error, "danger");
         }
     });
+}
+
+// Load bookings list and render under cancellations tab
+function loadCancellations() {
+    fetch("/api/bookings/list")
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const tbody = document.getElementById("cancellations-list-table");
+                tbody.innerHTML = "";
+                
+                if (data.bookings.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:30px 0;">No bookings found.</td></tr>`;
+                    return;
+                }
+                
+                data.bookings.forEach(b => {
+                    let statusClass = "badge-reservation";
+                    if (b.status === "ticketed") { statusClass = "badge-ticketed"; }
+                    else if (b.status === "refunded") { statusClass = "badge-refunded"; }
+                    else if (b.status === "voided") { statusClass = "badge-voided"; }
+                    
+                    let detailsHTML = "";
+                    let actionHTML = "";
+                    
+                    if (b.booking_type === "flight" && b.details) {
+                        const d = b.details;
+                        let pnrHTML = d.pnr_reference ? `<br>Ref: <strong style="color:var(--warning); font-family:monospace; font-size:12px;">${d.pnr_reference}</strong>` : '';
+                        let ticketHTML = d.ticket_number ? `<br>Tkt: <strong style="color:var(--success); font-family:monospace; font-size:12px;">${d.ticket_number}</strong>` : (b.status === "non-ticketed" ? `<br><span style="color:var(--text-muted); font-size:11.5px;">Tkt: Not Ticketed</span>` : '');
+                        
+                        let returnSegmentHTML = "";
+                        if (d.return_segment) {
+                            const r = d.return_segment;
+                            let rPnrHTML = r.pnr_reference ? `<br>Ref: <strong style="color:var(--warning); font-family:monospace; font-size:12px;">${r.pnr_reference}</strong>` : '';
+                            let rTicketHTML = r.ticket_number ? `<br>Tkt: <strong style="color:var(--success); font-family:monospace; font-size:12px;">${r.ticket_number}</strong>` : (b.status === "non-ticketed" ? `<br><span style="color:var(--text-muted); font-size:11.5px;">Tkt: Not Ticketed</span>` : '');
+                            returnSegmentHTML = `
+                                <div style="border-top: 1px dashed rgba(255,255,255,0.1); margin: 8px 0; padding-top: 8px;">
+                                    <strong>${r.airline} (${r.flight_number})</strong> (${r.gds_type}) (Return)<br>
+                                    ${r.origin} <i class="fa-solid fa-plane" style="font-size:10px; color:var(--primary); transform: rotate(180deg);"></i> ${r.destination}<br>
+                                    Seat: ${r.seat_number}${rPnrHTML}${rTicketHTML}
+                                </div>
+                            `;
+                        }
+                        
+                        detailsHTML = `
+                            <strong>${d.airline} (${d.flight_number})</strong> (${d.gds_type})<br>
+                            ${d.origin} <i class="fa-solid fa-plane" style="font-size:10px; color:var(--primary);"></i> ${d.destination}<br>
+                            Seat: ${d.seat_number}${pnrHTML}${ticketHTML}
+                            ${returnSegmentHTML}
+                        `;
+                        
+                        if (b.status === "non-ticketed") {
+                            actionHTML = `
+                                <button class="btn-action btn-danger" onclick="voidReservation(${b.id})">
+                                    <i class="fa-solid fa-ban"></i> Void (No Penalty)
+                                </button>
+                            `;
+                        } else if (b.status === "ticketed") {
+                            actionHTML = `
+                                <button class="btn-action btn-danger" onclick="refundBooking(${b.id})">
+                                    <i class="fa-solid fa-receipt"></i> TRF Refund
+                                </button>
+                            `;
+                        } else {
+                            actionHTML = `<span class="badge ${statusClass}">${b.status.toUpperCase()}</span>`;
+                        }
+                    } else if (b.booking_type === "hotel" && b.details) {
+                        const d = b.details;
+                        detailsHTML = `
+                            <strong>${d.hotel_name}</strong><br>
+                            Room: ${d.room_type}<br>
+                            Check In: ${d.check_in.split('T')[0]}
+                        `;
+                        
+                        if (b.status === "ticketed") {
+                            actionHTML = `
+                                <button class="btn-action btn-danger" onclick="refundBooking(${b.id})">
+                                    <i class="fa-solid fa-receipt"></i> Cancel & Refund
+                                </button>
+                            `;
+                        } else {
+                            actionHTML = `<span class="badge ${statusClass}">${b.status.toUpperCase()}</span>`;
+                        }
+                    } else {
+                        detailsHTML = `N/A`;
+                        if (b.status === "ticketed") {
+                            actionHTML = `<button class="btn-action btn-danger" onclick="refundBooking(${b.id})">Refund</button>`;
+                        } else if (b.status === "non-ticketed") {
+                            actionHTML = `<button class="btn-action btn-danger" onclick="voidReservation(${b.id})">Void</button>`;
+                        } else {
+                            actionHTML = `<span class="badge ${statusClass}">${b.status.toUpperCase()}</span>`;
+                        }
+                    }
+                    
+                    const passengerName = b.booking_type === 'flight' ? (b.details ? b.details.passenger_name : 'N/A') : (b.details ? b.details.guest_name : 'N/A');
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong style="color:#fff;">${b.invoice_number}</strong></td>
+                            <td><span class="badge-type">${b.booking_type.toUpperCase()}</span></td>
+                            <td>${passengerName}</td>
+                            <td>${detailsHTML}</td>
+                            <td style="font-weight:700; color:var(--primary);">${formatPrice(b.total_price)}</td>
+                            <td style="font-size:12px;">${b.created_at.split('T')[0]}</td>
+                            <td><span class="badge ${statusClass}">${b.status}</span></td>
+                            <td>${actionHTML}</td>
+                        </tr>
+                    `;
+                });
+            }
+        });
 }
 
 // Re-issue Simulated GDS ATC
@@ -713,7 +1495,12 @@ let currentReissueOriginalFare = 0;
 function openReissueModal(bookingId, currentFlightId, originalFare) {
     document.getElementById("reissue-booking-id").value = bookingId;
     currentReissueOriginalFare = originalFare;
-    document.getElementById("reissue-old-fare").innerText = `$${originalFare.toFixed(2)}`;
+    document.getElementById("reissue-old-fare").innerText = formatPrice(originalFare);
+    
+    const penaltyAlert = document.getElementById("reissue-penalty-text");
+    if (penaltyAlert) {
+        penaltyAlert.innerHTML = `Flight cancellation penalty applied: <strong>${formatPrice(50.00)}</strong>. Service fee markup applied: <strong>${formatPrice(25.00)}</strong>.`;
+    }
     
     // Fetch all active flights to populate re-issue options
     fetch("/api/flights/search")
@@ -725,7 +1512,7 @@ function openReissueModal(bookingId, currentFlightId, originalFare) {
                 
                 data.flights.forEach(f => {
                     if (f.id !== currentFlightId) {
-                        select.innerHTML += `<option value="${f.id}" data-price="${f.price}">${f.flight_number} - ${f.airline} (${f.origin} to ${f.destination}) - Base fare: $${f.price.toFixed(2)}</option>`;
+                        select.innerHTML += `<option value="${f.id}" data-price="${f.price}">${f.flight_number} - ${f.airline} (${f.origin} to ${f.destination}) - Base fare: ${formatPrice(f.price)}</option>`;
                     }
                 });
                 
@@ -742,16 +1529,22 @@ function calculateReissueFareDiff() {
     const selectedOption = select.options[select.selectedIndex];
     const newPrice = parseFloat(selectedOption.getAttribute("data-price"));
     
-    document.getElementById("reissue-new-fare").innerText = `$${newPrice.toFixed(2)}`;
+    document.getElementById("reissue-new-fare").innerText = formatPrice(newPrice);
     
     const fareDiff = Math.max(0, newPrice - currentReissueOriginalFare);
-    document.getElementById("reissue-fare-diff").innerText = `$${fareDiff.toFixed(2)}`;
+    document.getElementById("reissue-fare-diff").innerText = formatPrice(fareDiff);
     
     const penalty = 50.00;
     const agencyFee = 25.00;
     const total = fareDiff + penalty + agencyFee;
     
-    document.getElementById("reissue-total-cost").innerText = `$${total.toFixed(2)}`;
+    const penaltyEl = document.getElementById("reissue-gds-penalty");
+    if (penaltyEl) penaltyEl.innerText = formatPrice(penalty);
+    
+    const markupEl = document.getElementById("reissue-agency-markup");
+    if (markupEl) markupEl.innerText = formatPrice(agencyFee);
+    
+    document.getElementById("reissue-total-cost").innerText = formatPrice(total);
 }
 
 function submitReissueChange() {
@@ -773,7 +1566,7 @@ function submitReissueChange() {
         closeModal("reissue-modal");
         if (data.success) {
             const d = data.details;
-            const message = `Auto Re-issue complete!\nGDS Penalty: $${d.amadeus_penalty.toFixed(2)}\nFare Difference Collected: $${d.fare_difference.toFixed(2)}\nAgency markup: $${d.service_markup.toFixed(2)}\n\nTotal charged: $${d.total_charged.toFixed(2)}`;
+            const message = `Auto Re-issue complete!\nGDS Penalty: ${formatPrice(d.amadeus_penalty)}\nFare Difference Collected: ${formatPrice(d.fare_difference)}\nAgency markup: ${formatPrice(d.service_markup)}\n\nTotal charged: ${formatPrice(d.total_charged)}`;
             alert(message);
             showNotification("Auto Re-Issue Completed", "Seat reassigned, ticket updated.", "success");
             updateAgentUI();
@@ -931,9 +1724,9 @@ function loadAgentReports() {
                     tbody.innerHTML += `
                         <tr>
                             <td><strong>${d.day_label}</strong></td>
-                            <td style="color:#fff; font-weight:600;">$${d.turnover.toFixed(2)}</td>
-                            <td>$${cost.toFixed(2)}</td>
-                            <td style="color:var(--success); font-weight:700;">$${d.gp.toFixed(2)}</td>
+                            <td style="color:#fff; font-weight:600;">${formatPrice(d.turnover)}</td>
+                            <td>${formatPrice(cost)}</td>
+                            <td style="color:var(--success); font-weight:700;">${formatPrice(d.gp)}</td>
                             <td style="font-weight:600; color:var(--primary);">${margin.toFixed(1)}%</td>
                         </tr>
                     `;
@@ -1465,3 +2258,118 @@ function resolveAdminTicket(id) {
         }
     });
 }
+
+// Open payment selection modal
+function openPaymentOptionsModal() {
+    // Reset active visual cards in selection modal
+    const creditOpt = document.getElementById("pay-opt-credit");
+    const gatewayOpt = document.getElementById("pay-opt-gateway");
+    if (creditOpt) creditOpt.classList.remove("active");
+    if (gatewayOpt) gatewayOpt.classList.remove("active");
+    
+    openModal("payment-options-modal");
+}
+
+// Handles selecting payment options (Credit Balance vs Payment Gateway)
+function selectPaymentMethod(method) {
+    // Visually toggle active class briefly
+    const creditOpt = document.getElementById("pay-opt-credit");
+    const gatewayOpt = document.getElementById("pay-opt-gateway");
+    if (method === "credit" && creditOpt) {
+        creditOpt.classList.add("active");
+        if (gatewayOpt) gatewayOpt.classList.remove("active");
+    } else if (method === "gateway" && gatewayOpt) {
+        gatewayOpt.classList.add("active");
+        if (creditOpt) creditOpt.classList.remove("active");
+    }
+    
+    setTimeout(() => {
+        closeModal("payment-options-modal");
+        
+        if (method === "credit") {
+            // Proceed directly with credit balance
+            processFlightBooking(activeBookingPath === "ticket", "credit");
+        } else if (method === "gateway") {
+            // Fetch total fare from step 3 summary
+            const fareText = document.getElementById("summary-total-fare").innerText;
+            document.getElementById("gateway-payable-amount").innerText = fareText;
+            
+            // Reset card form fields
+            const form = document.getElementById("gateway-payment-form");
+            if (form) form.reset();
+            
+            // Open secure gateway modal
+            openModal("payment-gateway-modal");
+        }
+    }, 200);
+}
+
+// Auto formats credit card input with space delimiters: "0000 0000 0000 0000"
+function formatCardNumber(input) {
+    let value = input.value.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
+    let matches = value.match(/\d{4,16}/g);
+    let match = (matches && matches[0]) || "";
+    let parts = [];
+
+    for (let i = 0, len = match.length; i < len; i += 4) {
+        parts.push(match.substring(i, i + 4));
+    }
+
+    if (parts.length > 0) {
+        input.value = parts.join(" ");
+    } else {
+        input.value = value;
+    }
+}
+
+// Auto formats Expiry Date input to: "MM/YY"
+function formatCardExpiry(input) {
+    let value = input.value.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
+    if (value.length >= 2) {
+        input.value = value.substring(0, 2) + "/" + value.substring(2, 4);
+    } else {
+        input.value = value;
+    }
+}
+
+// Validates card details and executes checkout API call
+function submitGatewayPayment(event) {
+    event.preventDefault();
+    
+    const bankName = document.getElementById("gateway-bank-name").value.trim();
+    const cardholder = document.getElementById("gateway-cardholder").value.trim();
+    const cardnumber = document.getElementById("gateway-cardnumber").value.replace(/\s+/g, "");
+    const expiry = document.getElementById("gateway-expiry").value.trim();
+    const cvv = document.getElementById("gateway-cvv").value.trim();
+    
+    // Validations
+    if (!bankName || !cardholder || !cardnumber || !expiry || !cvv) {
+        showNotification("Validation Failed", "Please fill in all payment details.", "danger");
+        return;
+    }
+    
+    if (cardnumber.length < 15 || cardnumber.length > 16) {
+        showNotification("Invalid Card Number", "Card number must be 15 or 16 digits long.", "danger");
+        return;
+    }
+    
+    const expiryRegex = /^(0[1-9]|1[0-2])\/?([0-9]{2})$/;
+    if (!expiryRegex.test(expiry)) {
+        showNotification("Invalid Expiry Format", "Expiry date must be in MM/YY format.", "danger");
+        return;
+    }
+    
+    if (cvv.length !== 3) {
+        showNotification("Invalid CVV", "CVV code must be 3 digits long.", "danger");
+        return;
+    }
+    
+    // Simulate premium visual authorization delay
+    showNotification("Authorizing Payment", "Communicating securely with the bank gateway...", "info");
+    
+    setTimeout(() => {
+        closeModal("payment-gateway-modal");
+        processFlightBooking(activeBookingPath === "ticket", "gateway");
+    }, 1500);
+}
+
