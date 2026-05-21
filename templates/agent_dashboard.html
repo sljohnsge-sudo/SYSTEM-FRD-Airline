@@ -7,8 +7,11 @@
     <!-- Stylesheets & Fonts -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=1.0.5">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
     <!-- Chart.js and CDNs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 </head>
 <body>
 
@@ -84,7 +87,7 @@
                     <p>Access GDS, NDC, LCC ticketing systems from a unified console.</p>
                 </div>
                 
-                <div class="header-controls" style="display: flex; align-items: center; gap: 15px;">
+                <div class="header-controls" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
                     <!-- Premium Glassmorphic Currency Switcher -->
                     <div class="currency-widget" style="background: var(--panel-dark); border: 1px solid var(--border-dark); border-radius: 16px; padding: 12px 18px; display: flex; flex-direction: column; gap: 8px; box-shadow: var(--card-shadow); backdrop-filter: blur(12px); position: relative; overflow: hidden; align-items: flex-start;">
                         <span class="currency-label" style="font-size: 10.5px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; font-weight: 600;">Currency Selection</span>
@@ -221,7 +224,7 @@
                     <!-- Search widget -->
                     <div class="unified-search-panel">
                         <!-- Trip Type selector -->
-                        <div class="trip-type-selector" style="grid-column: 1 / -1; display: flex; gap: 10px; margin-bottom: 12px; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 30px; width: fit-content; border: 1px solid var(--border-dark);">
+                        <div class="trip-type-selector" style="display: flex; gap: 10px; margin-bottom: 12px; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 30px; width: fit-content; border: 1px solid var(--border-dark);">
                             <div class="trip-type-pill active" id="pill-roundtrip" onclick="setTripType('roundtrip')" style="padding: 6px 18px; border-radius: 20px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.25s ease; color: #fff; background: var(--primary-gradient);">
                                 <i class="fa-solid fa-arrows-left-right-to-line" style="margin-right: 6px;"></i>Return Ticket
                             </div>
@@ -250,11 +253,12 @@
                         </div>
                         <div class="search-input-group">
                             <label>Departure Date</label>
-                            <input type="date" id="flight-date" class="form-control" value="2026-05-28">
+                            <input type="text" id="flight-date" class="form-control date-picker" value="2026-05-28" placeholder="Select Departure Date">
                         </div>
                         <div class="search-input-group" id="return-date-container">
                             <label>Return Date</label>
-                            <input type="date" id="flight-return-date" class="form-control" placeholder="Optional">
+                            <input type="text" id="flight-return-date" class="form-control date-picker" placeholder="Optional (Select Return Date)">
+                            <span id="return-date-error" style="display:none; color:var(--danger); font-size:11px; margin-top:4px;"><i class="fa-solid fa-circle-exclamation"></i> Please select the return date</span>
                         </div>
                         <button class="btn-search" onclick="searchFlights()">
                             <i class="fa-solid fa-magnifying-glass"></i>
@@ -293,11 +297,11 @@
                         </div>
                         <div class="search-input-group">
                             <label>Check In</label>
-                            <input type="date" id="hotel-checkin" class="form-control" value="2026-06-01">
+                            <input type="text" id="hotel-checkin" class="form-control date-picker" value="2026-06-01" placeholder="Select Check-in Date">
                         </div>
                         <div class="search-input-group">
                             <label>Check Out</label>
-                            <input type="date" id="hotel-checkout" class="form-control" value="2026-06-05">
+                            <input type="text" id="hotel-checkout" class="form-control date-picker" value="2026-06-05" placeholder="Select Check-out Date">
                         </div>
                         <button class="btn-search" onclick="searchHotels()">
                             <i class="fa-solid fa-magnifying-glass"></i>
@@ -844,15 +848,21 @@
                     Choose your preferred payment method to complete the reservation.
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr; gap: 15px;">
-                    <!-- Option 1: Available Credit Balance -->
                     <div class="booking-opt-card" id="pay-opt-credit" onclick="selectPaymentMethod('credit')" style="padding: 20px;">
-                        <div class="opt-card-header">
-                            <i class="fa-solid fa-wallet" style="color:var(--primary); font-size: 20px;"></i>
-                            <span class="opt-card-title" style="font-size: 16px; font-weight: 700;">Available Credit Balance</span>
+                        <div class="opt-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-wallet" style="color:var(--primary); font-size: 20px;"></i>
+                                <span class="opt-card-title" style="font-size: 16px; font-weight: 700;">Available Credit Balance</span>
+                            </div>
+                            <strong id="modal-opt-avail-balance" style="color:var(--success); font-size: 14px;"></strong>
                         </div>
                         <p class="opt-card-desc" style="font-size: 12px; margin-top: 6px; color: var(--text-muted);">
                             Deduct the payment amount directly from your agency's credit wallet.
                         </p>
+                        <div style="margin-top: 12px; font-size: 13px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color:var(--text-muted);">Amount to Deduct:</span>
+                            <strong id="modal-opt-deduct-amount" style="color:var(--warning); font-size: 15px;"></strong>
+                        </div>
                     </div>
                     
                     <!-- Option 2: Payment Gateway -->
@@ -932,7 +942,19 @@
         </div>
     </div>
 
-    <!-- Script controller -->
+    <!-- Scripts -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}?v=1.0.5"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            flatpickr(".date-picker", {
+                dateFormat: "Y-m-d",
+                minDate: "today",
+                altInput: true,
+                altFormat: "F j, Y",
+            });
+        });
+    </script>
 </body>
 </html>

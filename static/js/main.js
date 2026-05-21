@@ -431,7 +431,19 @@ function searchFlights() {
     const dest = document.getElementById("flight-dest").value;
     const type = document.getElementById("flight-channel").value;
     const date = document.getElementById("flight-date") ? document.getElementById("flight-date").value : "";
-    const returnDate = document.getElementById("flight-return-date") ? document.getElementById("flight-return-date").value : "";
+    const returnDateInput = document.getElementById("flight-return-date");
+    const returnDate = returnDateInput ? returnDateInput.value : "";
+    const returnDateError = document.getElementById("return-date-error");
+    
+    if (returnDateError) returnDateError.style.display = "none";
+    if (returnDateInput) returnDateInput.style.borderColor = "";
+    
+    const isRoundTrip = document.getElementById("pill-roundtrip") && document.getElementById("pill-roundtrip").classList.contains("active");
+    if (isRoundTrip && !returnDate) {
+        if (returnDateError) returnDateError.style.display = "block";
+        if (returnDateInput) returnDateInput.style.borderColor = "var(--danger)";
+        return;
+    }
     
     const container = document.getElementById("flight-results-container");
     container.innerHTML = `<div style="text-align:center; padding:40px;"><i class="fa-solid fa-circle-notch fa-spin" style="font-size:32px; color:var(--primary);"></i><p style="margin-top:10px;">Interrogating GDS, LCC and NDC API databases...</p></div>`;
@@ -570,12 +582,10 @@ function setTripType(type) {
         }
         if (returnDateInput) {
             returnDateInput.value = "";
+            returnDateInput.style.borderColor = "";
         }
-        
-        // Adjust CSS grid layout columns dynamically to perfectly balance columns
-        if (searchPanel) {
-            searchPanel.style.gridTemplateColumns = "repeat(4, 1fr) auto";
-        }
+        const returnDateError = document.getElementById("return-date-error");
+        if (returnDateError) returnDateError.style.display = "none";
     } else {
         // Update Pills
         pillOneway.classList.remove("active");
@@ -589,11 +599,6 @@ function setTripType(type) {
         // Show return date
         if (returnDateContainer) {
             returnDateContainer.style.display = "flex";
-        }
-        
-        // Adjust CSS grid layout columns dynamically to original
-        if (searchPanel) {
-            searchPanel.style.gridTemplateColumns = "repeat(5, 1fr) auto";
         }
     }
 }
@@ -2266,6 +2271,16 @@ function openPaymentOptionsModal() {
     const gatewayOpt = document.getElementById("pay-opt-gateway");
     if (creditOpt) creditOpt.classList.remove("active");
     if (gatewayOpt) gatewayOpt.classList.remove("active");
+    
+    // Populate credit balance and deduct amount
+    const topbarCredit = document.getElementById("topbar-credit");
+    const summaryFare = document.getElementById("summary-total-fare");
+    
+    const availBalanceEl = document.getElementById("modal-opt-avail-balance");
+    if (availBalanceEl) availBalanceEl.innerText = topbarCredit ? topbarCredit.innerText : "$0.00";
+    
+    const deductAmountEl = document.getElementById("modal-opt-deduct-amount");
+    if (deductAmountEl) deductAmountEl.innerText = summaryFare ? summaryFare.innerText : "$0.00";
     
     openModal("payment-options-modal");
 }
