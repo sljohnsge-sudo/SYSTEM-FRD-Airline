@@ -153,22 +153,238 @@ def api_agent_topup():
         conn.close()
         return jsonify({"success": False, "error": str(e)}), 500
 
-# API: Search Flights (GDS, LCC, NDC consolidated)
-@app.route("/api/flights/search", methods=["GET"])
-def api_flights_search():
-    origin = request.args.get("origin", "").strip().upper()
-    destination = request.args.get("destination", "").strip().upper()
-    flight_type = request.args.get("flight_type", "ALL") # ALL, GDS, LCC, NDC
-    date_str = request.args.get("date", (datetime.datetime.now() + datetime.timedelta(days=7)).strftime("%Y-%m-%d")).strip()
-    
-    # Pre-fetch live GDS flights from Amadeus API and cache them in local database
-    if flight_type in ["ALL", "GDS"] and origin and destination:
+LOCATION_MAPPING = {
+    "SRI LANKA": "CMB",
+    "COLOMBO": "CMB",
+    "MALDIVES": "MLE",
+    "MALE": "MLE",
+    "LONDON": "LON",
+    "UNITED KINGDOM": "LON",
+    "UK": "LON",
+    "SINGAPORE": "SIN",
+    "DUBAI": "DXB",
+    "UAE": "DXB",
+    "UNITED ARAB EMIRATES": "DXB",
+    "DOHA": "DOH",
+    "QATAR": "DOH",
+    "SYDNEY": "SYD",
+    "AUSTRALIA": "SYD",
+    "NEW YORK": "JFK",
+    "USA": "JFK",
+    "UNITED STATES": "JFK",
+    "DELHI": "DEL",
+    "INDIA": "DEL",
+    "FRANCE": "CDG",
+    "PARIS": "CDG",
+    "GERMANY": "FRA",
+    "FRANKFURT": "FRA",
+    "MUNICH": "MUC",
+    "ITALY": "FCO",
+    "ROME": "FCO",
+    "SWITZERLAND": "ZRH",
+    "ZURICH": "ZRH",
+    "JAPAN": "HND",
+    "TOKYO": "HND",
+    "MALAYSIA": "KUL",
+    "KUALA LUMPUR": "KUL",
+    "THAILAND": "BKK",
+    "BANGKOK": "BKK",
+    "SAUDI ARABIA": "RUH",
+    "RIYADH": "RUH",
+    "JEDDAH": "JED",
+    "CHINA": "PEK",
+    "BEIJING": "PEK",
+    "CANADA": "YYZ",
+    "TORONTO": "YYZ"
+}
+
+POPULAR_LOCATIONS = [
+    {"city": "Colombo", "code": "CMB", "name": "Bandaranaike Intl Arpt", "country": "SRI LANKA", "country_code": "LK"},
+    {"city": "Jaffna", "code": "JAF", "name": "Jaffna Intl Arpt", "country": "SRI LANKA", "country_code": "LK"},
+    {"city": "Delhi", "code": "DEL", "name": "Delhi Indira Gandhi Intl", "country": "INDIA", "country_code": "IN"},
+    {"city": "Chennai", "code": "MAA", "name": "Chennai Arpt", "country": "INDIA", "country_code": "IN"},
+    {"city": "Mumbai", "code": "BOM", "name": "Chhatrapati Shivaji Maharaj Intl", "country": "INDIA", "country_code": "IN"},
+    {"city": "Bangalore", "code": "BLR", "name": "Kempegowda Intl", "country": "INDIA", "country_code": "IN"},
+    {"city": "Singapore", "code": "SIN", "name": "Changi Arpt", "country": "SINGAPORE", "country_code": "SG"},
+    {"city": "Male", "code": "MLE", "name": "Velana Intl Arpt", "country": "MALDIVES", "country_code": "MV"},
+    {"city": "London", "code": "LHR", "name": "London Heathrow Arpt", "country": "UNITED KINGDOM", "country_code": "GB"},
+    {"city": "London", "code": "LGW", "name": "London Gatwick Arpt", "country": "UNITED KINGDOM", "country_code": "GB"},
+    {"city": "Dubai", "code": "DXB", "name": "Dubai Intl Arpt", "country": "UNITED ARAB EMIRATES", "country_code": "AE"},
+    {"city": "Abu Dhabi", "code": "AUH", "name": "Abu Dhabi Intl Arpt", "country": "UNITED ARAB EMIRATES", "country_code": "AE"},
+    {"city": "Doha", "code": "DOH", "name": "Hamad Intl Arpt", "country": "QATAR", "country_code": "QA"},
+    {"city": "Sydney", "code": "SYD", "name": "Sydney Kingsford Smith Arpt", "country": "AUSTRALIA", "country_code": "AU"},
+    {"city": "Melbourne", "code": "MEL", "name": "Melbourne Arpt", "country": "AUSTRALIA", "country_code": "AU"},
+    {"city": "New York", "code": "JFK", "name": "John F. Kennedy Intl", "country": "UNITED STATES", "country_code": "US"},
+    {"city": "New York", "code": "LGA", "name": "LaGuardia Arpt", "country": "UNITED STATES", "country_code": "US"},
+    {"city": "Newark", "code": "EWR", "name": "Newark Liberty Intl", "country": "UNITED STATES", "country_code": "US"},
+    {"city": "Paris", "code": "CDG", "name": "Charles de Gaulle Arpt", "country": "FRANCE", "country_code": "FR"},
+    {"city": "Frankfurt", "code": "FRA", "name": "Frankfurt Arpt", "country": "GERMANY", "country_code": "DE"},
+    {"city": "Munich", "code": "MUC", "name": "Munich Arpt", "country": "GERMANY", "country_code": "DE"},
+    {"city": "Rome", "code": "FCO", "name": "Leonardo da Vinci-Fiumicino Arpt", "country": "ITALY", "country_code": "IT"},
+    {"city": "Zurich", "code": "ZRH", "name": "Zurich Arpt", "country": "SWITZERLAND", "country_code": "CH"},
+    {"city": "Tokyo", "code": "HND", "name": "Haneda Arpt", "country": "JAPAN", "country_code": "JP"},
+    {"city": "Tokyo", "code": "NRT", "name": "Narita Intl Arpt", "country": "JAPAN", "country_code": "JP"},
+    {"city": "Kuala Lumpur", "code": "KUL", "name": "Kuala Lumpur Intl", "country": "MALAYSIA", "country_code": "MY"},
+    {"city": "Bangkok", "code": "BKK", "name": "Suvarnabhumi Arpt", "country": "THAILAND", "country_code": "TH"},
+    {"city": "Riyadh", "code": "RUH", "name": "King Khalid Intl Arpt", "country": "SAUDI ARABIA", "country_code": "SA"},
+    {"city": "Jeddah", "code": "JED", "name": "King Abdulaziz Intl Arpt", "country": "SAUDI ARABIA", "country_code": "SA"},
+    {"city": "Beijing", "code": "PEK", "name": "Beijing Capital Intl", "country": "CHINA", "country_code": "CN"},
+    {"city": "Toronto", "code": "YYZ", "name": "Toronto Pearson Intl", "country": "CANADA", "country_code": "CA"}
+]
+
+def get_country_flag(country_code):
+    if not country_code or len(country_code) != 2:
+        return ""
+    try:
+        c1, c2 = country_code.upper()
+        return chr(127397 + ord(c1)) + chr(127397 + ord(c2))
+    except Exception:
+        return ""
+
+def resolve_iata_code(keyword, amadeus_client=None):
+    if not keyword:
+        return None
+        
+    # Extract 3-letter code from parentheses if present (e.g., "Colombo, Sri Lanka (CMB)" -> "CMB")
+    import re
+    match = re.search(r'\(([A-Z]{3})\)', keyword.upper())
+    if match:
+        return match.group(1)
+        
+    val = keyword.strip().upper()
+    if len(val) == 3 and val.isalpha():
+        return val
+    # Check local mapping
+    if val in LOCATION_MAPPING:
+        return LOCATION_MAPPING[val]
+    # Fallback to Amadeus Location Search API
+    if amadeus_client:
         try:
-            amadeus = Client(
+            response = amadeus_client.reference_data.locations.get(
+                keyword=keyword,
+                subType='CITY'
+            )
+            if response.data:
+                return response.data[0].get('iataCode') or response.data[0].get('address', {}).get('cityCode')
+        except Exception as e:
+            print(f"Error resolving location '{keyword}':", e)
+    return None
+
+# API: Autocomplete Search Locations
+@app.route("/api/locations/search", methods=["GET"])
+def api_locations_search():
+    q = request.args.get("q", "").strip().upper()
+    
+    # Filter local popular locations first
+    matches = []
+    seen_codes = set()
+    
+    for loc in POPULAR_LOCATIONS:
+        # Match against city, country, or code
+        if not q or q in loc["city"].upper() or q in loc["country"].upper() or q in loc["code"].upper():
+            matches.append(loc.copy())
+            seen_codes.add(loc["code"])
+            
+    # Then query Amadeus Reference Data API if we have a query
+    if q and len(q) >= 2:
+        try:
+            amadeus_client = Client(
                 client_id='3ZBEyT1bTUzMUPkcEPBUOEKIAkEjgu5o',
                 client_secret='2K9Xh5GC2UF9rVo3',
                 hostname='test'
             )
+            response = amadeus_client.reference_data.locations.get(
+                keyword=q,
+                subType='AIRPORT,CITY'
+            )
+            if response.data:
+                for item in response.data:
+                    code = item.get('iataCode') or item.get('address', {}).get('cityCode')
+                    if not code or code in seen_codes:
+                        continue
+                    
+                    address = item.get('address', {})
+                    country_name = address.get('countryName', '').upper()
+                    country_code = address.get('countryCode', '').upper()
+                    city_name = address.get('cityName', '').title() or item.get('name', '').title()
+                    airport_name = item.get('name', '').title()
+                    
+                    if not country_name:
+                        continue
+                        
+                    loc = {
+                        "city": city_name,
+                        "code": code,
+                        "name": f"{airport_name} Arpt" if "Airport" not in airport_name and "Intl" not in airport_name else airport_name,
+                        "country": country_name,
+                        "country_code": country_code
+                    }
+                    matches.append(loc)
+                    seen_codes.add(code)
+        except Exception as e:
+            print("Amadeus Reference Data search error:", e)
+            
+    # Group results by country
+    grouped = {}
+    for loc in matches:
+        country = loc["country"]
+        if country not in grouped:
+            grouped[country] = {
+                "country": country,
+                "flag": get_country_flag(loc["country_code"]),
+                "locations": []
+            }
+        grouped[country]["locations"].append({
+            "city": loc["city"],
+            "code": loc["code"],
+            "name": loc["name"]
+        })
+        
+    # Format as list sorted by country name, prioritizing SRI LANKA
+    sorted_groups = []
+    countries = sorted(list(grouped.keys()))
+    if "SRI LANKA" in countries:
+        countries.remove("SRI LANKA")
+        countries.insert(0, "SRI LANKA")
+        
+    for country in countries:
+        sorted_groups.append(grouped[country])
+        
+    return jsonify({"success": True, "groups": sorted_groups})
+
+# API: Search Flights (GDS, LCC, NDC consolidated)
+@app.route("/api/flights/search", methods=["GET"])
+def api_flights_search():
+    origin_input = request.args.get("origin", "").strip()
+    destination_input = request.args.get("destination", "").strip()
+    flight_type = request.args.get("flight_type", "ALL") # ALL, GDS, LCC, NDC
+    date_str = request.args.get("date", "").strip()
+    
+    # Initialize Amadeus client to resolve locations and query flight offers
+    amadeus = None
+    try:
+        amadeus = Client(
+            client_id='3ZBEyT1bTUzMUPkcEPBUOEKIAkEjgu5o',
+            client_secret='2K9Xh5GC2UF9rVo3',
+            hostname='test'
+        )
+    except Exception as e:
+        print("Failed to initialize Amadeus Client:", e)
+        
+    origin = resolve_iata_code(origin_input, amadeus)
+    destination = resolve_iata_code(destination_input, amadeus)
+    
+    # Fallback to uppercase values if resolution failed to prevent completely empty SQL matching
+    if not origin:
+        origin = origin_input.upper()
+    if not destination:
+        destination = destination_input.upper()
+    
+    amadeus_flight_ids = []
+    
+    # Pre-fetch live GDS flights from Amadeus API and cache them in local database
+    if flight_type in ["ALL", "GDS"] and origin and destination and date_str:
+        try:
             response = amadeus.shopping.flight_offers_search.get(
                 originLocationCode=origin,
                 destinationLocationCode=destination,
@@ -187,43 +403,58 @@ def api_flights_search():
                 # Keep first 19 chars for mysql datetime format (YYYY-MM-DD HH:MM:SS)
                 dept = segments[0]['departure']['at'].replace('T', ' ')[:19]
                 arr = segments[-1]['arrival']['at'].replace('T', ' ')[:19]
+                seg_count = len(segments)
                 
-                # Avoid duplicates
+                # Avoid duplicates and track IDs of fetched flights
                 cursor.execute("SELECT id FROM flights WHERE flight_number = %s AND departure_time = %s", (flight_no, dept))
-                if not cursor.fetchone():
+                row = cursor.fetchone()
+                if row:
+                    amadeus_flight_ids.append(row[0])
+                else:
                     cursor.execute("""
-                        INSERT INTO flights (flight_number, airline, origin, destination, departure_time, arrival_time, price, seats_available, flight_type)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'GDS')
-                    """, (flight_no, airline, origin, destination, dept, arr, price_val, f.get('numberOfBookableSeats', 9)))
+                        INSERT INTO flights (flight_number, airline, origin, destination, departure_time, arrival_time, price, seats_available, flight_type, segment_count)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'GDS', %s)
+                    """, (flight_no, airline, origin, destination, dept, arr, price_val, f.get('numberOfBookableSeats', 9), seg_count))
+                    amadeus_flight_ids.append(cursor.lastrowid)
             conn.commit()
             cursor.close()
             conn.close()
         except Exception as e:
             print("Amadeus API error:", e)
-
-    query = "SELECT * FROM flights WHERE 1=1"
-    params = []
-    
-    if origin:
-        query += " AND origin = %s"
-        params.append(origin)
-    if destination:
-        query += " AND destination = %s"
-        params.append(destination)
-    if flight_type != "ALL":
-        query += " AND flight_type = %s"
-        params.append(flight_type)
-        
-    query += " ORDER BY price ASC"
-    
-    flights = query_db(query, tuple(params))
+ 
+    # Query only the retrieved Amadeus flight IDs if parameters are fully specified
+    if origin and destination and date_str:
+        if amadeus_flight_ids:
+            format_strings = ','.join(['%s'] * len(amadeus_flight_ids))
+            query = f"SELECT * FROM flights WHERE id IN ({format_strings}) ORDER BY price ASC"
+            params = amadeus_flight_ids
+            flights = query_db(query, tuple(params))
+        else:
+            flights = []
+    else:
+        # Fallback for initial load or general listing to keep other non-search components operational
+        query = "SELECT * FROM flights WHERE 1=1"
+        params = []
+        if origin:
+            query += " AND origin = %s"
+            params.append(origin)
+        if destination:
+            query += " AND destination = %s"
+            params.append(destination)
+        if date_str:
+            query += " AND DATE(departure_time) = %s"
+            params.append(date_str)
+        if flight_type != "ALL":
+            query += " AND flight_type = %s"
+            params.append(flight_type)
+        query += " ORDER BY price ASC"
+        flights = query_db(query, tuple(params))
     
     # Format decimals for JSON
     for f in flights:
         f["price"] = float(f["price"])
         f["departure_time"] = f["departure_time"].isoformat()
         f["arrival_time"] = f["arrival_time"].isoformat()
-        f["segment_count"] = 1
         
     return jsonify({"success": True, "flights": flights})
 
@@ -329,11 +560,82 @@ def api_flights_book():
 def api_hotels_search():
     location = request.args.get("location", "").strip()
     
+    # Call Amadeus API if location is provided
+    if location:
+        try:
+            amadeus = Client(
+                client_id='3ZBEyT1bTUzMUPkcEPBUOEKIAkEjgu5o',
+                client_secret='2K9Xh5GC2UF9rVo3',
+                hostname='test'
+            )
+            
+            # Resolve City Code if not a 3-letter code
+            city_code = None
+            if len(location) == 3 and location.isalpha():
+                city_code = location.upper()
+            else:
+                loc_response = amadeus.reference_data.locations.get(
+                    keyword=location,
+                    subType='CITY'
+                )
+                if loc_response.data:
+                    city_code = loc_response.data[0]['address']['cityCode']
+                    
+            if city_code:
+                # Get hotels in that city
+                hotels_response = amadeus.reference_data.locations.hotels.by_city.get(
+                    cityCode=city_code
+                )
+                
+                if hotels_response.data:
+                    conn = get_db_connection()
+                    cursor = conn.cursor(dictionary=True)
+                    # Limit to top 5 hotels to avoid performance issues
+                    for h_data in hotels_response.data[:5]:
+                        hotel_name = h_data['name'].title()
+                        hotel_loc = f"{h_data['address'].get('cityName', city_code).title()}, {h_data['address'].get('countryCode', '')}"
+                        
+                        # Check if hotel already exists
+                        cursor.execute("SELECT id FROM hotels WHERE name = %s", (hotel_name,))
+                        existing = cursor.fetchone()
+                        
+                        if not existing:
+                            # Insert hotel
+                            desc = f"A premium hotel in {hotel_loc} sourced via Amadeus GDS. Offers comfortable lodging and premium amenities."
+                            # Random rating from 3 to 5
+                            rating = random.randint(3, 5)
+                            # Pick a random placeholder image or generic name
+                            img_url = f"hotel_{city_code.lower()}_{random.randint(1,3)}.jpg"
+                            
+                            cursor.execute("""
+                                INSERT INTO hotels (name, location, rating, description, image_url)
+                                VALUES (%s, %s, %s, %s, %s)
+                            """, (hotel_name, hotel_loc, rating, desc, img_url))
+                            hotel_id = cursor.lastrowid
+                            
+                            # Insert rooms for this hotel
+                            rooms_data = [
+                                ('Standard Single Room', Decimal(str(random.randint(80, 150)))),
+                                ('Deluxe Double Room', Decimal(str(random.randint(180, 300)))),
+                                ('Executive Luxury Suite', Decimal(str(random.randint(400, 750))))
+                            ]
+                            for room_type, price in rooms_data:
+                                cursor.execute("""
+                                    INSERT INTO rooms (hotel_id, room_type, price_per_night, availability)
+                                    VALUES (%s, %s, %s, 1)
+                                """, (hotel_id, room_type, price))
+                    conn.commit()
+                    cursor.close()
+                    conn.close()
+        except Exception as e:
+            print("Amadeus Hotel API error:", e)
+
     query = "SELECT * FROM hotels WHERE 1=1"
     params = []
     
     if location:
-        query += " AND location LIKE %s"
+        query += " AND (location LIKE %s OR name LIKE %s)"
+        params.append(f"%{location}%")
         params.append(f"%{location}%")
         
     hotels = query_db(query, tuple(params))

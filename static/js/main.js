@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", function () {
         loadBookings();
         loadSupportTickets();
         loadTimaticLogs();
+        initAutocompleteSearch();
     } else if (document.getElementById("admin-total-turnover")) {
         // Admin initialization
         updateAdminUI();
@@ -174,6 +175,120 @@ function submitTopup() {
         }
     });
 }
+
+// Autocomplete search integration
+function initAutocompleteSearch() {
+    const originInput = document.getElementById("flight-origin");
+    const destInput = document.getElementById("flight-dest");
+    
+    if (!originInput || !destInput) return;
+    
+    setupAutocompleteForInput(originInput, "flight-origin-dropdown");
+    setupAutocompleteForInput(destInput, "flight-dest-dropdown");
+}
+
+function setupAutocompleteForInput(input, dropdownId) {
+    const dropdown = document.getElementById(dropdownId);
+    if (!dropdown) return;
+    
+    let debounceTimer = null;
+    
+    function fetchAndShowSuggestions(forcedQuery) {
+        const query = typeof forcedQuery === "string" ? forcedQuery : input.value.trim();
+        
+        fetch(`/api/locations/search?q=${encodeURIComponent(query)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.groups.length > 0) {
+                    dropdown.innerHTML = "";
+                    
+                    data.groups.forEach(group => {
+                        // Create country header
+                        const header = document.createElement("div");
+                        header.className = "autocomplete-country-header";
+                        header.innerHTML = `
+                            <span>${group.country}</span>
+                            <span class="autocomplete-country-flag">${group.flag}</span>
+                        `;
+                        dropdown.appendChild(header);
+                        
+                        // Create items for locations in this country
+                        group.locations.forEach(loc => {
+                            const item = document.createElement("div");
+                            item.className = "autocomplete-item";
+                            item.innerHTML = `
+                                <div class="autocomplete-item-details">
+                                    <div class="autocomplete-item-city">${loc.city}</div>
+                                    <div class="autocomplete-item-airport">${loc.name}</div>
+                                </div>
+                                <div class="autocomplete-item-code">${loc.code}</div>
+                            `;
+                            
+                            item.addEventListener("click", function(e) {
+                                e.stopPropagation();
+                                const formattedCountry = group.country.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+                                input.value = `${loc.city}, ${formattedCountry} (${loc.code})`;
+                                dropdown.style.display = "none";
+                            });
+                            
+                            dropdown.appendChild(item);
+                        });
+                    });
+                    
+                    dropdown.style.display = "block";
+                } else {
+                    dropdown.style.display = "none";
+                }
+            })
+            .catch(err => {
+                console.error("Autocomplete search error:", err);
+                dropdown.style.display = "none";
+            });
+    }
+    
+    // Focus listener
+    input.addEventListener("focus", function() {
+        input.select();
+        const val = input.value.trim();
+        if (!val || val.length === 3 || /\([A-Z]{3}\)$/i.test(val)) {
+            fetchAndShowSuggestions("");
+        } else {
+            fetchAndShowSuggestions();
+        }
+    });
+    
+    // Input listener with debounce
+    input.addEventListener("input", function() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            fetchAndShowSuggestions();
+        }, 150);
+    });
+    
+    // Stop propagation on clicks inside the dropdown/input to prevent document listener from closing it
+    dropdown.addEventListener("click", function(e) {
+        e.stopPropagation();
+    });
+    
+    input.addEventListener("click", function(e) {
+        e.stopPropagation();
+        input.select();
+        const val = input.value.trim();
+        if (!val || val.length === 3 || /\([A-Z]{3}\)$/i.test(val)) {
+            fetchAndShowSuggestions("");
+        } else {
+            fetchAndShowSuggestions();
+        }
+    });
+}
+
+// Global click listener to close dropdowns when clicking outside
+document.addEventListener("click", function() {
+    const originDropdown = document.getElementById("flight-origin-dropdown");
+    const destDropdown = document.getElementById("flight-dest-dropdown");
+    if (originDropdown) originDropdown.style.display = "none";
+    if (destDropdown) destDropdown.style.display = "none";
+});
 
 // Flight Search Logic
 function searchFlights() {

@@ -198,11 +198,13 @@
                     <div class="unified-search-panel">
                         <div class="search-input-group">
                             <label>Origin Airport</label>
-                            <input type="text" id="flight-origin" class="form-control" placeholder="e.g. CMB" value="CMB">
+                            <input type="text" id="flight-origin" class="form-control" placeholder="e.g. CMB" value="CMB" autocomplete="off">
+                            <div class="autocomplete-dropdown" id="flight-origin-dropdown"></div>
                         </div>
                         <div class="search-input-group">
                             <label>Destination Airport</label>
-                            <input type="text" id="flight-dest" class="form-control" placeholder="e.g. MLE" value="MLE">
+                            <input type="text" id="flight-dest" class="form-control" placeholder="e.g. MLE" value="MLE" autocomplete="off">
+                            <div class="autocomplete-dropdown" id="flight-dest-dropdown"></div>
                         </div>
                         <div class="search-input-group">
                             <label>Fare Segment Channel</label>
