@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATL Admin Console - Flight & Hotel Booking System</title>
+    <!-- Stylesheets & Fonts -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="app-sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon" style="background: var(--accent-gradient);">
+                    <i class="fa-solid fa-screwdriver-wrench" style="color: #fff;"></i>
+                </div>
+                <div class="brand-text" style="background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">ATL Admin</div>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <a class="menu-item active" onclick="switchAdminTab('dashboard')">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Admin Dashboard</span>
+                </a>
+                <a class="menu-item" onclick="switchAdminTab('agents')">
+                    <i class="fa-solid fa-users-gear"></i>
+                    <span>Manage Agents</span>
+                </a>
+                <a class="menu-item" onclick="switchAdminTab('fees')">
+                    <i class="fa-solid fa-tags"></i>
+                    <span>Fee Configuration</span>
+                </a>
+                <a class="menu-item" onclick="switchAdminTab('reports')">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                    <span>Reports Console</span>
+                </a>
+                <a class="menu-item" onclick="switchAdminTab('notices')">
+                    <i class="fa-solid fa-bullhorn"></i>
+                    <span>System Notices</span>
+                </a>
+                <a class="menu-item" onclick="switchAdminTab('tickets')">
+                    <i class="fa-solid fa-headset"></i>
+                    <span>Support Queue</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="profile-avatar" style="background: #e11d48;">
+                        {{ admin.username[0].upper() }}
+                    </div>
+                    <div class="profile-info">
+                        <div class="profile-name">{{ admin.company_name }}</div>
+                        <div class="profile-role">ATL Operations Admin</div>
+                    </div>
+                </div>
+                <a href="{{ url_for('logout') }}" class="btn-logout">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Logout Console</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="app-content">
+            
+            <!-- Content Header -->
+            <header class="content-header">
+                <div class="welcome-section">
+                    <h1>ATL System Administrator</h1>
+                    <p>Manage B2B contracts, adjust service fees, and evaluate transaction reports.</p>
+                </div>
+                
+                <div style="font-size:12px; color: var(--text-muted); background: var(--panel-dark); padding: 10px 20px; border-radius:10px; border:1px solid var(--border-dark);">
+                    <span>System Status: <strong style="color:var(--success);"><i class="fa-solid fa-circle-check"></i> LIVE (XAMPP MariaDB)</strong></span>
+                </div>
+            </header>
+
+            <!-- ========================================================= -->
+            <!-- TAB: ADMIN DASHBOARD OVERVIEW -->
+            <!-- ========================================================= -->
+            <section id="tab-dashboard" class="tab-content-panel active">
+                <!-- Stat Cards -->
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Cumulative Turnover</span>
+                            <div class="stat-icon success"><i class="fa-solid fa-money-bill-trend-up"></i></div>
+                        </div>
+                        <div class="stat-value" id="admin-total-turnover">$0.00</div>
+                        <div class="stat-footer">
+                            <span>All ticketed flights & hotels</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Gross Profit (GP)</span>
+                            <div class="stat-icon primary"><i class="fa-solid fa-coins"></i></div>
+                        </div>
+                        <div class="stat-value" id="admin-total-gp">$0.00</div>
+                        <div class="stat-footer">
+                            <span class="trend-up"><i class="fa-solid fa-circle-check"></i> From configured service fees</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Active B2B Agents</span>
+                            <div class="stat-icon warning"><i class="fa-solid fa-users"></i></div>
+                        </div>
+                        <div class="stat-value" id="admin-total-agents">0</div>
+                        <div class="stat-footer">
+                            <span>Onboarded travel shops</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Helpdesk Queue</span>
+                            <div class="stat-icon danger"><i class="fa-solid fa-headset"></i></div>
+                        </div>
+                        <div class="stat-value" id="admin-open-tickets">0</div>
+                        <div class="stat-footer">
+                            <span class="trend-down"><i class="fa-solid fa-triangle-exclamation"></i> Open tickets pending resolve</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 3fr 2fr; gap: 24px;">
+                    <!-- Top 5 B2B Agents -->
+                    <div class="content-card" style="margin-bottom:0;">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <i class="fa-solid fa-trophy" style="color:var(--warning);"></i>
+                                <span>Top 5 Performing B2B Agents</span>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Agent Shop</th>
+                                        <th>Company Name</th>
+                                        <th>Current Credit</th>
+                                        <th>Cumulative Turnover</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-top-agents-table">
+                                    <!-- Loaded dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- GDS Segment Counts doughnut chart card -->
+                    <div class="content-card" style="margin-bottom:0; display:flex; flex-direction:column; justify-content:space-between;">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <i class="fa-solid fa-chart-pie" style="color:var(--primary);"></i>
+                                <span>GDS Segment Count Share</span>
+                            </div>
+                        </div>
+                        <div class="report-chart-container" style="height: 220px; border:none; background:transparent;">
+                            <canvas id="admin-segment-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- TAB: MANAGE AGENTS & ONBOARDING -->
+            <!-- ========================================================= -->
+            <section id="tab-agents" class="tab-content-panel">
+                <div style="display: grid; grid-template-columns: 3fr 2fr; gap:24px;">
+                    <!-- Onboarded Agents list -->
+                    <div class="content-card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <i class="fa-solid fa-users"></i>
+                                <span>Active Onboarded B2B Agents</span>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="custom-table" style="font-size:13px;">
+                                <thead>
+                                    <tr>
+                                        <th>Username</th>
+                                        <th>Company</th>
+                                        <th>Credit Balance</th>
+                                        <th>Onboarded</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-agents-table">
+                                    <!-- Loaded dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Onboarding Registration Form -->
+                    <div class="content-card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <i class="fa-solid fa-user-plus"></i>
+                                <span>Comprehensive Agent Onboarding</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Agent Login Username</label>
+                            <input type="text" id="onboard-username" class="form-control" placeholder="e.g. fast_travels">
+                        </div>
+                        <div class="form-group">
+                            <label>Secure Password</label>
+                            <input type="password" id="onboard-password" class="form-control" placeholder="••••••••" value="agent123">
+                        </div>
+                        <div class="form-group">
+                            <label>Agent Email Address</label>
+                            <input type="email" id="onboard-email" class="form-control" placeholder="e.g. contact@fasttravels.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Company Legal Name</label>
+                            <input type="text" id="onboard-company" class="form-control" placeholder="e.g. Fast Travels Ltd">
+                        </div>
+                        <div class="form-group">
+                            <label>Contact Phone</label>
+                            <input type="text" id="onboard-phone" class="form-control" placeholder="+9411223344">
+                        </div>
+                        <div class="form-group">
+                            <label>Initial Credit Balance ($USD)</label>
+                            <input type="number" id="onboard-credit" class="form-control" placeholder="0.00" value="5000">
+                        </div>
+                        <button class="btn-primary" onclick="submitOnboardAgent()">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>Register Agent</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- TAB: FEE CONFIGURATION (MARKUP/MARKDOWN) -->
+            <!-- ========================================================= -->
+            <section id="tab-fees" class="tab-content-panel">
+                <div class="content-card" style="max-width: 800px;">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-tags"></i>
+                            <span>Service Fee Markup & Markdown Configuration</span>
+                        </div>
+                    </div>
+                    <p style="color: var(--text-muted); font-size:13.5px; margin-bottom:25px;">
+                        Configure service fees for different transactions. Markups are added to GDS base fares and represent direct agency profit.
+                    </p>
+                    
+                    <div class="table-responsive">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Transaction Type</th>
+                                    <th>Fee Configuration Type</th>
+                                    <th>Configured Fee Amount ($USD)</th>
+                                    <th>Edit & Save</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-fees-table">
+                                <!-- Loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- TAB: REPORTS CONSOLE -->
+            <!-- ========================================================= -->
+            <section id="tab-reports" class="tab-content-panel">
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-file-invoice-dollar"></i>
+                            <span>Turnover & Gross Profit Analytical Reporting Panel</span>
+                        </div>
+                        <!-- Agent Filter dropdown -->
+                        <div class="search-input-group" style="flex-direction:row; align-items:center; gap:10px;">
+                            <label style="margin:0; white-space:nowrap;">Filter Agent:</label>
+                            <select id="reports-agent-filter" class="form-control" style="width: 220px;" onchange="loadAdminReports()">
+                                <option value="all">All Agents Consolidated</option>
+                                <!-- Loaded dynamically -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Chart widgets -->
+                    <div class="reports-dashboard-top">
+                        <div class="report-chart-container">
+                            <canvas id="admin-chart-turnover"></canvas>
+                        </div>
+                        <div class="report-chart-container">
+                            <canvas id="admin-chart-gp"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Airline Splits and Destination Splits report tables side by side -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap:24px; margin-top:30px;">
+                        <div>
+                            <h3 style="font-size:16px; margin-bottom:15px; color:var(--text-muted);"><i class="fa-solid fa-plane"></i> Ticket Volumes & GP by Airline</h3>
+                            <div class="table-responsive">
+                                <table class="custom-table" style="font-size:13px;">
+                                    <thead>
+                                        <tr>
+                                            <th>Airline</th>
+                                            <th>Tickets Count</th>
+                                            <th>Turnover</th>
+                                            <th>Gross Profit</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="reports-airline-table">
+                                        <!-- Loaded dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 style="font-size:16px; margin-bottom:15px; color:var(--text-muted);"><i class="fa-solid fa-location-dot"></i> Booking Volumes & GP by Destination</h3>
+                            <div class="table-responsive">
+                                <table class="custom-table" style="font-size:13px;">
+                                    <thead>
+                                        <tr>
+                                            <th>Destination Sector</th>
+                                            <th>Bookings Count</th>
+                                            <th>Turnover</th>
+                                            <th>Gross Profit</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="reports-dest-table">
+                                        <!-- Loaded dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- TAB: BROADCASTER notices/alerts -->
+            <!-- ========================================================= -->
+            <section id="tab-notices" class="tab-content-panel">
+                <div class="content-card" style="max-width: 600px;">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-bullhorn"></i>
+                            <span>System Advisory & Pop-up Alert Broadcaster</span>
+                        </div>
+                    </div>
+                    <p style="color:var(--text-muted); font-size:13.5px; margin-bottom:20px;">
+                        Broadcast popup advisories or messages to all B2B agents immediately upon page loads (e.g. credit updates, special NDC fare notifications).
+                    </p>
+                    
+                    <div class="form-group">
+                        <label>Broadcast Notice Text</label>
+                        <textarea id="broadcast-message" class="form-control" rows="5" placeholder="Type maintenance warnings or special NDC fare alerts..."></textarea>
+                    </div>
+                    <button class="btn-primary" onclick="submitBroadcastNotice()">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>Broadcast Alert Live</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- TAB: TICKETS SUPPORT QUEUE -->
+            <!-- ========================================================= -->
+            <section id="tab-tickets" class="tab-content-panel">
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-headset"></i>
+                            <span>B2B Agents Feedback & Support Ticket Queue</span>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Submit Date</th>
+                                    <th>Agent Shop</th>
+                                    <th>Subject Topic</th>
+                                    <th>Inquiry Description</th>
+                                    <th>Status Status</th>
+                                    <th>Resolve Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-tickets-table">
+                                <!-- Loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- MODAL OVERLAY: ADJUST CREDIT BALANCE -->
+    <!-- ========================================================= -->
+    <div class="modal-overlay" id="adjust-credit-modal">
+        <div class="modal-box" style="max-width: 440px;">
+            <div class="modal-header">
+                <span class="modal-title">Adjust Agent Credit Balance</span>
+                <button class="modal-close" onclick="closeModal('adjust-credit-modal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="adjust-credit-agent-id">
+                <div style="background: rgba(255,255,255,0.03); padding:12px; border-radius:8px; margin-bottom:20px; font-size:13.5px;">
+                    Agent: <strong id="adjust-credit-agent-name" style="color:var(--primary);">Agent</strong><br>
+                    Current Wallet: <strong id="adjust-credit-agent-current" style="color:var(--success);">$0.00</strong>
+                </div>
+                
+                <div class="form-group">
+                    <label>Adjustment Value ($USD)</label>
+                    <input type="number" id="adjust-credit-amount" class="form-control" placeholder="Use negative for deductions (e.g. -200)" required>
+                </div>
+                <div class="form-group">
+                    <label>Audit Log Reason</label>
+                    <input type="text" id="adjust-credit-reason" class="form-control" placeholder="e.g. Received Bank Transfer TXN-1284">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal('adjust-credit-modal')">Cancel</button>
+                <button class="btn-primary" onclick="submitAdjustCredit()">Apply Adjustment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dynamic administrative controller script -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome - Flight Hub Consolidated B2B Travel Portal</title>
+    <!-- CSS & FontAwesome -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Specific Styles for Landing Welcome Page */
+        .landing-navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 8%;
+            background: rgba(10, 15, 26, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-dark);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        .landing-navbar .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 22px;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .landing-navbar .logo i {
+            color: var(--primary);
+            -webkit-text-fill-color: initial;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14.5px;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #fff;
+        }
+
+        .btn-nav-login {
+            background: var(--primary-gradient);
+            color: #fff !important;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            box-shadow: var(--glow-shadow);
+            transition: all 0.3s;
+        }
+
+        .btn-nav-login:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 0 18px rgba(0, 242, 254, 0.6);
+        }
+
+        .hero-section {
+            padding: 160px 8% 80px 8%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            min-height: 85vh;
+            justify-content: center;
+            position: relative;
+        }
+
+        .hero-badge {
+            background: rgba(0, 242, 254, 0.1);
+            border: 1px solid rgba(0, 242, 254, 0.2);
+            color: var(--primary);
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 12.5px;
+            font-weight: 600;
+            margin-bottom: 25px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .hero-title {
+            font-size: 56px;
+            font-weight: 800;
+            font-family: 'Outfit', sans-serif;
+            line-height: 1.15;
+            margin-bottom: 20px;
+            max-width: 900px;
+            background: linear-gradient(135deg, #fff 30%, var(--text-muted) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-desc {
+            font-size: 18px;
+            color: var(--text-muted);
+            max-width: 650px;
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn-hero-primary {
+            background: var(--primary-gradient);
+            color: #fff;
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            box-shadow: var(--glow-shadow);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-hero-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(0, 242, 254, 0.7);
+        }
+
+        .btn-hero-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-dark);
+            color: #fff;
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .btn-hero-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            padding: 40px 8% 100px 8%;
+        }
+
+        .feature-card {
+            background: var(--panel-dark);
+            border: 1px solid var(--border-dark);
+            border-radius: 20px;
+            padding: 35px;
+            backdrop-filter: blur(12px);
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: var(--card-shadow);
+        }
+
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 242, 254, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: var(--primary);
+            margin-bottom: 22px;
+        }
+
+        .feature-card h3 {
+            font-size: 20px;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Landing Navbar -->
+    <nav class="landing-navbar">
+        <div class="logo">
+            <i class="fa-solid fa-plane-departure"></i>
+            <span>Flight Hub</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#features">Features</a></li>
+            <li><a href="#about">About B2B</a></li>
+            <li><a href="{{ url_for('login') }}" class="btn-nav-login">Enter Portal</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero Landing Area -->
+    <section class="hero-section">
+        <div class="hero-badge">
+            <i class="fa-solid fa-bolt"></i> Next-Gen Consolidated Booking Engine
+        </div>
+        <h1 class="hero-title">Unified GDS, LCC & NDC Booking Platform</h1>
+        <p class="hero-desc">
+            Instantly access flights, wholesale hotels, and passenger visa compliance databases. Process automated tickets, re-issues, and refunds in real-time.
+        </p>
+        <div class="cta-group">
+            <a href="{{ url_for('login') }}" class="btn-hero-primary">
+                <span>Access B2B Portal</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </a>
+            <a href="#features" class="btn-hero-secondary">Explore Features</a>
+        </div>
+    </section>
+
+    <!-- Key Core Features Grid -->
+    <section id="features" class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fa-solid fa-shuffle"></i>
+            </div>
+            <h3>Consolidated Fares</h3>
+            <p>Compare and book major GDS, NDC direct connections, and LCC wholesale flights from a single unified portal instantly.</p>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fa-solid fa-rotate-left"></i>
+            </div>
+            <h3>Auto Re-Issue & Void</h3>
+            <p>Modify seat arrangements or re-route ticketing paths in seconds. Automatic penalty calculations prevent GDS debit notes.</p>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h3>Timatic Visa Queries</h3>
+            <p>Ensure zero passenger boarding denials by querying standard Timatic visa databases immediately during the reservation flow.</p>
+        </div>
+    </section>
+
+    <footer style="text-align: center; color: var(--text-muted); padding: 40px 0; border-top: 1px solid var(--border-dark); font-size: 13px;">
+        &copy; 2026 Flight Hub B2B Travel Booking Platform. All rights reserved.
+    </footer>
+
+</body>
+</html>

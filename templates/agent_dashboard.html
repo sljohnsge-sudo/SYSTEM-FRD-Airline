@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B2B Agent Dashboard - Flight Hub</title>
+    <!-- Stylesheets & Fonts -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js and CDNs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="app-sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-plane-departure" style="color: #fff;"></i>
+                </div>
+                <div class="brand-text">Flight Hub</div>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <a class="menu-item active" onclick="switchTab('dashboard')">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Dashboard Panel</span>
+                </a>
+                <a class="menu-item" onclick="switchTab('flights')">
+                    <i class="fa-solid fa-ticket"></i>
+                    <span>Book Flights</span>
+                </a>
+                <a class="menu-item" onclick="switchTab('hotels')">
+                    <i class="fa-solid fa-hotel"></i>
+                    <span>Book Hotels</span>
+                </a>
+                <a class="menu-item" onclick="switchTab('bookings')">
+                    <i class="fa-solid fa-briefcase"></i>
+                    <span>Manage Bookings</span>
+                </a>
+                <a class="menu-item" onclick="switchTab('timatic')">
+                    <i class="fa-solid fa-passport"></i>
+                    <span>Visa Timatic</span>
+                </a>
+                <a class="menu-item" onclick="switchTab('reports')">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                    <span>Reports Console</span>
+                </a>
+                <a class="menu-item" onclick="switchTab('support')">
+                    <i class="fa-solid fa-headset"></i>
+                    <span>Feedback & Tickets</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="profile-avatar">
+                        {{ agent.username[0].upper() }}
+                    </div>
+                    <div class="profile-info">
+                        <div class="profile-name">{{ agent.company_name }}</div>
+                        <div class="profile-role">B2B Travel Agent</div>
+                    </div>
+                </div>
+                <a href="{{ url_for('logout') }}" class="btn-logout">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Logout Account</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="app-content">
+            
+            <!-- Content Header -->
+            <header class="content-header">
+                <div class="welcome-section">
+                    <h1 id="welcome-message">Hello, {{ agent.username }}!</h1>
+                    <p>Access GDS, NDC, LCC ticketing systems from a unified console.</p>
+                </div>
+                
+                <!-- Glowing Credit Balance Box -->
+                <div class="credit-widget">
+                    <div class="credit-details">
+                        <span class="credit-label">Available Credit Balance</span>
+                        <span class="credit-value" id="topbar-credit">$0.00</span>
+                    </div>
+                    <button class="btn-topup" onclick="openTopupModal()">
+                        <i class="fa-solid fa-circle-dollar-to-slot"></i>
+                        <span>Instant Top-Up</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Popups Alert System Broadcaster (Announcements) -->
+            {% if popups %}
+            <div class="announcement-box" id="global-popup-box">
+                <i class="fa-solid fa-bullhorn announcement-icon"></i>
+                <div class="announcement-body">
+                    <h4>Special Agency Advisory:</h4>
+                    <p id="global-popup-text">{{ popups[0].message_text }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ========================================================= -->
+            <!-- TAB: AGENT DASHBOARD OVERVIEW -->
+            <!-- ========================================================= -->
+            <section id="tab-dashboard" class="tab-content-panel active">
+                <!-- Stat Cards -->
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Loyalty Program</span>
+                            <div class="stat-icon warning"><i class="fa-solid fa-award"></i></div>
+                        </div>
+                        <div class="stat-value" id="dashboard-reward-points">0 PTS</div>
+                        <div class="stat-footer">
+                            <span class="trend-up"><i class="fa-solid fa-circle-check"></i> Silver Tier Reward Agent</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Ticketed Bookings</span>
+                            <div class="stat-icon success"><i class="fa-solid fa-circle-check"></i></div>
+                        </div>
+                        <div class="stat-value" id="dashboard-ticketed-count">0</div>
+                        <div class="stat-footer">
+                            <span>Ready to fly & travel</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Pending Reservations</span>
+                            <div class="stat-icon warning"><i class="fa-solid fa-clock"></i></div>
+                        </div>
+                        <div class="stat-value" id="dashboard-pending-count">0</div>
+                        <div class="stat-footer">
+                            <span class="trend-down"><i class="fa-solid fa-triangle-exclamation"></i> Immediate ticket deadlines</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Timatic Checks</span>
+                            <div class="stat-icon primary"><i class="fa-solid fa-shield-halved"></i></div>
+                        </div>
+                        <div class="stat-value" id="dashboard-timatic-count">0</div>
+                        <div class="stat-footer">
+                            <span>Visa query history logs</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daily Lowest Fares Display (ATL Flyers) -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-fire" style="color: var(--primary);"></i>
+                            <span>ATL Flyers - Daily Lowest Available Fares (NDC & GDS)</span>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Sector Route</th>
+                                    <th>Airline Carrier</th>
+                                    <th>Standard GDS/LCC</th>
+                                    <th>Lowest Available Fare</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lowest-fares-table">
+                                <!-- Loaded dynamically via API -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- TAB: BOOK FLIGHTS -->
+            <!-- ========================================================= -->
+            <section id="tab-flights" class="tab-content-panel">
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-plane"></i>
+                            <span>Unified GDS, LCC, and NDC Flight Search</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Search widget -->
+                    <div class="unified-search-panel">
+                        <div class="search-input-group">
+                            <label>Origin Airport</label>
+                            <input type="text" id="flight-origin" class="form-control" placeholder="e.g. CMB" value="CMB">
+                        </div>
+                        <div class="search-input-group">
+                            <label>Destination Airport</label>
+                            <input type="text" id="flight-dest" class="form-control" placeholder="e.g. MLE" value="MLE">
+                        </div>
+                        <div class="search-input-group">
+                            <label>Fare Segment Channel</label>
+                            <select id="flight-channel" class="form-control">
+                                <option value="ALL">All Consolidated Fares</option>
+                                <option value="GDS">Flight Hub GDS Fares</option>
+                                <option value="LCC">LCC Low Cost Fares</option>
+                                <option value="NDC">NDC Direct Connect Fares</option>
+                            </select>
+                        </div>
+                        <div class="search-input-group">
+                            <label>Departure Date</label>
+                            <input type="date" id="flight-date" class="form-control" value="2026-05-28">
+                        </div>
+                        <button class="btn-search" onclick="searchFlights()">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <span>Search</span>
+                        </button>
+                    </div>
+
+                    <!-- Search Results -->
+                    <div class="flight-results-grid" id="flight-results-container">
+                        <!-- Loaded dynamically -->
+                        <div style="text-align: center; color: var(--text-muted); padding: 40px 0;">
+                            <i class="fa-solid fa-plane-departure" style="font-size: 40px; margin-bottom: 15px; color: rgba(255,255,255,0.1);"></i>
+                            <p>Fill in origin and destination above and click Search.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- TAB: BOOK HOTELS -->
+            <!-- ========================================================= -->
+            <section id="tab-hotels" class="tab-content-panel">
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-hotel"></i>
+                            <span>Unified Hotel Room Booking Facility</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Search widget -->
+                    <div class="unified-search-panel">
+                        <div class="search-input-group" style="grid-column: span 2;">
+                            <label>City Location</label>
+                            <input type="text" id="hotel-location" class="form-control" placeholder="e.g. Maldives" value="Maldives">
+                        </div>
+                        <div class="search-input-group">
+                            <label>Check In</label>
+                            <input type="date" id="hotel-checkin" class="form-control" value="2026-06-01">
+                        </div>
+                        <div class="search-input-group">
+                            <label>Check Out</label>
+                            <input type="date" id="hotel-checkout" class="form-control" value="2026-06-05">
+                        </div>
+                        <button class="btn-search" onclick="searchHotels()">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <span>Search</span>
+                        </button>
+                    </div>
+
+                    <!-- Hotel results -->
+                    <div class="hotels-grid" id="hotel-results-container">
+                        <!-- Loaded dynamically -->
+                        <div style="text-align: center; color: var(--text-muted); padding: 40px 0; grid-column: span 3;">
+                            <i class="fa-solid fa-hotel" style="font-size: 40px; margin-bottom: 15px; color: rgba(255,255,255,0.1);"></i>
+                            <p>Fill in destination city and date to view hotel availability.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- TAB: MANAGE BOOKINGS -->
+            <!-- ========================================================= -->
+            <section id="tab-bookings" class="tab-content-panel">
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-briefcase"></i>
+                            <span>Manage Active Tickets & Time-Limited Reservations</span>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Invoice #</th>
+                                    <th>Booking Type</th>
+                                    <th>Passenger/Guest</th>
+                                    <th>Service Details</th>
+                                    <th>Price Total</th>
+                                    <th>Booking Date</th>
+                                    <th>Status Status</th>
+                                    <th>Actions / Changes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bookings-list-table">
+                                <!-- Loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- TAB: VISA TIMATIC TOOL -->
+            <!-- ========================================================= -->
+            <section id="tab-timatic" class="tab-content-panel">
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-passport"></i>
+                            <span>Visa Timatic Travel Intelligence System</span>
+                        </div>
+                    </div>
+                    <p style="color: var(--text-muted); font-size:13.5px; margin-bottom:25px;">
+                        Ensure error-free passenger check-ins and travel documentation checking by consulting the Timatic tool database instantly.
+                    </p>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 20px; align-items: flex-end; max-width: 800px; margin-bottom: 30px;">
+                        <div class="search-input-group">
+                            <label>Passenger Passport Citizenship</label>
+                            <select id="timatic-passport" class="form-control">
+                                <option value="Sri Lanka">Sri Lanka</option>
+                                <option value="India">India</option>
+                                <option value="United Kingdom">United Kingdom</option>
+                                <option value="United States">United States</option>
+                                <option value="Maldives">Maldives</option>
+                            </select>
+                        </div>
+                        <div class="search-input-group">
+                            <label>Destination Country</label>
+                            <select id="timatic-dest" class="form-control">
+                                <option value="Maldives">Maldives</option>
+                                <option value="United Kingdom">United Kingdom</option>
+                                <option value="Singapore">Singapore</option>
+                                <option value="United States">United States</option>
+                                <option value="Sri Lanka">Sri Lanka</option>
+                            </select>
+                        </div>
+                        <button class="btn-search" onclick="checkTimatic()" style="height: 48px;">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            <span>Query Timatic</span>
+                        </button>
+                    </div>
+
+                    <!-- Timatic results -->
+                    <div class="timatic-result-panel" id="timatic-result-box">
+                        <div class="timatic-result-header">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <span id="timatic-result-header-text">TIMATIC RESPONSE DETAILS</span>
+                        </div>
+                        <div class="timatic-result-text" id="timatic-result-text-body">
+                            <!-- Loaded dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Timatic past checks logs -->
+                    <div style="margin-top: 40px;">
+                        <h4 style="font-size:16px; margin-bottom:15px; color:var(--text-muted);">Recent Query Log</h4>
+                        <div class="table-responsive">
+                            <table class="custom-table" style="font-size: 13px;">
+                                <thead>
+                                    <tr>
+                                        <th>Checked Date</th>
+                                        <th>Citizenship</th>
+                                        <th>Destination</th>
+                                        <th>Result Verdict</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="timatic-logs-table">
+                                    <!-- Loaded dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- TAB: REPORTS CONSOLE -->
+            <!-- ========================================================= -->
+            <section id="tab-reports" class="tab-content-panel">
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-file-invoice-dollar"></i>
+                            <span>Daily, Monthly & Yearly Turnover (TO) and Gross Profit (GP) Reports</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Chart widgets -->
+                    <div class="reports-dashboard-top">
+                        <div class="report-chart-container">
+                            <canvas id="agent-chart-turnover"></canvas>
+                        </div>
+                        <div class="report-chart-container">
+                            <canvas id="agent-chart-gp"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Reports Breakdown table -->
+                    <div style="margin-top: 30px;">
+                        <h3 style="font-size:18px; margin-bottom:15px;">Daily Turnover & Profit Details</h3>
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Reporting Date</th>
+                                        <th>Turnover (TO)</th>
+                                        <th>Service Cost (Base Fare)</th>
+                                        <th>Gross Profit (GP - Agency Markup)</th>
+                                        <th>Net Margin</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reports-daily-table">
+                                    <!-- Loaded dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- TAB: SUPPORT HELPDESK -->
+            <!-- ========================================================= -->
+            <section id="tab-support" class="tab-content-panel">
+                <div class="content-card" style="display: grid; grid-template-columns: 2fr 3fr; gap: 30px;">
+                    <!-- Create feedback form -->
+                    <div>
+                        <h3 style="font-size:18px; margin-bottom:15px;">Integrated Helpdesk Ticket Submission</h3>
+                        <div class="form-group">
+                            <label>Inquiry Subject</label>
+                            <input type="text" id="support-subject" class="form-control" placeholder="e.g. Flight Hub GDS connection lag">
+                        </div>
+                        <div class="form-group">
+                            <label>Detailed Message</label>
+                            <textarea id="support-message" class="form-control" rows="6" placeholder="Describe the reservation issue, flight number, or credit balance query..."></textarea>
+                        </div>
+                        <button class="btn-primary" onclick="submitSupportTicket()">
+                            <i class="fa-solid fa-envelope-open-text"></i>
+                            <span>Submit to ATL Operations</span>
+                        </button>
+                    </div>
+
+                    <!-- Active tickets list -->
+                    <div>
+                        <h3 style="font-size:18px; margin-bottom:15px;">Current Active Helpdesk Responses</h3>
+                        <div class="table-responsive">
+                            <table class="custom-table" style="font-size:13px;">
+                                <thead>
+                                    <tr>
+                                        <th>Submitted</th>
+                                        <th>Subject</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="support-tickets-table">
+                                    <!-- Loaded dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- MODAL OVERLAY: FLIGHT BOOKING & SEAT SELECTOR -->
+    <!-- ========================================================= -->
+    <div class="modal-overlay" id="flight-book-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span class="modal-title" id="flight-modal-title">Book Flight Reservation</span>
+                <button class="modal-close" onclick="closeModal('flight-book-modal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modal-flight-id">
+                <div class="form-group">
+                    <label>Passenger Name (Same as Passport)</label>
+                    <input type="text" id="modal-passenger-name" class="form-control" placeholder="e.g. Sanka Lasitha">
+                </div>
+                
+                <!-- Interactive Seat selector map wrapper -->
+                <div class="form-group">
+                    <label>Flight Hub Seat Map Selection (Select seat)</label>
+                    <div class="seat-map-container" id="modal-seat-map">
+                        <!-- Loaded dynamically in main.js -->
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:11px; color:var(--text-muted);">
+                        <span>Selected seat: <strong style="color:var(--primary);" id="modal-selected-seat-text">None</strong></span>
+                        <span>Price markup: <strong style="color:var(--success);">+$15.00</strong></span>
+                    </div>
+                </div>
+                
+                <!-- Amadeus Penalty Notification simulation -->
+                <div class="penalty-notifier-box" style="margin-top:20px; background: rgba(0,242,254,0.03); border-color: rgba(0,242,254,0.15);">
+                    <i class="fa-solid fa-circle-info" style="color:var(--primary);"></i>
+                    <div>
+                        <div class="penalty-notifier-title" style="color:var(--primary);">Flight Hub Fare Rules:</div>
+                        <div class="penalty-notifier-desc">Re-issues carry a $50 carrier penalty + $25 agency markup. Cancellations are subject to a $75 cancellation penalty.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="processFlightBooking(false)">Save Reservation</button>
+                <button class="btn-primary" onclick="processFlightBooking(true)">Ticket Immediately</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- MODAL OVERLAY: RE-ISSUE TICKET SIMULATOR (ATC) -->
+    <!-- ========================================================= -->
+    <div class="modal-overlay" id="reissue-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span class="modal-title">ATC Auto Re-Issue Simulation</span>
+                <button class="modal-close" onclick="closeModal('reissue-modal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="reissue-booking-id">
+                
+                <!-- Penalty notifier box -->
+                <div class="penalty-notifier-box">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <div>
+                        <div class="penalty-notifier-title">Flight Hub Penalty Warning (ADMs Protection)</div>
+                        <div class="penalty-notifier-desc" id="reissue-penalty-text">
+                            Flight cancellation penalty applied: <strong>$50.00</strong>. Service fee markup applied: <strong>$25.00</strong>.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Select Target New Flight to Re-Issue Into</label>
+                    <select id="reissue-new-flight-id" class="form-control" onchange="calculateReissueFareDiff()">
+                        <!-- Loaded dynamically with available flights -->
+                    </select>
+                </div>
+
+                <div style="background: rgba(0,0,0,0.2); border-radius:10px; padding:15px; margin-top:20px; font-size:13px; display:flex; flex-direction:column; gap:8px;">
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>Original Base Fare:</span>
+                        <span id="reissue-old-fare">$0.00</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>New Flight Base Fare:</span>
+                        <span id="reissue-new-fare">$0.00</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-dark); padding-bottom:6px;">
+                        <span>Fare Difference (Collected):</span>
+                        <span id="reissue-fare-diff" style="color:var(--warning); font-weight:700;">$0.00</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>GDS Penalty Fee:</span>
+                        <span>$50.00</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>Agency Re-Issue Markup:</span>
+                        <span id="reissue-agency-markup">$25.00</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:15px; font-weight:700; color:var(--danger); border-top: 1px solid var(--border-dark); padding-top:6px;">
+                        <span>Total Re-Issue Cost:</span>
+                        <span id="reissue-total-cost">$0.00</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal('reissue-modal')">Abort Change</button>
+                <button class="btn-primary" onclick="submitReissueChange()">
+                    <i class="fa-solid fa-rotate"></i>
+                    <span>Execute Auto Re-Issue</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- MODAL OVERLAY: TOP-UP CREDIT -->
+    <!-- ========================================================= -->
+    <div class="modal-overlay" id="topup-modal">
+        <div class="modal-box" style="max-width: 440px;">
+            <div class="modal-header">
+                <span class="modal-title">Instant Credit Wallet Top-Up</span>
+                <button class="modal-close" onclick="closeModal('topup-modal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Top-Up Value ($USD)</label>
+                    <input type="number" id="topup-amount" class="form-control" placeholder="e.g. 5000" min="10">
+                </div>
+                <div class="form-group">
+                    <label>Simulated Payment Method</label>
+                    <select id="topup-method" class="form-control">
+                        <option value="Flight Hub Direct Debit">Flight Hub API Wallet Integration</option>
+                        <option value="Credit Card">Instant Credit Card Payment</option>
+                        <option value="Bank Transfer">Bank Wire Transfer</option>
+                    </select>
+                </div>
+                <p style="color:var(--text-muted); font-size:11.5px; line-height:1.4;">
+                    *Payment will clear and credit balance will increase IMMEDIATELY upon clicking process.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal('topup-modal')">Cancel</button>
+                <button class="btn-primary" onclick="submitTopup()">Process Payment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script controller -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
