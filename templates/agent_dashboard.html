@@ -82,9 +82,14 @@
             
             <!-- Content Header -->
             <header class="content-header">
-                <div class="welcome-section">
-                    <h1 id="welcome-message">Hello, {{ agent.username }}!</h1>
-                    <p>Access GDS, NDC, LCC ticketing systems from a unified console.</p>
+                <div style="display: flex; align-items: center;">
+                    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div class="welcome-section">
+                        <h1 id="welcome-message">Hello, {{ agent.username }}!</h1>
+                        <p>Access GDS, NDC, LCC ticketing systems from a unified console.</p>
+                    </div>
                 </div>
                 
                 <div class="header-controls" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
@@ -243,12 +248,42 @@
                             <div class="autocomplete-dropdown" id="flight-dest-dropdown"></div>
                         </div>
                         <div class="search-input-group">
+                            <label>Travel Class</label>
+                            <select id="flight-class" class="form-control">
+                                <option value="ALL">All Classes</option>
+                                <option value="ECONOMY">Economy</option>
+                                <option value="PREMIUM_ECONOMY">Premium Economy</option>
+                                <option value="BUSINESS">Business Class</option>
+                                <option value="FIRST">First Class</option>
+                            </select>
+                        </div>
+                        <div class="search-input-group">
                             <label>Fare Segment Channel</label>
                             <select id="flight-channel" class="form-control">
                                 <option value="ALL">All Consolidated Fares</option>
                                 <option value="GDS">Flight Hub GDS Fares</option>
                                 <option value="LCC">LCC Low Cost Fares</option>
                                 <option value="NDC">NDC Direct Connect Fares</option>
+                            </select>
+                        </div>
+                        <div class="search-input-group">
+                            <label>Airline (Optional)</label>
+                            <select id="flight-airline" class="form-control">
+                                <option value="">All Airlines</option>
+                                <option value="Air India">Air India</option>
+                                <option value="British Airways">British Airways</option>
+                                <option value="Cathay Pacific">Cathay Pacific</option>
+                                <option value="Emirates">Emirates</option>
+                                <option value="Etihad Airways">Etihad Airways</option>
+                                <option value="IndiGo">IndiGo</option>
+                                <option value="Lufthansa">Lufthansa</option>
+                                <option value="Malaysia Airlines">Malaysia Airlines</option>
+                                <option value="Qatar Airways">Qatar Airways</option>
+                                <option value="Qantas">Qantas</option>
+                                <option value="Singapore Airlines">Singapore Airlines</option>
+                                <option value="SriLankan Airlines">SriLankan Airlines</option>
+                                <option value="Thai Airways">Thai Airways</option>
+                                <option value="Turkish Airlines">Turkish Airlines</option>
                             </select>
                         </div>
                         <div class="search-input-group">
@@ -554,6 +589,9 @@
             </section>
 
         </main>
+        
+        <!-- Sidebar Overlay for Mobile -->
+        <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleMobileMenu()"></div>
     </div>
 
     <!-- ========================================================= -->

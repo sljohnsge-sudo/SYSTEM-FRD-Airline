@@ -192,7 +192,7 @@ def initialize_database():
         cursor.execute("""
             INSERT INTO users (username, password, email, role, credit_balance, company_name, phone, onboarded_at)
             VALUES 
-            ('premium_agent', 'agent123', 'premium@travel.com', 'agent', 45000.00, 'SkyHigh Travels', '+1234567890', '2026-01-10 10:00:00'),
+            ('premium_agent', 'agent123', 'premium@travel.com', 'agent', 45000.00, 'XYZ Travels', '+1234567890', '2026-01-10 10:00:00'),
             ('standard_agent', 'agent123', 'standard@travel.com', 'agent', 7850.50, 'Global Tourers', '+1987654321', '2026-02-15 11:30:00'),
             ('zero_agent', 'agent123', 'zero@travel.com', 'agent', 0.00, 'Budget Flight Shop', '+1122334455', '2026-05-01 09:15:00'),
             ('admin', 'admin123', 'admin@atl.com', 'admin', 0.00, 'ATL Operations', '+1000000000', '2025-12-01 08:00:00')

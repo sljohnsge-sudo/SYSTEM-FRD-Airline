@@ -396,6 +396,8 @@ def api_flights_search():
     flight_type = request.args.get("flight_type", "ALL") # ALL, GDS, LCC, NDC
     date_str = request.args.get("date", "").strip()
     return_date_str = request.args.get("return_date", "").strip()
+    airline_filter = request.args.get("airline", "").strip()
+    travel_class = request.args.get("travelClass", "ECONOMY").strip()
     
     # Initialize Amadeus client to resolve locations and query flight offers
     amadeus = None
@@ -423,13 +425,17 @@ def api_flights_search():
     # Pre-fetch live GDS flights from Amadeus API and cache them in local database
     if flight_type in ["ALL", "GDS"] and origin and destination and date_str:
         try:
-            response = amadeus.shopping.flight_offers_search.get(
-                originLocationCode=origin,
-                destinationLocationCode=destination,
-                departureDate=date_str,
-                adults=1,
-                max=10
-            )
+            search_params = {
+                "originLocationCode": origin,
+                "destinationLocationCode": destination,
+                "departureDate": date_str,
+                "adults": 1,
+                "max": 10
+            }
+            if travel_class != "ALL":
+                search_params["travelClass"] = travel_class
+
+            response = amadeus.shopping.flight_offers_search.get(**search_params)
             
             conn = get_db_connection()
             cursor = conn.cursor()
@@ -459,13 +465,17 @@ def api_flights_search():
             # Pre-fetch return flights if return date is specified
             if return_date_str:
                 try:
-                    return_response = amadeus.shopping.flight_offers_search.get(
-                        originLocationCode=destination,
-                        destinationLocationCode=origin,
-                        departureDate=return_date_str,
-                        adults=1,
-                        max=10
-                    )
+                    return_search_params = {
+                        "originLocationCode": destination,
+                        "destinationLocationCode": origin,
+                        "departureDate": return_date_str,
+                        "adults": 1,
+                        "max": 10
+                    }
+                    if travel_class != "ALL":
+                        return_search_params["travelClass"] = travel_class
+
+                    return_response = amadeus.shopping.flight_offers_search.get(**return_search_params)
                     for f in return_response.data:
                         segments = f['itineraries'][0]['segments']
                         flight_no = f"{segments[0]['carrierCode']}-{segments[0]['number']}"
@@ -508,6 +518,9 @@ def api_flights_search():
             if flight_type != "ALL":
                 query += " AND flight_type = %s"
                 params.append(flight_type)
+            if airline_filter:
+                query += " AND airline LIKE %s"
+                params.append(f"%{airline_filter}%")
             query += " ORDER BY price ASC"
             flights = query_db(query, tuple(params))
     else:
@@ -526,6 +539,9 @@ def api_flights_search():
         if flight_type != "ALL":
             query += " AND flight_type = %s"
             params.append(flight_type)
+        if airline_filter:
+            query += " AND airline LIKE %s"
+            params.append(f"%{airline_filter}%")
         query += " ORDER BY price ASC"
         flights = query_db(query, tuple(params))
         
@@ -543,6 +559,9 @@ def api_flights_search():
             if flight_type != "ALL":
                 query += " AND flight_type = %s"
                 params.append(flight_type)
+            if airline_filter:
+                query += " AND airline LIKE %s"
+                params.append(f"%{airline_filter}%")
             query += " ORDER BY price ASC"
             return_flights = query_db(query, tuple(params))
             

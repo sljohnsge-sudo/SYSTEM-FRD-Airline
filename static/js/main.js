@@ -198,6 +198,14 @@ function switchTab(tabId) {
     event.currentTarget.classList.add("active");
     document.getElementById(`tab-${tabId}`).classList.add("active");
     
+    // Close mobile menu if open
+    const sidebar = document.querySelector('.app-sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    if (sidebar && sidebar.classList.contains('open')) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+    }
+    
     // Load fresh data if needed
     if (tabId === "dashboard") {
         updateAgentUI();
@@ -430,10 +438,12 @@ function searchFlights() {
     const origin = document.getElementById("flight-origin").value;
     const dest = document.getElementById("flight-dest").value;
     const type = document.getElementById("flight-channel").value;
+    const travelClass = document.getElementById("flight-class") ? document.getElementById("flight-class").value : "ALL";
     const date = document.getElementById("flight-date") ? document.getElementById("flight-date").value : "";
     const returnDateInput = document.getElementById("flight-return-date");
     const returnDate = returnDateInput ? returnDateInput.value : "";
     const returnDateError = document.getElementById("return-date-error");
+    const airline = document.getElementById("flight-airline") ? document.getElementById("flight-airline").value : "";
     
     if (returnDateError) returnDateError.style.display = "none";
     if (returnDateInput) returnDateInput.style.borderColor = "";
@@ -448,7 +458,7 @@ function searchFlights() {
     const container = document.getElementById("flight-results-container");
     container.innerHTML = `<div style="text-align:center; padding:40px;"><i class="fa-solid fa-circle-notch fa-spin" style="font-size:32px; color:var(--primary);"></i><p style="margin-top:10px;">Interrogating GDS, LCC and NDC API databases...</p></div>`;
     
-    fetch(`/api/flights/search?origin=${origin}&destination=${dest}&flight_type=${type}&date=${date}&return_date=${returnDate}`)
+    fetch(`/api/flights/search?origin=${origin}&destination=${dest}&flight_type=${type}&date=${date}&return_date=${returnDate}&airline=${encodeURIComponent(airline)}&travelClass=${encodeURIComponent(travelClass)}`)
         .then(res => res.json())
         .then(data => {
             if (data.success) {
