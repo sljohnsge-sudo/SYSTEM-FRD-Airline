@@ -290,6 +290,18 @@
                             <label>Departure Date</label>
                             <input type="text" id="flight-date" class="form-control date-picker" value="2026-05-28" placeholder="Select Departure Date">
                         </div>
+                        <div class="search-input-group">
+                            <label>Depart Before Time</label>
+                            <div style="display: flex; gap: 8px;">
+                                <select id="flight-time-mode" class="form-control" style="flex: 1;" onchange="document.getElementById('flight-time-wrapper').style.display = this.value === 'BEFORE' ? 'block' : 'none';">
+                                    <option value="ALL">Anytime</option>
+                                    <option value="BEFORE">Select Time</option>
+                                </select>
+                                <div id="flight-time-wrapper" style="flex: 1; display: none;">
+                                    <input type="text" id="flight-time-before" class="form-control time-picker" placeholder="e.g. 06:00 PM">
+                                </div>
+                            </div>
+                        </div>
                         <div class="search-input-group" id="return-date-container">
                             <label>Return Date</label>
                             <input type="text" id="flight-return-date" class="form-control date-picker" placeholder="Optional (Select Return Date)">
@@ -299,6 +311,23 @@
                             <i class="fa-solid fa-magnifying-glass"></i>
                             <span>Search</span>
                         </button>
+                    </div>
+                    </div>
+
+                    <!-- Search Results Filter Bar (Initially Hidden) -->
+                    <div id="flight-results-filter-bar" style="display: none; background: rgba(0, 0, 0, 0.2); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.05); align-items: center; justify-content: space-between;">
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <span style="color: var(--text-muted); font-size: 14px;"><i class="fa-solid fa-filter"></i> Filter Results:</span>
+                            
+                            <select id="filter-flight-type" class="form-control" style="width: 200px; padding: 8px; height: auto;" onchange="applyFlightFilters()">
+                                <option value="ALL">All Flights (Direct & Transit)</option>
+                                <option value="DIRECT">Direct Flights Only</option>
+                                <option value="TRANSIT">Indirect/Transit Flights Only</option>
+                            </select>
+                        </div>
+                        <div style="font-size: 14px; color: var(--text-muted);">
+                            <span id="filtered-results-count">0</span> flights shown
+                        </div>
                     </div>
 
                     <!-- Search Results -->
@@ -991,6 +1020,14 @@
                 minDate: "today",
                 altInput: true,
                 altFormat: "F j, Y",
+            });
+            flatpickr(".time-picker", {
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "H:i",
+                time_24hr: false,
+                altInput: true,
+                altFormat: "h:i K"
             });
         });
     </script>

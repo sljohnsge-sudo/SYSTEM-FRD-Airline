@@ -63,7 +63,9 @@ function changeGlobalCurrency(currencyCode) {
         const searchResults = document.getElementById("flight-results-container");
         if (searchResults && searchResults.innerHTML && !searchResults.innerHTML.includes("Interrogating") && !searchResults.innerHTML.includes("triangle-exclamation")) {
             if (lastSearchedFlights && lastSearchedFlights.length > 0) {
-                renderFlightSearchResults(lastSearchedFlights);
+                const filterBar = document.getElementById("flight-results-filter-bar");
+                if (filterBar) filterBar.style.display = "flex";
+                applyFlightFilters();
             }
         }
         
@@ -446,6 +448,10 @@ function searchFlights() {
     const airline = document.getElementById("flight-airline") ? document.getElementById("flight-airline").value : "";
     
     if (returnDateError) returnDateError.style.display = "none";
+    
+    // Hide filter bar when a new search starts
+    const filterBar = document.getElementById("flight-results-filter-bar");
+    if (filterBar) filterBar.style.display = "none";
     if (returnDateInput) returnDateInput.style.borderColor = "";
     
     const isRoundTrip = document.getElementById("pill-roundtrip") && document.getElementById("pill-roundtrip").classList.contains("active");
@@ -463,20 +469,30 @@ function searchFlights() {
         .then(data => {
             if (data.success) {
                 lastSearchedFlights = data.flights; // Cache the search results in global state
-                renderFlightSearchResults(lastSearchedFlights);
+                const filterBar = document.getElementById("flight-results-filter-bar");
+                if (filterBar && lastSearchedFlights.length > 0) {
+                    filterBar.style.display = "flex";
+                }
+                applyFlightFilters();
             }
         });
 }
 
 function renderFlightSearchResults(flights) {
     const container = document.getElementById("flight-results-container");
-    container.innerHTML = "";
+    
+    container.innerHTML = `
+        <div style="text-align: center; color: var(--primary-color); padding: 40px 0;">
+            <i class="fa-solid fa-plane-departure fa-bounce" style="font-size: 32px; margin-bottom: 15px;"></i>
+            <p>Interrogating Global Distribution Systems...</p>
+        </div>
+    `;
     
     if (flights.length === 0) {
         container.innerHTML = `
             <div style="text-align: center; color: var(--text-muted); padding: 40px 0;">
                 <i class="fa-solid fa-triangle-exclamation" style="font-size: 32px; margin-bottom: 15px; color: var(--warning);"></i>
-                <p>No flights matching the routing found. Try CMB to MLE, DOH to LHR, or CMB to SIN.</p>
+                <p>No flights matching the routing and filters found.</p>
             </div>
         `;
         return;
@@ -506,7 +522,7 @@ function renderFlightSearchResults(flights) {
                         <div class="airline-logo-placeholder" style="background: rgba(0, 242, 254, 0.1);"><i class="fa-solid fa-plane" style="transform: rotate(180deg);"></i></div>
                         <div>
                             <div class="airline-name">${ret.airline} (Return)</div>
-                            <div class="flight-number">${ret.flight_number} • <span class="badge-type">${ret.flight_type}</span></div>
+                            <div class="flight-number">${ret.flight_number} • <span class="badge-type">Fare: ${ret.flight_type}</span></div>
                         </div>
                     </div>
                     <div class="flight-route-flow" style="flex-grow: 1;">
@@ -534,7 +550,7 @@ function renderFlightSearchResults(flights) {
                             <div class="airline-logo-placeholder"><i class="fa-solid fa-plane"></i></div>
                             <div>
                                 <div class="airline-name">${f.airline} ${f.return_flight ? '(Outbound)' : ''}</div>
-                                <div class="flight-number">${f.flight_number} • <span class="badge-type">${f.flight_type}</span></div>
+                                <div class="flight-number">${f.flight_number} • <span class="badge-type" style="background: rgba(0, 242, 254, 0.2); padding: 2px 6px; border-radius: 4px; font-weight: 600;">Fare: ${f.flight_type}</span></div>
                             </div>
                         </div>
                         <div class="flight-route-flow" style="flex-grow: 1;">
@@ -564,6 +580,46 @@ function renderFlightSearchResults(flights) {
             </div>
         `;
     });
+}
+
+function applyFlightFilters() {
+    if (!lastSearchedFlights) return;
+
+    const typeFilter = document.getElementById("filter-flight-type").value;
+    const timeMode = document.getElementById("flight-time-mode") ? document.getElementById("flight-time-mode").value : "ALL";
+    const timeBeforeStr = document.getElementById("flight-time-before") ? document.getElementById("flight-time-before").value : "";
+
+    let filteredFlights = lastSearchedFlights.filter(f => {
+        // Filter by Type
+        if (typeFilter === "DIRECT" && f.segment_count > 1) return false;
+        if (typeFilter === "TRANSIT" && f.segment_count === 1) return false;
+
+        // Filter by Time
+        if (timeMode === "BEFORE" && timeBeforeStr) {
+            // timeBeforeStr is format HH:mm
+            const parts = timeBeforeStr.split(":");
+            if (parts.length === 2) {
+                const maxHour = parseInt(parts[0], 10);
+                const maxMin = parseInt(parts[1], 10);
+                const depDate = new Date(f.departure_time);
+                
+                if (depDate.getHours() > maxHour) return false;
+                if (depDate.getHours() === maxHour && depDate.getMinutes() > maxMin) return false;
+            }
+        }
+
+        return true;
+    });
+
+    // Sort by price
+    filteredFlights.sort((a, b) => {
+        const pA = a.price + (a.return_flight ? 30 : 15);
+        const pB = b.price + (b.return_flight ? 30 : 15);
+        return pA - pB;
+    });
+
+    document.getElementById("filtered-results-count").innerText = filteredFlights.length;
+    renderFlightSearchResults(filteredFlights);
 }
 
 // Trip Type Selector Controller (One-way vs Round-trip)

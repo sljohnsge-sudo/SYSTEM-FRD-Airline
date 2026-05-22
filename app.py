@@ -451,16 +451,20 @@ def api_flights_search():
                 seg_count = len(segments)
                 
                 # Avoid duplicates and track IDs of fetched flights
-                cursor.execute("SELECT id FROM flights WHERE flight_number = %s AND departure_time = %s", (flight_no, dept))
-                row = cursor.fetchone()
-                if row:
-                    amadeus_flight_ids.append(row[0])
-                else:
-                    cursor.execute("""
-                        INSERT INTO flights (flight_number, airline, origin, destination, departure_time, arrival_time, price, seats_available, flight_type, segment_count)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'GDS', %s)
-                    """, (flight_no, airline, origin, destination, dept, arr, price_val, f.get('numberOfBookableSeats', 9), seg_count))
-                    amadeus_flight_ids.append(cursor.lastrowid)
+                try:
+                    cursor.execute("SELECT id FROM flights WHERE flight_number = %s", (flight_no,))
+                    row = cursor.fetchone()
+                    if row:
+                        amadeus_flight_ids.append(row[0])
+                        cursor.execute("UPDATE flights SET departure_time = %s, arrival_time = %s, price = %s WHERE id = %s", (dept, arr, price_val, row[0]))
+                    else:
+                        cursor.execute("""
+                            INSERT INTO flights (flight_number, airline, origin, destination, departure_time, arrival_time, price, seats_available, flight_type, segment_count)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'GDS', %s)
+                        """, (flight_no, airline, origin, destination, dept, arr, price_val, f.get('numberOfBookableSeats', 9), seg_count))
+                        amadeus_flight_ids.append(cursor.lastrowid)
+                except Exception as ex:
+                    print(f"Amadeus API flight loop error for {flight_no}:", ex)
                     
             # Pre-fetch return flights if return date is specified
             if return_date_str:
@@ -486,16 +490,20 @@ def api_flights_search():
                         arr = segments[-1]['arrival']['at'].replace('T', ' ')[:19]
                         seg_count = len(segments)
                         
-                        cursor.execute("SELECT id FROM flights WHERE flight_number = %s AND departure_time = %s", (flight_no, dept))
-                        row = cursor.fetchone()
-                        if row:
-                            amadeus_return_flight_ids.append(row[0])
-                        else:
-                            cursor.execute("""
-                                INSERT INTO flights (flight_number, airline, origin, destination, departure_time, arrival_time, price, seats_available, flight_type, segment_count)
-                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'GDS', %s)
-                            """, (flight_no, airline, destination, origin, dept, arr, price_val, f.get('numberOfBookableSeats', 9), seg_count))
-                            amadeus_return_flight_ids.append(cursor.lastrowid)
+                        try:
+                            cursor.execute("SELECT id FROM flights WHERE flight_number = %s", (flight_no,))
+                            row = cursor.fetchone()
+                            if row:
+                                amadeus_return_flight_ids.append(row[0])
+                                cursor.execute("UPDATE flights SET departure_time = %s, arrival_time = %s, price = %s WHERE id = %s", (dept, arr, price_val, row[0]))
+                            else:
+                                cursor.execute("""
+                                    INSERT INTO flights (flight_number, airline, origin, destination, departure_time, arrival_time, price, seats_available, flight_type, segment_count)
+                                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'GDS', %s)
+                                """, (flight_no, airline, destination, origin, dept, arr, price_val, f.get('numberOfBookableSeats', 9), seg_count))
+                                amadeus_return_flight_ids.append(cursor.lastrowid)
+                        except Exception as ex:
+                            print(f"Amadeus Return API flight loop error for {flight_no}:", ex)
                 except Exception as ex:
                     print("Amadeus Return API error:", ex)
                     
@@ -513,8 +521,9 @@ def api_flights_search():
             params = amadeus_flight_ids
             flights = query_db(query, tuple(params))
         else:
-            query = "SELECT * FROM flights WHERE origin = %s AND destination = %s AND DATE(departure_time) = %s"
-            params = [origin, destination, date_str]
+            # Fallback to local DB without strict date match to ensure mock data shows up
+            query = "SELECT * FROM flights WHERE origin = %s AND destination = %s"
+            params = [origin, destination]
             if flight_type != "ALL":
                 query += " AND flight_type = %s"
                 params.append(flight_type)
@@ -523,6 +532,18 @@ def api_flights_search():
                 params.append(f"%{airline_filter}%")
             query += " ORDER BY price ASC"
             flights = query_db(query, tuple(params))
+            
+            # Adjust the departure date of the mock flights to match the requested date
+            if date_str:
+                requested_date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+                for f in flights:
+                    orig_dep = f["departure_time"]
+                    orig_arr = f["arrival_time"]
+                    time_diff = orig_arr - orig_dep
+                    new_dep = datetime.datetime.combine(requested_date, orig_dep.time())
+                    new_arr = new_dep + time_diff
+                    f["departure_time"] = new_dep
+                    f["arrival_time"] = new_arr
     else:
         # Fallback for initial load or general listing to keep other non-search components operational
         query = "SELECT * FROM flights WHERE 1=1"
@@ -554,8 +575,8 @@ def api_flights_search():
             params = amadeus_return_flight_ids
             return_flights = query_db(query, tuple(params))
         else:
-            query = "SELECT * FROM flights WHERE origin = %s AND destination = %s AND DATE(departure_time) = %s"
-            params = [destination, origin, return_date_str]
+            query = "SELECT * FROM flights WHERE origin = %s AND destination = %s"
+            params = [destination, origin]
             if flight_type != "ALL":
                 query += " AND flight_type = %s"
                 params.append(flight_type)
@@ -564,6 +585,18 @@ def api_flights_search():
                 params.append(f"%{airline_filter}%")
             query += " ORDER BY price ASC"
             return_flights = query_db(query, tuple(params))
+            
+            # Adjust the departure date of the mock flights to match the requested date
+            if return_date_str:
+                requested_ret_date = datetime.datetime.strptime(return_date_str, "%Y-%m-%d").date()
+                for f in return_flights:
+                    orig_dep = f["departure_time"]
+                    orig_arr = f["arrival_time"]
+                    time_diff = orig_arr - orig_dep
+                    new_dep = datetime.datetime.combine(requested_ret_date, orig_dep.time())
+                    new_arr = new_dep + time_diff
+                    f["departure_time"] = new_dep
+                    f["arrival_time"] = new_arr
             
         # Fallback clone return flights if no return flights found but outbound flights exist
         if not return_flights and flights:
