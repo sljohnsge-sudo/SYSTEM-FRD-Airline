@@ -437,21 +437,78 @@ let selectedSeat = null;
 
 // Flight Search Logic
 function searchFlights() {
-    const origin = document.getElementById("flight-origin").value;
-    const dest = document.getElementById("flight-dest").value;
+    const isMultiCity = document.getElementById("pill-multicity") && document.getElementById("pill-multicity").classList.contains("active");
+    const container = document.getElementById("flight-results-container");
     const type = document.getElementById("flight-channel").value;
     const travelClass = document.getElementById("flight-class") ? document.getElementById("flight-class").value : "ALL";
-    const date = document.getElementById("flight-date") ? document.getElementById("flight-date").value : "";
-    const returnDateInput = document.getElementById("flight-return-date");
-    const returnDate = returnDateInput ? returnDateInput.value : "";
-    const returnDateError = document.getElementById("return-date-error");
     const airline = document.getElementById("flight-airline") ? document.getElementById("flight-airline").value : "";
-    
-    if (returnDateError) returnDateError.style.display = "none";
     
     // Hide filter bar when a new search starts
     const filterBar = document.getElementById("flight-results-filter-bar");
     if (filterBar) filterBar.style.display = "none";
+
+    container.innerHTML = `<div style="text-align:center; padding:40px;"><i class="fa-solid fa-circle-notch fa-spin" style="font-size:32px; color:var(--primary);"></i><p style="margin-top:10px;">Interrogating GDS, LCC and NDC API databases...</p></div>`;
+
+    if (isMultiCity) {
+        const wrapper = document.getElementById("multi-city-legs-wrapper");
+        const legs = [];
+        Array.from(wrapper.children).forEach(child => {
+            const legIdMatch = child.id.match(/\d+/);
+            if (legIdMatch) {
+                const legId = legIdMatch[0];
+                const o = document.getElementById(`mc-origin-${legId}`).value;
+                const d = document.getElementById(`mc-dest-${legId}`).value;
+                const dt = document.getElementById(`mc-date-${legId}`).value;
+                if (o && d && dt) {
+                    legs.push({ origin: o, dest: d, date: dt });
+                }
+            }
+        });
+        
+        if (legs.length < 2) {
+            container.innerHTML = `<div style="text-align: center; color: var(--danger); padding: 40px 0;"><i class="fa-solid fa-triangle-exclamation" style="font-size: 32px; margin-bottom: 15px;"></i><p>Please enter at least 2 complete flight legs.</p></div>`;
+            return;
+        }
+        
+        const fetchPromises = legs.map(leg => 
+            fetch(`/api/flights/search?origin=${leg.origin}&destination=${leg.dest}&flight_type=${type}&date=${leg.date}&return_date=&airline=${encodeURIComponent(airline)}&travelClass=${encodeURIComponent(travelClass)}`)
+                .then(res => res.json())
+        );
+
+        Promise.all(fetchPromises).then(results => {
+            let combinedItineraries = [];
+            const minLen = Math.min(...results.map(r => (r.success && r.flights) ? r.flights.length : 0));
+            
+            for(let i=0; i<minLen; i++) {
+                const legFlights = results.map(r => r.flights[i]);
+                const masterFlight = {
+                    is_multicity: true,
+                    legs: legFlights,
+                    price: legFlights.reduce((sum, f) => sum + parseFloat(f.price), 0),
+                    airline: legFlights[0].airline,
+                    flight_type: legFlights[0].flight_type,
+                    departure_time: legFlights[0].departure_time,
+                    segment_count: legFlights.reduce((sum, f) => sum + parseInt(f.segment_count), 0),
+                    id: legFlights[0].id // use first flight's ID for booking modal simplicity
+                };
+                combinedItineraries.push(masterFlight);
+            }
+            
+            lastSearchedFlights = combinedItineraries;
+            if (filterBar && lastSearchedFlights.length > 0) filterBar.style.display = "flex";
+            applyFlightFilters();
+        });
+        return;
+    }
+
+    const origin = document.getElementById("flight-origin").value;
+    const dest = document.getElementById("flight-dest").value;
+    const date = document.getElementById("flight-date") ? document.getElementById("flight-date").value : "";
+    const returnDateInput = document.getElementById("flight-return-date");
+    const returnDate = returnDateInput ? returnDateInput.value : "";
+    const returnDateError = document.getElementById("return-date-error");
+    
+    if (returnDateError) returnDateError.style.display = "none";
     if (returnDateInput) returnDateInput.style.borderColor = "";
     
     const isRoundTrip = document.getElementById("pill-roundtrip") && document.getElementById("pill-roundtrip").classList.contains("active");
@@ -461,18 +518,12 @@ function searchFlights() {
         return;
     }
     
-    const container = document.getElementById("flight-results-container");
-    container.innerHTML = `<div style="text-align:center; padding:40px;"><i class="fa-solid fa-circle-notch fa-spin" style="font-size:32px; color:var(--primary);"></i><p style="margin-top:10px;">Interrogating GDS, LCC and NDC API databases...</p></div>`;
-    
     fetch(`/api/flights/search?origin=${origin}&destination=${dest}&flight_type=${type}&date=${date}&return_date=${returnDate}&airline=${encodeURIComponent(airline)}&travelClass=${encodeURIComponent(travelClass)}`)
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                lastSearchedFlights = data.flights; // Cache the search results in global state
-                const filterBar = document.getElementById("flight-results-filter-bar");
-                if (filterBar && lastSearchedFlights.length > 0) {
-                    filterBar.style.display = "flex";
-                }
+                lastSearchedFlights = data.flights;
+                if (filterBar && lastSearchedFlights.length > 0) filterBar.style.display = "flex";
                 applyFlightFilters();
             }
         });
@@ -499,13 +550,79 @@ function renderFlightSearchResults(flights) {
     }
     
     flights.forEach(f => {
+        if (f.is_multicity) {
+            let legsHTML = '';
+            f.legs.forEach((leg, index) => {
+                const depDate = new Date(leg.departure_time);
+                const arrDate = new Date(leg.arrival_time);
+                const hours = Math.abs(arrDate - depDate) / 36e5;
+                const durationStr = `${Math.floor(hours)}h ${Math.round((hours % 1) * 60)}m`;
+                
+                if (index > 0) {
+                    legsHTML += `<div style="border-top: 1px dashed rgba(255,255,255,0.1); margin: 15px 0; padding-top: 15px;"></div>`;
+                }
+                
+                legsHTML += `
+                    <div style="display: flex; gap: 20px; align-items: center;">
+                        <div class="airline-info" style="min-width: 150px; flex-shrink: 0;">
+                            <div class="airline-logo-placeholder"><i class="fa-solid fa-plane"></i></div>
+                            <div>
+                                <div class="airline-name">${leg.airline} (Flight ${index+1})</div>
+                                <div class="flight-number">${leg.flight_number} • <span class="badge-type">Fare: ${leg.flight_type}</span></div>
+                            </div>
+                        </div>
+                        <div class="flight-route-flow" style="flex-grow: 1;">
+                            <div class="route-stop">
+                                <div class="route-time">${depDate.toLocaleTimeString(undefined, {hour: '2-digit', minute:'2-digit'})}</div>
+                                <div class="route-airport">${leg.origin}</div>
+                            </div>
+                            <div class="route-path-line">
+                                <span class="route-duration">${durationStr} (${leg.segment_count} Segment)</span>
+                            </div>
+                            <div class="route-stop">
+                                <div class="route-time">${arrDate.toLocaleTimeString(undefined, {hour: '2-digit', minute:'2-digit'})}</div>
+                                <div class="route-airport">${leg.destination}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            const adults = document.getElementById("flight-adults") ? parseInt(document.getElementById("flight-adults").value) : 1;
+            const children = document.getElementById("flight-children") ? parseInt(document.getElementById("flight-children").value) : 0;
+            const infants = document.getElementById("flight-infants") ? parseInt(document.getElementById("flight-infants").value) : 0;
+            const passengers = adults + children + infants;
+            const markupTotal = 15.00 * f.legs.length * passengers;
+            const totalPrice = (f.price * passengers) + markupTotal;
+            
+            container.innerHTML += `
+                <div class="flight-ticket-card">
+                    <div style="flex-grow: 1;">
+                        ${legsHTML}
+                    </div>
+                    <div class="flight-fare-booking" style="margin-left: 20px; border-left: 1px solid rgba(255,255,255,0.08); padding-left: 20px;">
+                        <div class="flight-fare-value">${formatPrice(totalPrice)}</div>
+                        <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px;">Includes ${formatPrice(markupTotal)} markup (${passengers} pax)</div>
+                        <button class="btn-book-action" onclick="openFlightBookModal('${f.id}', 'Multi-City', '${f.airline}', ${totalPrice.toFixed(2)})">
+                            <i class="fa-solid fa-circle-check"></i> Book Seat
+                        </button>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
         const depDate = new Date(f.departure_time);
         const arrDate = new Date(f.arrival_time);
         const hours = Math.abs(arrDate - depDate) / 36e5;
         const durationStr = `${Math.floor(hours)}h ${Math.round((hours % 1) * 60)}m`;
         
-        const markupTotal = f.return_flight ? 30.00 : 15.00;
-        const totalPrice = f.price + markupTotal;
+        const adults = document.getElementById("flight-adults") ? parseInt(document.getElementById("flight-adults").value) : 1;
+        const children = document.getElementById("flight-children") ? parseInt(document.getElementById("flight-children").value) : 0;
+        const infants = document.getElementById("flight-infants") ? parseInt(document.getElementById("flight-infants").value) : 0;
+        const passengers = adults + children + infants;
+        const markupTotal = (f.return_flight ? 30.00 : 15.00) * passengers;
+        const totalPrice = (f.price * passengers) + markupTotal;
         
         let returnHTML = '';
         if (f.return_flight) {
@@ -572,7 +689,7 @@ function renderFlightSearchResults(flights) {
                 
                 <div class="flight-fare-booking" style="margin-left: 20px; border-left: 1px solid rgba(255,255,255,0.08); padding-left: 20px;">
                     <div class="flight-fare-value">${formatPrice(totalPrice)}</div>
-                    <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px;">Includes ${formatPrice(markupTotal)} agency markup</div>
+                    <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px;">Includes ${formatPrice(markupTotal)} markup (${passengers} pax)</div>
                     <button class="btn-book-action" onclick="openFlightBookModal(${f.id}, '${f.flight_number}', '${f.airline}', ${totalPrice.toFixed(2)})">
                         <i class="fa-solid fa-circle-check"></i> Book Seat
                     </button>
@@ -626,46 +743,133 @@ function applyFlightFilters() {
 function setTripType(type) {
     const pillRoundtrip = document.getElementById("pill-roundtrip");
     const pillOneway = document.getElementById("pill-oneway");
+    const pillMulticity = document.getElementById("pill-multicity");
     const returnDateContainer = document.getElementById("return-date-container");
     const returnDateInput = document.getElementById("flight-return-date");
-    const searchPanel = document.querySelector(".unified-search-panel");
+    const standardFlightSearch = document.getElementById("standard-flight-search");
+    const multiCityContainer = document.getElementById("multi-city-container");
     
-    if (!pillRoundtrip || !pillOneway) return;
+    if (!pillRoundtrip || !pillOneway || !pillMulticity) return;
     
-    if (type === "oneway") {
-        // Update Pills
-        pillRoundtrip.classList.remove("active");
-        pillRoundtrip.style.background = "none";
-        pillRoundtrip.style.color = "var(--text-muted)";
+    // Reset all pills
+    const allPills = [pillRoundtrip, pillOneway, pillMulticity];
+    allPills.forEach(p => {
+        p.classList.remove("active");
+        p.style.background = "none";
+        p.style.color = "var(--text-muted)";
+    });
+
+    if (type === "multicity") {
+        pillMulticity.classList.add("active");
+        pillMulticity.style.background = "var(--primary-gradient)";
+        pillMulticity.style.color = "#fff";
         
-        pillOneway.classList.add("active");
-        pillOneway.style.background = "var(--primary-gradient)";
-        pillOneway.style.color = "#fff";
-        
-        // Hide return date
-        if (returnDateContainer) {
-            returnDateContainer.style.display = "none";
+        if (standardFlightSearch) standardFlightSearch.style.display = "none";
+        if (multiCityContainer) multiCityContainer.style.display = "block";
+
+        // Initialize multi-city legs if empty
+        const legsWrapper = document.getElementById("multi-city-legs-wrapper");
+        if (legsWrapper && legsWrapper.children.length === 0) {
+            addMultiCityLeg(); // Flight 1
+            addMultiCityLeg(); // Flight 2
         }
-        if (returnDateInput) {
-            returnDateInput.value = "";
-            returnDateInput.style.borderColor = "";
-        }
-        const returnDateError = document.getElementById("return-date-error");
-        if (returnDateError) returnDateError.style.display = "none";
     } else {
-        // Update Pills
-        pillOneway.classList.remove("active");
-        pillOneway.style.background = "none";
-        pillOneway.style.color = "var(--text-muted)";
-        
-        pillRoundtrip.classList.add("active");
-        pillRoundtrip.style.background = "var(--primary-gradient)";
-        pillRoundtrip.style.color = "#fff";
-        
-        // Show return date
-        if (returnDateContainer) {
-            returnDateContainer.style.display = "flex";
+        if (standardFlightSearch) standardFlightSearch.style.display = "contents";
+        if (multiCityContainer) multiCityContainer.style.display = "none";
+
+        if (type === "oneway") {
+            pillOneway.classList.add("active");
+            pillOneway.style.background = "var(--primary-gradient)";
+            pillOneway.style.color = "#fff";
+            
+            if (returnDateContainer) returnDateContainer.style.display = "none";
+            if (returnDateInput) {
+                returnDateInput.value = "";
+                returnDateInput.style.borderColor = "";
+            }
+            const returnDateError = document.getElementById("return-date-error");
+            if (returnDateError) returnDateError.style.display = "none";
+        } else {
+            pillRoundtrip.classList.add("active");
+            pillRoundtrip.style.background = "var(--primary-gradient)";
+            pillRoundtrip.style.color = "#fff";
+            
+            if (returnDateContainer) returnDateContainer.style.display = "flex";
         }
+    }
+}
+
+let multiCityLegCount = 0;
+function addMultiCityLeg() {
+    multiCityLegCount++;
+    const legId = multiCityLegCount;
+    const wrapper = document.getElementById("multi-city-legs-wrapper");
+    
+    const div = document.createElement("div");
+    div.className = "multi-city-leg";
+    div.id = `multi-city-leg-${legId}`;
+    div.style.marginBottom = "15px";
+    
+    div.innerHTML = `
+        <div style="font-weight: 600; font-size: 14px; margin-bottom: 8px; color: var(--text-color);">Flight ${legId}</div>
+        <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+            <div class="search-input-group" style="flex: 1; margin: 0; position: relative;">
+                <label>Leaving from</label>
+                <input type="text" id="mc-origin-${legId}" class="form-control" placeholder="Add city, airport" autocomplete="off">
+                <div class="autocomplete-dropdown" id="mc-origin-dropdown-${legId}"></div>
+            </div>
+            <div style="cursor: pointer; color: var(--text-muted); font-size: 18px; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.05); margin-top: 15px;" onclick="swapMultiCityLocations(${legId})">
+                <i class="fa-solid fa-right-left"></i>
+            </div>
+            <div class="search-input-group" style="flex: 1; margin: 0; position: relative;">
+                <label>Going to</label>
+                <input type="text" id="mc-dest-${legId}" class="form-control" placeholder="Add city, airport" autocomplete="off">
+                <div class="autocomplete-dropdown" id="mc-dest-dropdown-${legId}"></div>
+            </div>
+            <div class="search-input-group" style="flex: 1; margin: 0;">
+                <label>Date</label>
+                <input type="text" id="mc-date-${legId}" class="form-control date-picker" placeholder="Add date">
+            </div>
+            ${legId > 2 ? `<div style="cursor: pointer; color: var(--danger); font-size: 16px; margin-top: 15px;" onclick="removeMultiCityLeg(${legId})"><i class="fa-solid fa-trash"></i></div>` : ''}
+        </div>
+    `;
+    
+    wrapper.appendChild(div);
+    
+    // Initialize flatpickr for the new input
+    flatpickr(`#mc-date-${legId}`, {
+        dateFormat: "Y-m-d",
+        minDate: "today",
+        altInput: true,
+        altFormat: "F j, Y",
+    });
+    
+    // Initialize autocomplete for origin and destination
+    const originInput = document.getElementById(`mc-origin-${legId}`);
+    const destInput = document.getElementById(`mc-dest-${legId}`);
+    if (originInput) setupAutocompleteForInput(originInput, `mc-origin-dropdown-${legId}`);
+    if (destInput) setupAutocompleteForInput(destInput, `mc-dest-dropdown-${legId}`);
+}
+
+function removeMultiCityLeg(legId) {
+    const leg = document.getElementById(`multi-city-leg-${legId}`);
+    if (leg) {
+        leg.remove();
+        // Recalculate labels for remaining legs
+        const wrapper = document.getElementById("multi-city-legs-wrapper");
+        Array.from(wrapper.children).forEach((child, index) => {
+            child.querySelector("div").innerText = `Flight ${index + 1}`;
+        });
+    }
+}
+
+function swapMultiCityLocations(legId) {
+    const o = document.getElementById(`mc-origin-${legId}`);
+    const d = document.getElementById(`mc-dest-${legId}`);
+    if (o && d) {
+        const temp = o.value;
+        o.value = d.value;
+        d.value = temp;
     }
 }
 

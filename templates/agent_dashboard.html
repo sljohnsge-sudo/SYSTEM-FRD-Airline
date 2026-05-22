@@ -229,24 +229,67 @@
                     <!-- Search widget -->
                     <div class="unified-search-panel">
                         <!-- Trip Type selector -->
-                        <div class="trip-type-selector" style="display: flex; gap: 10px; margin-bottom: 12px; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 30px; width: fit-content; border: 1px solid var(--border-dark);">
-                            <div class="trip-type-pill active" id="pill-roundtrip" onclick="setTripType('roundtrip')" style="padding: 6px 18px; border-radius: 20px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.25s ease; color: #fff; background: var(--primary-gradient);">
-                                <i class="fa-solid fa-arrows-left-right-to-line" style="margin-right: 6px;"></i>Return Ticket
+                        <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 12px;">
+                            <div class="trip-type-selector" style="display: flex; gap: 10px; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 30px; width: fit-content; border: 1px solid var(--border-dark);">
+                                <div class="trip-type-pill active" id="pill-roundtrip" onclick="setTripType('roundtrip')" style="padding: 6px 18px; border-radius: 20px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.25s ease; color: #fff; background: var(--primary-gradient);">
+                                    <i class="fa-solid fa-arrows-left-right-to-line" style="margin-right: 6px;"></i>Return Ticket
+                                </div>
+                                <div class="trip-type-pill" id="pill-oneway" onclick="setTripType('oneway')" style="padding: 6px 18px; border-radius: 20px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.25s ease; color: var(--text-muted);">
+                                    <i class="fa-solid fa-arrow-right" style="margin-right: 6px;"></i>One-way Ticket
+                                </div>
+                                <div class="trip-type-pill" id="pill-multicity" onclick="setTripType('multicity')" style="padding: 6px 18px; border-radius: 20px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.25s ease; color: var(--text-muted);">
+                                    <i class="fa-solid fa-location-dot" style="margin-right: 6px;"></i>Multi-City
+                                </div>
                             </div>
-                            <div class="trip-type-pill" id="pill-oneway" onclick="setTripType('oneway')" style="padding: 6px 18px; border-radius: 20px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.25s ease; color: var(--text-muted);">
-                                <i class="fa-solid fa-arrow-right" style="margin-right: 6px;"></i>One-way Ticket
+                            
+                            <div class="passenger-selector" style="margin-left: auto; display: flex; gap: 10px;">
+                                <div>
+                                    <label style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; display: block;">Adults</label>
+                                    <select id="flight-adults" class="form-control" style="width: 70px; padding: 6px; height: auto; text-align: center;">
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; display: block;">Children</label>
+                                    <select id="flight-children" class="form-control" style="width: 70px; padding: 6px; height: auto; text-align: center;">
+                                        <option value="0">0</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; display: block;">Infants</label>
+                                    <select id="flight-infants" class="form-control" style="width: 70px; padding: 6px; height: auto; text-align: center;">
+                                        <option value="0">0</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
-                        <div class="search-input-group">
-                            <label>Origin Airport</label>
-                            <input type="text" id="flight-origin" class="form-control" placeholder="e.g. CMB" value="CMB" autocomplete="off">
-                            <div class="autocomplete-dropdown" id="flight-origin-dropdown"></div>
-                        </div>
-                        <div class="search-input-group">
-                            <label>Destination Airport</label>
-                            <input type="text" id="flight-dest" class="form-control" placeholder="e.g. MLE" value="MLE" autocomplete="off">
-                            <div class="autocomplete-dropdown" id="flight-dest-dropdown"></div>
-                        </div>
+
+                        <!-- Standard Flight Search Fields -->
+                        <div id="standard-flight-search" style="display: flex; flex-wrap: wrap; gap: 16px; width: 100%; align-items: flex-end;">
+                            <div style="display: flex; gap: 16px; flex: 1 1 100%;">
+                                <div class="search-input-group" style="flex: 1;">
+                                    <label>Origin Airport</label>
+                                    <input type="text" id="flight-origin" class="form-control" placeholder="e.g. CMB" value="CMB" autocomplete="off">
+                                    <div class="autocomplete-dropdown" id="flight-origin-dropdown"></div>
+                                </div>
+                                <div class="search-input-group" style="flex: 1;">
+                                    <label>Destination Airport</label>
+                                    <input type="text" id="flight-dest" class="form-control" placeholder="e.g. MLE" value="MLE" autocomplete="off">
+                                    <div class="autocomplete-dropdown" id="flight-dest-dropdown"></div>
+                                </div>
+                            </div>
                         <div class="search-input-group">
                             <label>Travel Class</label>
                             <select id="flight-class" class="form-control">
@@ -286,31 +329,47 @@
                                 <option value="Turkish Airlines">Turkish Airlines</option>
                             </select>
                         </div>
-                        <div class="search-input-group">
-                            <label>Departure Date</label>
-                            <input type="text" id="flight-date" class="form-control date-picker" value="2026-05-28" placeholder="Select Departure Date">
-                        </div>
-                        <div class="search-input-group">
-                            <label>Depart Before Time</label>
-                            <div style="display: flex; gap: 8px;">
-                                <select id="flight-time-mode" class="form-control" style="flex: 1;" onchange="document.getElementById('flight-time-wrapper').style.display = this.value === 'BEFORE' ? 'block' : 'none';">
-                                    <option value="ALL">Anytime</option>
-                                    <option value="BEFORE">Select Time</option>
-                                </select>
-                                <div id="flight-time-wrapper" style="flex: 1; display: none;">
-                                    <input type="text" id="flight-time-before" class="form-control time-picker" placeholder="e.g. 06:00 PM">
+                            <div style="display: flex; gap: 16px; flex: 1 1 100%; align-items: flex-start;">
+                                <div class="search-input-group" style="flex: 1;">
+                                    <label>Departure Date</label>
+                                    <input type="text" id="flight-date" class="form-control date-picker" value="2026-05-28" placeholder="Select Departure Date">
+                                </div>
+                                <div class="search-input-group" id="return-date-container" style="flex: 1;">
+                                    <label>Return Date</label>
+                                    <input type="text" id="flight-return-date" class="form-control date-picker" placeholder="Optional (Select Return Date)">
+                                    <span id="return-date-error" style="display:none; color:var(--danger); font-size:11px; margin-top:4px;"><i class="fa-solid fa-circle-exclamation"></i> Please select the return date</span>
+                                </div>
+                                <div class="search-input-group" style="flex: 1;">
+                                    <label>Depart Before Time</label>
+                                    <div style="display: flex; gap: 8px;">
+                                        <select id="flight-time-mode" class="form-control" style="flex: 1;" onchange="document.getElementById('flight-time-wrapper').style.display = this.value === 'BEFORE' ? 'block' : 'none';">
+                                            <option value="ALL">Anytime</option>
+                                            <option value="BEFORE">Select Time</option>
+                                        </select>
+                                        <div id="flight-time-wrapper" style="flex: 1; display: none;">
+                                            <input type="text" id="flight-time-before" class="form-control time-picker" placeholder="e.g. 06:00 PM">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+                        </div> <!-- End of standard-flight-search -->
+
+                        <!-- Multi-City Flight Search Container -->
+                        <div id="multi-city-container" style="display: none; width: 100%; margin-top: 15px;">
+                            <div id="multi-city-legs-wrapper" style="display: flex; flex-direction: column; gap: 15px;">
+                                <!-- Legs will be injected here via JS -->
+                            </div>
+                            <button class="btn" style="margin-top: 15px; background: rgba(0, 123, 255, 0.1); color: #007bff; border: none; padding: 10px 20px; font-weight: 600; border-radius: 8px; cursor: pointer;" onclick="addMultiCityLeg()">
+                                <i class="fa-solid fa-plus"></i> Add city, airport
+                            </button>
                         </div>
-                        <div class="search-input-group" id="return-date-container">
-                            <label>Return Date</label>
-                            <input type="text" id="flight-return-date" class="form-control date-picker" placeholder="Optional (Select Return Date)">
-                            <span id="return-date-error" style="display:none; color:var(--danger); font-size:11px; margin-top:4px;"><i class="fa-solid fa-circle-exclamation"></i> Please select the return date</span>
+                        
+                        <div style="width: 100%; display: flex; justify-content: flex-end; margin-top: 20px;">
+                            <button class="btn-search" onclick="searchFlights()" style="min-width: 150px;">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <span>Search</span>
+                            </button>
                         </div>
-                        <button class="btn-search" onclick="searchFlights()">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            <span>Search</span>
-                        </button>
                     </div>
                     </div>
 

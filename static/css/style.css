@@ -781,7 +781,8 @@ h1, h2, h3, h4, .brand-font {
     flex: 1 1 100%;
 }
 
-.unified-search-panel > .search-input-group {
+.unified-search-panel > .search-input-group,
+#standard-flight-search > .search-input-group {
     flex: 1 1 180px;
 }
 
