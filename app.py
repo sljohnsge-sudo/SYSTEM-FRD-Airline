@@ -1900,6 +1900,32 @@ def api_admin_support_resolve():
         conn.close()
         return jsonify({"success": False, "error": str(e)}), 500
 
+# API: Get Current Agent Credit Balance
+@app.route("/api/agent/credit")
+def api_agent_credit():
+    if "user_id" not in session:
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("SELECT credit_balance, company_name FROM users WHERE id = %s", (session["user_id"],))
+        agent = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        if agent:
+            return jsonify({
+                "success": True, 
+                "credit_balance": float(agent["credit_balance"]),
+                "company_name": agent["company_name"]
+            })
+        return jsonify({"success": False, "error": "Agent not found"}), 404
+    except Exception as e:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+        return jsonify({"success": False, "error": str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True, host="127.0.0.1", port=5000)
