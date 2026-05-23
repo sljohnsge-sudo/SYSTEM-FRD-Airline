@@ -101,6 +101,16 @@ def agent_dashboard():
     
     return render_template("agent_dashboard.html", agent=agent_info, popups=popups, flights=flights, hotels=hotels)
 
+# Route: Flight Results (New Window)
+@app.route("/flight-results")
+def flight_results():
+    if "user_id" not in session or session["role"] != "agent":
+        return redirect(url_for("login"))
+    
+    agent_id = session["user_id"]
+    agent_info = query_db("SELECT * FROM users WHERE id = %s", (agent_id,), one=True)
+    
+    return render_template("flight_results.html", agent=agent_info)
 # Route: Admin Dashboard
 @app.route("/admin")
 def admin_dashboard():
@@ -176,6 +186,7 @@ LOCATION_MAPPING = {
     "QATAR": "DOH",
     "SYDNEY": "SYD",
     "AUSTRALIA": "SYD",
+    "MELBOURNE": "MEL",
     "NEW YORK": "JFK",
     "USA": "JFK",
     "UNITED STATES": "JFK",
@@ -202,7 +213,12 @@ LOCATION_MAPPING = {
     "CHINA": "PEK",
     "BEIJING": "PEK",
     "CANADA": "YYZ",
-    "TORONTO": "YYZ"
+    "TORONTO": "YYZ",
+    "JAFFNA": "JAF",
+    "CHENNAI": "MAA",
+    "MUMBAI": "BOM",
+    "BANGALORE": "BLR",
+    "NEWARK": "EWR"
 }
 
 AIRLINE_MAPPING = {

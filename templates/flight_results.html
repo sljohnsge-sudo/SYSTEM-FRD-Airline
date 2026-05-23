@@ -1,0 +1,1615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Search Results - Flight Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-main: #2b3a42;
+            --text-muted: #6c757d;
+            --primary-blue: #88123B;
+            --primary-dark: #003b95;
+            --blue-tint: #effcff;
+            --success-green: #008234;
+            --success-green-hover: #006c2b;
+            --card-bg: #ffffff;
+            --border-color: #e9ecef;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+        }
+
+        .results-header {
+            background-color: var(--primary-dark);
+            color: white;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-brand {
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .layout-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 20px;
+            padding: 0 20px;
+        }
+
+        .sidebar { background: transparent; }
+        .filter-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        .filter-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .filter-option {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .filter-option input[type="checkbox"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .results-main { display: flex; flex-direction: column; gap: 15px; }
+
+        .sort-bar {
+            display: flex;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+        .sort-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-right: 1px solid var(--border-color);
+        }
+        .sort-tab:last-child { border-right: none; }
+        .sort-tab.active {
+            border-bottom: 3px solid var(--primary-blue);
+            color: var(--primary-blue);
+            background: var(--blue-tint);
+        }
+
+        .flight-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: box-shadow 0.2s;
+        }
+        .flight-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+        .airline-logo {
+            width: 32px; height: 32px; background: #eee; border-radius: 4px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--primary-blue);
+        }
+
+        .fc-price { font-size: 24px; font-weight: 800; color: var(--success-green); }
+        .btn-book {
+            background: var(--success-green); color: white; border: none;
+            padding: 10px 24px; border-radius: 4px; font-size: 14px; font-weight: 700;
+            cursor: pointer; width: 100%; transition: background 0.2s;
+        }
+        .btn-book:hover { background: var(--success-green-hover); }
+        
+        .loading-state {
+            text-align: center; padding: 50px; background: white;
+            border-radius: 8px; border: 1px solid var(--border-color);
+        }
+
+        /* Hide scrollbars in airline carousel */
+        #airline-carousel-inner::-webkit-scrollbar {
+            display: none;
+        }
+        .carousel-tile:hover {
+            background: var(--blue-tint) !important;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            width: 500px;
+            max-width: 90%;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .modal-header {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-close {
+            cursor: pointer;
+            font-size: 20px;
+            color: var(--text-muted);
+        }
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .btn-submit {
+            background: var(--success-green);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+        }
+        .btn-submit:hover {
+            background: var(--success-green-hover);
+        }
+        
+        /* Dynamic 2-column layout for Traveler & Seat selector modal */
+        .booking-modal-grid {
+            display: grid;
+            grid-template-columns: 1.3fr 1fr;
+            gap: 25px;
+            margin-top: 15px;
+        }
+        @media (max-width: 900px) {
+            .booking-modal-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .traveler-header:hover {
+            opacity: 0.9;
+        }
+        
+        /* Interactive Seat Selector map */
+        .plane-fuselage {
+            border: 2px solid #ccc;
+            border-radius: 50px 50px 15px 15px;
+            background: #ffffff;
+            padding: 35px 20px 20px 20px;
+            width: 250px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            position: relative;
+        }
+        .plane-nose {
+            position: absolute;
+            top: -16px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 55px;
+            height: 16px;
+            background: #ffffff;
+            border: 2px solid #ccc;
+            border-bottom: none;
+            border-radius: 40px 40px 0 0;
+        }
+        .seat-row {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 6px;
+            align-items: center;
+            width: 100%;
+        }
+        .seat {
+            width: 24px;
+            height: 24px;
+            background: #ffffff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .seat.aisle {
+            width: 24px;
+            background: transparent;
+            border: none;
+            cursor: default;
+        }
+        .seat:not(.aisle):hover {
+            background: var(--blue-tint);
+            border-color: var(--primary-dark);
+            color: var(--primary-dark);
+        }
+        .seat.selected {
+            background: var(--primary-dark) !important;
+            border-color: var(--primary-dark) !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 8px rgba(0, 59, 149, 0.4);
+            font-weight: bold;
+        }
+        .seat.occupied {
+            background: rgba(255, 77, 77, 0.12) !important;
+            border-color: rgba(255, 77, 77, 0.2) !important;
+            color: rgba(255, 77, 77, 0.4) !important;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <header class="results-header">
+        <div class="header-brand"><i class="fa-solid fa-plane-departure"></i> Flight Hub Results</div>
+        <div>Logged in as {{ agent.company_name }}</div>
+    </header>
+
+    <div class="layout-container">
+        <!-- Sidebar filters -->
+        <aside class="sidebar">
+            <div class="filter-section">
+                <div class="filter-title" style="display:flex; justify-content:space-between;">PRICE <span style="font-size:11px; font-weight:normal; color:#999; cursor:pointer;" onclick="this.parentElement.nextElementSibling.style.display='none'; this.parentElement.nextElementSibling.nextElementSibling.style.display='none';">HIDE</span></div>
+                <input type="range" id="filter-price" min="100000" max="1000000" value="1000000" style="width: 100%;" onchange="document.getElementById('price-val-display').innerText = 'LKR ' + parseInt(this.value).toLocaleString(); applyFilters();">
+                <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted); margin-top:5px;">
+                    <span>LKR 100,000</span>
+                    <span id="price-val-display">LKR 1,000,000</span>
+                </div>
+            </div>
+            
+            <div class="filter-section">
+                <div class="filter-title" style="display:flex; justify-content:space-between;">FARE TYPE <span style="font-size:11px; font-weight:normal; color:#999; cursor:pointer;">HIDE</span></div>
+                <label class="filter-option"><input type="checkbox" checked value="REFUNDABLE" class="filter-fare" onchange="applyFilters()"> REFUNDABLE</label>
+                <label class="filter-option"><input type="checkbox" checked value="NON_REFUNDABLE" class="filter-fare" onchange="applyFilters()"> NON REFUNDABLE</label>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-title" style="display:flex; justify-content:space-between;">STOPS <span style="font-size:11px; font-weight:normal; color:#999; cursor:pointer;">HIDE</span></div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px; margin-bottom:10px;">
+                    <div class="filter-stop-btn selected" data-val="0" style="padding:8px 0; background:rgba(136, 18, 59, 0.08); border: 1px solid var(--primary-blue); text-align:center; font-size:12px; cursor:pointer; border-radius:4px;" onclick="toggleFilterBtn(this); applyFilters();">0 STOP</div>
+                    <div class="filter-stop-btn selected" data-val="1" style="padding:8px 0; background:rgba(136, 18, 59, 0.08); border: 1px solid var(--primary-blue); text-align:center; font-size:12px; cursor:pointer; border-radius:4px;" onclick="toggleFilterBtn(this); applyFilters();">1 STOP</div>
+                    <div class="filter-stop-btn selected" data-val="2" style="padding:8px 0; background:rgba(136, 18, 59, 0.08); border: 1px solid var(--primary-blue); text-align:center; font-size:12px; cursor:pointer; border-radius:4px;" onclick="toggleFilterBtn(this); applyFilters();">2+ STOPS</div>
+                </div>
+            </div>
+            
+            <div class="filter-section">
+                <div class="filter-title" style="display:flex; justify-content:space-between;">CONNECTION TIME <span style="font-size:11px; font-weight:normal; color:#999; cursor:pointer;">HIDE</span></div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px;">
+                    <div class="filter-conn-btn selected" data-min="0" data-max="5" style="padding:8px 0; background:rgba(136, 18, 59, 0.08); border: 1px solid var(--primary-blue); text-align:center; font-size:12px; cursor:pointer; border-radius:4px;" onclick="toggleFilterBtn(this); applyFilters();">0h - 5h</div>
+                    <div class="filter-conn-btn selected" data-min="5" data-max="10" style="padding:8px 0; background:rgba(136, 18, 59, 0.08); border: 1px solid var(--primary-blue); text-align:center; font-size:12px; cursor:pointer; border-radius:4px;" onclick="toggleFilterBtn(this); applyFilters();">5h - 10h</div>
+                    <div class="filter-conn-btn selected" data-min="10" data-max="15" style="padding:8px 0; background:rgba(136, 18, 59, 0.08); border: 1px solid var(--primary-blue); text-align:center; font-size:12px; cursor:pointer; border-radius:4px;" onclick="toggleFilterBtn(this); applyFilters();">10h - 15h</div>
+                    <div class="filter-conn-btn selected" data-min="15" data-max="99" style="padding:8px 0; background:rgba(136, 18, 59, 0.08); border: 1px solid var(--primary-blue); text-align:center; font-size:12px; cursor:pointer; border-radius:4px;" onclick="toggleFilterBtn(this); applyFilters();">15h+</div>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-title" style="display:flex; justify-content:space-between;">FLIGHT TIMINGS (LOCAL) <span style="font-size:11px; font-weight:normal; color:#999; cursor:pointer;">HIDE</span></div>
+                <div style="display:flex; border-bottom:2px solid var(--primary-blue); margin-bottom:10px; cursor:pointer;">
+                    <div id="timing-tab-dep" style="flex:1; text-align:center; font-size:12px; font-weight:bold; background:#7b93a4; color:white; padding:8px;" onclick="switchTimingTab('DEPARTURE')">DEPARTURE</div>
+                    <div id="timing-tab-arr" style="flex:1; text-align:center; font-size:12px; font-weight:bold; padding:8px;" onclick="switchTimingTab('ARRIVAL')">ARRIVAL</div>
+                </div>
+                
+                <div id="timing-label-outbound" style="font-size:11px; color:var(--text-muted); background:#e0e0e0; padding:4px 8px; margin-bottom:5px;">OUTBOUND DEPARTURE</div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:2px; margin-bottom:10px;">
+                    <div class="filter-dep-btn selected" data-min="0" data-max="6" style="padding:10px 0; background:rgba(136, 18, 59, 0.08); text-align:center; font-size:9px; cursor:pointer; color:var(--text-main); border-bottom:2px solid var(--primary-blue);" onclick="toggleTimingBtn(this); applyFilters();"><i class="fa-solid fa-sun fa-lg"></i><br><br>00:00-06:00</div>
+                    <div class="filter-dep-btn selected" data-min="6" data-max="12" style="padding:10px 0; background:rgba(136, 18, 59, 0.08); text-align:center; font-size:9px; cursor:pointer; color:var(--text-main); border-bottom:2px solid var(--primary-blue);" onclick="toggleTimingBtn(this); applyFilters();"><i class="fa-regular fa-sun fa-lg"></i><br><br>06:00-12:00</div>
+                    <div class="filter-dep-btn selected" data-min="12" data-max="18" style="padding:10px 0; background:rgba(136, 18, 59, 0.08); text-align:center; font-size:9px; cursor:pointer; color:var(--text-main); border-bottom:2px solid var(--primary-blue);" onclick="toggleTimingBtn(this); applyFilters();"><i class="fa-solid fa-cloud-sun fa-lg"></i><br><br>12:00-18:00</div>
+                    <div class="filter-dep-btn selected" data-min="18" data-max="24" style="padding:10px 0; background:rgba(136, 18, 59, 0.08); text-align:center; font-size:9px; cursor:pointer; color:var(--text-main); border-bottom:2px solid var(--primary-blue);" onclick="toggleTimingBtn(this); applyFilters();"><i class="fa-solid fa-moon fa-lg"></i><br><br>18:00-23:59</div>
+                </div>
+                
+                <div id="timing-label-return" style="font-size:11px; color:var(--text-muted); background:#e0e0e0; padding:4px 8px; margin-bottom:5px;">RETURN DEPARTURE</div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:2px;">
+                    <div class="filter-arr-btn selected" data-min="0" data-max="6" style="padding:10px 0; background:rgba(136, 18, 59, 0.08); text-align:center; font-size:9px; cursor:pointer; color:var(--text-main); border-bottom:2px solid var(--primary-blue);" onclick="toggleTimingBtn(this); applyFilters();"><i class="fa-solid fa-sun fa-lg"></i><br><br>00:00-06:00</div>
+                    <div class="filter-arr-btn selected" data-min="6" data-max="12" style="padding:10px 0; background:rgba(136, 18, 59, 0.08); text-align:center; font-size:9px; cursor:pointer; color:var(--text-main); border-bottom:2px solid var(--primary-blue);" onclick="toggleTimingBtn(this); applyFilters();"><i class="fa-regular fa-sun fa-lg"></i><br><br>06:00-12:00</div>
+                    <div class="filter-arr-btn selected" data-min="12" data-max="18" style="padding:10px 0; background:rgba(136, 18, 59, 0.08); text-align:center; font-size:9px; cursor:pointer; color:var(--text-main); border-bottom:2px solid var(--primary-blue);" onclick="toggleTimingBtn(this); applyFilters();"><i class="fa-solid fa-cloud-sun fa-lg"></i><br><br>12:00-18:00</div>
+                    <div class="filter-arr-btn selected" data-min="18" data-max="24" style="padding:10px 0; background:rgba(136, 18, 59, 0.08); text-align:center; font-size:9px; cursor:pointer; color:var(--text-main); border-bottom:2px solid var(--primary-blue);" onclick="toggleTimingBtn(this); applyFilters();"><i class="fa-solid fa-moon fa-lg"></i><br><br>18:00-23:59</div>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-title" style="display:flex; justify-content:space-between;">AIRLINES <span style="font-size:11px; font-weight:normal; color:#999; cursor:pointer;">HIDE</span></div>
+                <div style="display:flex; margin-bottom:10px; border:1px solid var(--border-color); border-radius:4px; overflow:hidden; cursor:pointer;">
+                    <div id="airline-sort-cheap" style="flex:1; text-align:center; font-size:12px; font-weight:bold; background:#7b93a4; color:white; padding:6px;" onclick="switchSortTab('cheapest')"><i class="fa-solid fa-tag"></i> CHEAPEST</div>
+                    <div id="airline-sort-fast" style="flex:1; text-align:center; font-size:12px; font-weight:bold; padding:6px;" onclick="switchSortTab('fastest')"><i class="fa-solid fa-bolt"></i> FASTEST</div>
+                </div>
+                <div id="airline-filters-container" style="max-height: 200px; overflow-y: auto;"></div>
+            </div>
+            
+            <div class="filter-section">
+                <div class="filter-title" style="display:flex; justify-content:space-between;">CONNECTING AIRPORTS <span style="font-size:11px; font-weight:normal; color:#999; cursor:pointer;">HIDE</span></div>
+                <div id="airports-filters-container" style="max-height: 200px; overflow-y: auto; font-size:13px;">
+                    <label class="filter-option" style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                        <div><input type="checkbox" checked value="AUH" class="filter-airport" onchange="applyFilters()"> ABU DHABI <span style="color:#999; font-size:10px;">(AUH)</span></div>
+                    </label>
+                    <label class="filter-option" style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                        <div><input type="checkbox" checked value="MAA" class="filter-airport" onchange="applyFilters()"> CHENNAI <span style="color:#999; font-size:10px;">(MAA)</span></div>
+                    </label>
+                    <label class="filter-option" style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                        <div><input type="checkbox" checked value="BKK" class="filter-airport" onchange="applyFilters()"> BANGKOK <span style="color:#999; font-size:10px;">(BKK)</span></div>
+                    </label>
+                    <label class="filter-option" style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                        <div><input type="checkbox" checked value="SIN" class="filter-airport" onchange="applyFilters()"> SINGAPORE <span style="color:#999; font-size:10px;">(SIN)</span></div>
+                    </label>
+                    <label class="filter-option" style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                        <div><input type="checkbox" checked value="KUL" class="filter-airport" onchange="applyFilters()"> KUALA LUMPUR <span style="color:#999; font-size:10px;">(KUL)</span></div>
+                    </label>
+                </div>
+                <div style="text-align:right; margin-top:15px;">
+                    <a href="#" style="color:var(--primary-dark); font-size:12px; text-decoration:none; font-weight:bold;" onclick="resetAllFilters(); return false;">RESET ALL</a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Right Main results container -->
+        <main class="results-main">
+            <!-- Search Summary Card -->
+            <div class="summary-card" style="background: white; border: 1px solid var(--border-color); border-radius: 8px; padding: 15px 25px; display: flex; align-items: center; justify-content: space-between; gap: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;" id="summary-trip-type">ROUND-TRIP</span>
+                    <span style="font-size: 16px; font-weight: 700; color: var(--text-main);" id="summary-cities">Colombo ⇄ Melbourne</span>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">DEPARTURE</span>
+                    <span style="font-size: 14px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 5px;">
+                        <i class="fa-regular fa-calendar-days" style="color: var(--text-muted);"></i>
+                        <span id="summary-departure-date">--</span>
+                    </span>
+                </div>
+                
+                <div id="summary-return-date-container" style="display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">RETURN</span>
+                    <span style="font-size: 14px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 5px;">
+                        <i class="fa-regular fa-calendar-days" style="color: var(--text-muted);"></i>
+                        <span id="summary-return-date">--</span>
+                    </span>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 4px; text-align: center; width: 60px;">
+                    <span style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">ADULT</span>
+                    <span style="font-size: 15px; font-weight: 700; color: var(--text-main);" id="summary-adults">1</span>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 4px; text-align: center; width: 70px;">
+                    <span style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">CHILDREN</span>
+                    <span style="font-size: 15px; font-weight: 700; color: var(--text-main);" id="summary-children">--</span>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 4px; text-align: center; width: 60px;">
+                    <span style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">INFANT</span>
+                    <span style="font-size: 15px; font-weight: 700; color: var(--text-main);" id="summary-infant">--</span>
+                </div>
+                
+                <button class="btn-modify-outline" onclick="window.close()" style="background: white; border: 1px solid var(--primary-blue); color: var(--primary-blue); padding: 8px 16px; border-radius: 4px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 13px; transition: background 0.2s;">
+                    <i class="fa-solid fa-magnifying-glass"></i> Modify Search
+                </button>
+            </div>
+
+            <!-- Transit Info Banner -->
+            <div class="transit-info-banner" style="background: var(--blue-tint); border: 1px solid rgba(0, 59, 149, 0.2); border-radius: 4px; padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--primary-dark); box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                <i class="fa-solid fa-circle-info" style="color: var(--primary-dark); font-size: 18px;"></i>
+                <span style="font-weight: 500;">If you are transiting any country, kindly check for Transit Visa requirements.</span>
+            </div>
+
+            <!-- Airline Quick-Filter Carousel -->
+            <div class="airline-carousel-card" style="background: white; border: 1px solid var(--border-color); border-radius: 8px; display: flex; align-items: center; padding: 8px 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden;">
+                <!-- Left Arrow -->
+                <div id="carousel-prev" style="color: var(--primary-blue); cursor: pointer; font-size: 18px; padding: 10px; font-weight: bold; user-select: none;" onclick="slideCarousel(-1)">
+                    <i class="fa-solid fa-angle-left"></i>
+                </div>
+                
+                <!-- Outer Wrapper -->
+                <div id="carousel-outer" style="flex: 1; overflow: hidden;">
+                    <!-- Inner Slider -->
+                    <div id="airline-carousel-inner" style="display: flex; gap: 15px; overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; padding: 5px 0;">
+                        <!-- Dynamic Airline tiles will be inserted here -->
+                    </div>
+                </div>
+                
+                <!-- Right Arrow -->
+                <div id="carousel-next" style="color: var(--primary-blue); cursor: pointer; font-size: 18px; padding: 10px; font-weight: bold; user-select: none;" onclick="slideCarousel(1)">
+                    <i class="fa-solid fa-angle-right"></i>
+                </div>
+            </div>
+
+            <!-- Date Matrix Carousel Removed -->
+
+            <!-- Sorting tabs -->
+            <div class="sort-bar">
+                <div id="sort-tab-cheap" class="sort-tab active" onclick="switchSortTab('cheapest')">Cheapest</div>
+                <div id="sort-tab-quick" class="sort-tab" onclick="switchSortTab('fastest')">Quickest</div>
+                <div id="sort-tab-best" class="sort-tab" onclick="switchSortTab('best')">Best</div>
+            </div>
+
+            <!-- Flight results stack -->
+            <div id="flight-list-container">
+                <div class="loading-state">
+                    <i class="fa-solid fa-spinner fa-spin fa-2x" style="color: var(--primary-blue); margin-bottom: 15px;"></i>
+                    <h3>Interrogating Global Distribution Systems...</h3>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Booking Modal -->
+    <div class="modal-overlay" id="booking-modal">
+        <div class="modal-content" style="width: 1100px; max-width: 95vw; border-radius: 12px; padding: 25px 30px; background: #ffffff; box-shadow: 0 10px 30px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <span id="booking-modal-title" style="font-weight: 700; font-size: 20px; color: var(--primary-dark);"><i class="fa-solid fa-plane-departure" style="margin-right: 8px;"></i>GDS Flight Booking Confirmation</span>
+                <span class="modal-close" onclick="closeBookingModal()" style="font-size: 24px; cursor: pointer; color: var(--text-muted);">&times;</span>
+            </div>
+            
+            <form id="booking-form" onsubmit="submitBooking(event)">
+                <!-- Hidden fields for compatibility -->
+                <input type="hidden" id="book-outbound-id">
+                <input type="hidden" id="book-return-id">
+                <input type="hidden" id="book-ticket-now">
+                <input type="hidden" id="book-pax-name" required>
+                <input type="hidden" id="book-passport" required>
+                <input type="hidden" id="book-phone" required>
+                <input type="hidden" id="book-email" required>
+                <input type="hidden" id="book-seat">
+                <input type="hidden" id="book-return-seat">
+                
+                <div class="booking-modal-grid">
+                    <!-- Left Column: Traveler Details Form -->
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        
+                        <!-- Adult 1 Card Wrapper -->
+                        <div class="traveler-details-card" style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px;">
+                            <div class="traveler-header" onclick="toggleTravelerDetails()" style="display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: 700; color: var(--primary-dark); cursor: pointer; padding-bottom: 8px; border-bottom: 1px solid #ced4da; margin-bottom: 15px;">
+                                <span style="display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-user-check"></i> Adult 1</span>
+                                <i class="fa-solid fa-chevron-down" id="traveler-chevron"></i>
+                            </div>
+                            
+                            <div id="traveler-form-body">
+                                <!-- Passenger Name Fields -->
+                                <div class="traveler-grid" style="display: grid; grid-template-columns: 100px 1fr 1fr; gap: 12px; margin-bottom: 15px;">
+                                    <div>
+                                        <label style="display:block; font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:5px;">Title</label>
+                                        <select id="book-title" class="form-control" onchange="updateFormattedPaxName()" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px;">
+                                            <option value="Mr">Mr</option>
+                                            <option value="Mrs">Mrs</option>
+                                            <option value="Miss">Miss</option>
+                                            <option value="Ms">Ms</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="display:block; font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:5px;">Surnames (Lastnames) *</label>
+                                        <input type="text" id="book-lastname" placeholder="Last Name" required oninput="updateFormattedPaxName()" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px;">
+                                    </div>
+                                    <div>
+                                        <label style="display:block; font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:5px;">Other Names (Firstnames) *</label>
+                                        <input type="text" id="book-firstname" placeholder="First Name" required oninput="updateFormattedPaxName()" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px;">
+                                    </div>
+                                </div>
+                                
+                                <!-- Date of Birth (DOB) -->
+                                <div class="dob-grid" style="display: grid; grid-template-columns: 1fr 1.2fr 1.2fr; gap: 8px; margin-bottom: 15px;">
+                                    <div class="dob-title" style="grid-column: span 3; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 2px;">Date of Birth *</div>
+                                    <div>
+                                        <select id="book-dob-day" required style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px;"></select>
+                                    </div>
+                                    <div>
+                                        <select id="book-dob-month" required style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px;"></select>
+                                    </div>
+                                    <div>
+                                        <select id="book-dob-year" required style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px;"></select>
+                                    </div>
+                                </div>
+                                
+                                <!-- Passport number and expiry date -->
+                                <div style="display: grid; grid-template-columns: 1.2fr 1.8fr; gap: 12px; margin-bottom: 15px;">
+                                    <div>
+                                        <label style="display:block; font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:5px;">Passport No *</label>
+                                        <input type="text" id="book-passport-new" placeholder="Passport Number" required oninput="syncFormValues()" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px;">
+                                    </div>
+                                    
+                                    <div class="expiry-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                                        <div class="expiry-title" style="grid-column: span 3; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 2px;">Expiry Date *</div>
+                                        <div>
+                                            <select id="book-exp-day" required style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px;"></select>
+                                        </div>
+                                        <div>
+                                            <select id="book-exp-month" required style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px;"></select>
+                                        </div>
+                                        <div>
+                                            <select id="book-exp-year" required style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px;"></select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Frequent Flyer Expansion Toggle -->
+                                <div id="flyer-toggle" style="color: var(--primary-dark); font-size:12.5px; font-weight:700; cursor:pointer; margin-top: 15px; display: inline-flex; align-items: center; gap: 6px;" onclick="toggleFrequentFlyer()">
+                                    <span id="flyer-toggle-sign">+</span> Add optional ( Frequent Flyer Number )
+                                </div>
+                                
+                                <!-- Frequent Flyer Expansion Container -->
+                                <div id="flyer-container" class="frequent-flyer-box" style="display: none; background: #ffffff; border: 1px solid #e9ecef; border-radius: 6px; padding: 15px; margin-top: 12px;">
+                                    <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 12px;">
+                                        <div>
+                                            <label style="display:block; font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:5px;">Frequent Flyer Program</label>
+                                            <select id="book-flyer-program" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px;">
+                                                <option value="Fly Smiles">Fly Smiles (SriLankan)</option>
+                                                <option value="Etihad Guest">Etihad Guest</option>
+                                                <option value="Emirates Skywards">Emirates Skywards</option>
+                                                <option value="Singapore KrisFlyer">Singapore KrisFlyer</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label style="display:block; font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:5px;">Frequent Flyer Number</label>
+                                            <input type="text" id="book-flyer-number" placeholder="Flyer Number" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px;">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Contact details -->
+                        <div class="contact-details-grid" style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 12px; margin-top: 15px;">
+                            <div>
+                                <label style="display:block; font-size:13px; font-weight:600; color:var(--text-main); margin-bottom:5px;">Mobile Number *</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <select id="book-phone-prefix" class="form-control" style="width: 100px; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 13.5px;" onchange="syncFormValues()">
+                                        <option value="+94">🇱🇰 +94</option>
+                                        <option value="+91">🇮🇳 +91</option>
+                                        <option value="+960">🇲🇻 +960</option>
+                                        <option value="+65">🇸🇬 +65</option>
+                                        <option value="+44">🇬🇧 +44</option>
+                                        <option value="+1">🇺🇸 +1</option>
+                                        <option value="+971">🇦🇪 +971</option>
+                                        <option value="+974">🇶🇦 +974</option>
+                                        <option value="+61">🇦🇺 +61</option>
+                                    </select>
+                                    <input type="text" id="book-phone-number" placeholder="Your mobile number" required oninput="syncFormValues()" style="flex: 1; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px;">
+                                </div>
+                            </div>
+                            <div>
+                                <label style="display:block; font-size:13px; font-weight:600; color:var(--text-main); margin-bottom:5px;">E-mail Address *</label>
+                                <input type="email" id="book-email-new" placeholder="passenger@email.com" required oninput="syncFormValues()" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px;">
+                                <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 4px;">* Your ticket will be sent to this E-mail address</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Confirmation Checkbox -->
+                        <div style="margin-top: 15px; display: flex; align-items: flex-start; gap: 10px; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 12px 16px;">
+                            <input type="checkbox" id="book-confirm-names" required style="margin-top: 4px; width: 16px; height: 16px; cursor: pointer;">
+                            <label for="book-confirm-names" style="font-size: 12.5px; line-height: 1.5; color: var(--text-main); cursor: pointer;">
+                                you confirm that the names on the booking match those on the passports of all travellers. Once the booking is confirmed, names are strictly non-changeable.
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column: Plane Seat Map Selector -->
+                    <div class="seat-map-wrapper" style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; align-items: center;">
+                        <h4 style="font-size: 14px; font-weight: 700; color: var(--primary-dark); margin-bottom: 2px; text-align: center; width: 100%;">Flight Hub Seat Map Selection</h4>
+                        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px; text-align: center;">Click on an available seat inside the grid below.</div>
+                        
+                        <!-- Tab Selectors for Seat Map (Outbound / Return) -->
+                        <div class="seat-tabs" style="display: flex; gap: 8px; width: 100%; margin-bottom: 15px;">
+                            <div class="seat-tab active" id="seat-tab-outbound" onclick="switchSeatTab('outbound')" style="flex: 1; padding: 8px; text-align: center; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 11.5px; border: 1px solid #ced4da; background: white; transition: all 0.2s;">Outbound Seat</div>
+                            <div class="seat-tab" id="seat-tab-return" onclick="switchSeatTab('return')" style="flex: 1; padding: 8px; text-align: center; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 11.5px; border: 1px solid #ced4da; background: white; transition: all 0.2s; display: none;">Return Seat</div>
+                        </div>
+                        
+                        <!-- Plane Fuselage Shape -->
+                        <div class="plane-fuselage" style="border: 2px solid #ccc; border-radius: 50px 50px 15px 15px; background: #ffffff; padding: 35px 20px 20px 20px; width: 250px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); position: relative;">
+                            <div class="plane-nose" style="position: absolute; top: -16px; left: 50%; transform: translateX(-50%); width: 55px; height: 16px; background: #ffffff; border: 2px solid #ccc; border-bottom: none; border-radius: 40px 40px 0 0;"></div>
+                            
+                            <!-- Dynamically generated seats will go here -->
+                            <div id="seat-grid-inner" style="display: flex; flex-direction: column; gap: 6px; align-items: center;"></div>
+                        </div>
+                        
+                        <!-- Selected Seat Text Display & Legend -->
+                        <div style="width: 100%; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; background: #ffffff; border: 1px solid #e9ecef; padding: 8px 12px; border-radius: 6px; font-size: 12px;">
+                            <span style="font-weight: 600;">Selected Seat: <strong style="color: var(--primary-blue);" id="selected-seat-display">None</strong></span>
+                            <span style="font-size: 11px; color: var(--text-muted);">No extra charge</span>
+                        </div>
+                        
+                        <div class="seat-legend" style="display: flex; justify-content: space-around; width: 100%; margin-top: 12px; font-size: 10px; color: var(--text-muted); border-top: 1px solid #e9ecef; padding-top: 10px; gap: 8px;">
+                            <div class="legend-item" style="display: flex; align-items: center; gap: 4px;">
+                                <div class="legend-box available" style="width: 12px; height: 12px; border-radius: 3px; background: white; border: 1px solid #ccc;"></div> Available
+                            </div>
+                            <div class="legend-item" style="display: flex; align-items: center; gap: 4px;">
+                                <div class="legend-box occupied" style="width: 12px; height: 12px; border-radius: 3px; background: rgba(255, 77, 77, 0.15); border: 1px solid rgba(255, 77, 77, 0.2);"></div> Occupied
+                            </div>
+                            <div class="legend-item" style="display: flex; align-items: center; gap: 4px;">
+                                <div class="legend-box selected" style="width: 12px; height: 12px; border-radius: 3px; background: var(--primary-dark);"></div> Selected
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Bottom pricing and submit bar -->
+                <div style="margin-top: 25px; border-top: 1px solid var(--border-color); padding-top: 20px; display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap;">
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Total Price (Inclusive of Taxes)</span>
+                        <div id="book-display-price" style="font-size: 26px; font-weight: 800; color: var(--success-green); line-height: 1.1;">LKR 0</div>
+                    </div>
+                    
+                    <button type="submit" class="btn-submit" id="book-submit-btn" style="background: var(--success-green); color: white; border: none; padding: 12px 30px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 15px; display: inline-flex; align-items: center; gap: 8px; box-shadow: var(--glow-success); transition: all 0.2s;">
+                        Confirm GDS Booking
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let cachedFlights = [];
+        let flightsLoaded = false;
+        let currentSort = 'cheapest';
+        let activeAirlineFilter = null;
+        let activeTimingTab = 'DEPARTURE';
+
+        const CITY_NAME_MAPPING = {
+            'CMB': 'Colombo',
+            'MEL': 'Melbourne',
+            'SIN': 'Singapore',
+            'MLE': 'Male (Maldives)',
+            'LHR': 'London',
+            'JFK': 'New York',
+            'DXB': 'Dubai',
+            'DOH': 'Doha',
+            'DEL': 'Delhi',
+            'SYD': 'Sydney'
+        };
+
+        function getCityName(code) {
+            return CITY_NAME_MAPPING[code.toUpperCase()] || code;
+        }
+
+        function formatDateCompact(dateObj) {
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const month = months[dateObj.getMonth()];
+            const year = dateObj.getFullYear();
+            return `${day}${month}${year}`;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const origin = urlParams.get('origin') || 'CMB';
+            const dest = urlParams.get('dest') || 'MEL';
+            const dateStr = urlParams.get('date') || '2026-05-28';
+            const adults = urlParams.get('adults') || '1';
+            const returnDateStr = urlParams.get('returnDate') || null;
+            
+            // Populate Search Summary Card
+            document.getElementById('summary-trip-type').innerText = returnDateStr ? 'ROUND-TRIP' : 'ONE-WAY';
+            document.getElementById('summary-cities').innerText = `${getCityName(origin)} ⇄ ${getCityName(dest)}`;
+            
+            const depDate = new Date(dateStr);
+            document.getElementById('summary-departure-date').innerText = formatDateCompact(depDate);
+            
+            const returnDateContainer = document.getElementById('summary-return-date-container');
+            if (returnDateStr) {
+                const retDate = new Date(returnDateStr);
+                document.getElementById('summary-return-date').innerText = formatDateCompact(retDate);
+                returnDateContainer.style.display = 'flex';
+            } else {
+                returnDateContainer.style.display = 'none';
+            }
+            
+            document.getElementById('summary-adults').innerText = adults;
+            document.getElementById('summary-children').innerText = '--';
+            document.getElementById('summary-infant').innerText = '--';
+
+            fetchFlights(origin, dest, dateStr, returnDateStr);
+
+            // Set timing labels
+            switchTimingTab('DEPARTURE');
+        });
+
+        function slideCarousel(direction) {
+            const inner = document.getElementById('airline-carousel-inner');
+            inner.scrollLeft += direction * 250;
+        }
+
+        function generateAirlineCarousel(flights) {
+            const inner = document.getElementById('airline-carousel-inner');
+            inner.innerHTML = '';
+            
+            // Get unique airlines
+            const uniqueAirlines = [...new Set(flights.map(f => f.airline))];
+            
+            if (uniqueAirlines.length === 0) {
+                inner.innerHTML = '<div style="padding: 10px; color: var(--text-muted); font-size: 13px;">No airlines found</div>';
+                return;
+            }
+            
+            uniqueAirlines.forEach(airline => {
+                const airFlights = flights.filter(f => f.airline === airline);
+                const minPrice = Math.min(...airFlights.map(f => parseFloat(f.price) * 300));
+                
+                const minDur = Math.min(...airFlights.map(f => {
+                    const dur = new Date(f.arrival_time) - new Date(f.departure_time);
+                    return dur + (f.return_flight ? (new Date(f.return_flight.arrival_time) - new Date(f.return_flight.departure_time)) : 0);
+                }));
+                
+                const hours = Math.floor(minDur / 36e5);
+                const mins = Math.round((minDur % 36e5) / 60000);
+                const durStr = `${hours}hr ${String(mins).padStart(2, '0')}min`;
+                
+                const priceFormatted = "LKR " + Math.round(minPrice).toLocaleString();
+                
+                const isSelected = activeAirlineFilter === airline;
+                
+                let logoHtml = `<div class="airline-logo" style="width: 32px; height: 32px; background: #eee; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: var(--primary-blue); font-size: 14px;"><i class="fa-solid fa-plane"></i></div>`;
+                if (airline.toLowerCase().includes('etihad')) {
+                    logoHtml = `<div class="airline-logo" style="width: 32px; height: 32px; background: #000; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #d4af37; font-weight: bold; font-size: 10px;">EY</div>`;
+                } else if (airline.toLowerCase().includes('indigo')) {
+                    logoHtml = `<div class="airline-logo" style="width: 32px; height: 32px; background: #003b95; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 10px;">6E</div>`;
+                } else if (airline.toLowerCase().includes('malaysia')) {
+                    logoHtml = `<div class="airline-logo" style="width: 32px; height: 32px; background: #d71920; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 10px;">MH</div>`;
+                } else if (airline.toLowerCase().includes('srilankan')) {
+                    logoHtml = `<div class="airline-logo" style="width: 32px; height: 32px; background: #006b54; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #ffcc00; font-weight: bold; font-size: 10px;">UL</div>`;
+                }
+                
+                inner.innerHTML += `
+                    <div class="carousel-tile" onclick="toggleAirlineCarouselFilter('${airline}')" style="display: flex; align-items: center; gap: 12px; padding: 10px 20px; border-right: 1px solid var(--border-color); min-width: 220px; cursor: pointer; border-radius: 6px; background: ${isSelected ? 'rgba(136, 18, 59, 0.08)' : 'white'}; border: ${isSelected ? '1px solid var(--primary-blue)' : '1px solid transparent'}; transition: all 0.2s; box-sizing: border-box; flex-shrink: 0;">
+                        ${logoHtml}
+                        <div style="text-align: left; line-height: 1.2;">
+                            <div style="font-weight: 700; font-size: 11px; color: var(--text-main); text-transform: uppercase;">${airline}</div>
+                            <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">(${durStr})</div>
+                            <div style="font-weight: 700; font-size: 13px; color: var(--success-green); margin-top: 3px;">${priceFormatted}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function toggleAirlineCarouselFilter(airline) {
+            if (activeAirlineFilter === airline) {
+                activeAirlineFilter = null;
+            } else {
+                activeAirlineFilter = airline;
+            }
+            generateAirlineCarousel(cachedFlights);
+            applyFilters();
+        }
+
+        function switchTimingTab(tab) {
+            activeTimingTab = tab;
+            const depTab = document.getElementById('timing-tab-dep');
+            const arrTab = document.getElementById('timing-tab-arr');
+            const lblOut = document.getElementById('timing-label-outbound');
+            const lblRet = document.getElementById('timing-label-return');
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const returnDate = urlParams.get('returnDate');
+            
+            if (tab === 'DEPARTURE') {
+                depTab.style.background = '#7b93a4';
+                depTab.style.color = 'white';
+                arrTab.style.background = 'transparent';
+                arrTab.style.color = 'var(--text-main)';
+                
+                lblOut.innerText = 'OUTBOUND DEPARTURE';
+                lblRet.innerText = returnDate ? 'RETURN DEPARTURE' : 'OUTBOUND ARRIVAL';
+            } else {
+                arrTab.style.background = '#7b93a4';
+                arrTab.style.color = 'white';
+                depTab.style.background = 'transparent';
+                depTab.style.color = 'var(--text-main)';
+                
+                lblOut.innerText = 'OUTBOUND ARRIVAL';
+                lblRet.innerText = returnDate ? 'RETURN ARRIVAL' : 'RETURN ARRIVAL';
+            }
+            applyFilters();
+        }
+
+        function switchSortTab(sortBy) {
+            currentSort = sortBy;
+            
+            // Sidebar sort highlights
+            const arCheap = document.getElementById('airline-sort-cheap');
+            const arFast = document.getElementById('airline-sort-fast');
+            if (arCheap && arFast) {
+                if (sortBy === 'cheapest') {
+                    arCheap.style.background = '#7b93a4';
+                    arCheap.style.color = 'white';
+                    arFast.style.background = 'transparent';
+                    arFast.style.color = 'var(--text-main)';
+                } else if (sortBy === 'fastest') {
+                    arFast.style.background = '#7b93a4';
+                    arFast.style.color = 'white';
+                    arCheap.style.background = 'transparent';
+                    arCheap.style.color = 'var(--text-main)';
+                }
+            }
+            
+            // Main tabs highlights
+            const tabCheap = document.getElementById('sort-tab-cheap');
+            const tabQuick = document.getElementById('sort-tab-quick');
+            const tabBest = document.getElementById('sort-tab-best');
+            
+            [tabCheap, tabQuick, tabBest].forEach(t => t.classList.remove('active'));
+            
+            if (sortBy === 'cheapest') {
+                tabCheap.classList.add('active');
+            } else if (sortBy === 'fastest') {
+                tabQuick.classList.add('active');
+            } else if (sortBy === 'best') {
+                tabBest.classList.add('active');
+            }
+            
+            applyFilters();
+        }
+
+        function fetchFlights(origin, dest, date, returnDate) {
+            let url = `/api/flights/search?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(dest)}&date=${encodeURIComponent(date)}&flight_type=ALL`;
+            if (returnDate) {
+                url += `&return_date=${encodeURIComponent(returnDate)}`;
+            }
+            
+            fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                flightsLoaded = true;
+                if(data.success && data.flights) {
+                    cachedFlights = data.flights;
+                    generateAirlineFilters(cachedFlights);
+                    
+                    // Generate carousel
+                    generateAirlineCarousel(cachedFlights);
+                    
+                    applyFilters();
+                } else {
+                    document.getElementById('flight-list-container').innerHTML = `<div class="loading-state">Error fetching flights: ${data.message || 'Unknown GDS error'}</div>`;
+                }
+            })
+            .catch(err => {
+                flightsLoaded = true;
+                document.getElementById('flight-list-container').innerHTML = `<div class="loading-state">Error fetching flights from GDS consolidation servers.</div>`;
+            });
+        }
+
+        function generateAirlineFilters(flights) {
+            const airlinesSet = new Set();
+            flights.forEach(f => {
+                if (f.airline) airlinesSet.add(f.airline);
+                if (f.return_flight && f.return_flight.airline) airlinesSet.add(f.return_flight.airline);
+            });
+            const airlines = [...airlinesSet];
+            const container = document.getElementById('airline-filters-container');
+            container.innerHTML = '';
+            airlines.forEach(airline => {
+                container.innerHTML += `
+                    <label class="filter-option" style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                        <div><input type="checkbox" checked value="${airline}" class="filter-airline" onchange="applyFilters()"> ${airline}</div>
+                    </label>
+                `;
+            });
+        }
+
+        function toggleFilterBtn(el) {
+            el.classList.toggle('selected');
+            if (el.classList.contains('selected')) {
+                el.style.background = 'rgba(136, 18, 59, 0.08)';
+                el.style.border = '1px solid var(--primary-blue)';
+            } else {
+                el.style.background = '#f5f5f5';
+                el.style.border = '1px solid transparent';
+            }
+        }
+
+        function toggleTimingBtn(el) {
+            el.classList.toggle('selected');
+            if (el.classList.contains('selected')) {
+                el.style.background = 'rgba(136, 18, 59, 0.08)';
+                el.style.borderBottom = '2px solid var(--primary-blue)';
+            } else {
+                el.style.background = '#f9f9f9';
+                el.style.borderBottom = 'none';
+            }
+        }
+
+        function resetAllFilters() {
+            document.getElementById('filter-price').value = 1000000;
+            document.getElementById('price-val-display').innerText = 'LKR 1,000,000';
+            
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
+            
+            document.querySelectorAll('.filter-stop-btn, .filter-conn-btn, .filter-dep-btn, .filter-arr-btn').forEach(btn => {
+                if (!btn.classList.contains('selected')) {
+                    if (btn.classList.contains('filter-dep-btn') || btn.classList.contains('filter-arr-btn')) {
+                        toggleTimingBtn(btn);
+                    } else {
+                        toggleFilterBtn(btn);
+                    }
+                }
+            });
+            
+            applyFilters();
+        }
+
+        function getLayoverAirport(f) {
+            if (f.segment_count <= 1) return null;
+            const airline = f.airline.toLowerCase();
+            if (airline.includes('etihad') || airline.includes('emirates') || airline.includes('qatar') || airline.includes('flydubai')) {
+                return 'AUH';
+            }
+            if (airline.includes('srilankan') || airline.includes('indigo') || airline.includes('air india') || airline.includes('spicejet')) {
+                return 'MAA';
+            }
+            if (airline.includes('thai') || airline.includes('bangkok')) {
+                return 'BKK';
+            }
+            if (airline.includes('singapore') || airline.includes('scoot')) {
+                return 'SIN';
+            }
+            if (airline.includes('malaysia') || airline.includes('airasia') || airline.includes('malindo') || airline.includes('batik')) {
+                return 'KUL';
+            }
+            // Deterministic hash fallback
+            const airportCodes = ['AUH', 'MAA', 'BKK', 'SIN', 'KUL'];
+            let hash = 0;
+            const fn = f.flight_number || '';
+            for (let i = 0; i < fn.length; i++) {
+                hash = fn.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            return airportCodes[Math.abs(hash) % airportCodes.length];
+        }
+
+        function applyFilters() {
+            // Sidebar filters state reading
+            const maxPrice = parseInt(document.getElementById('filter-price').value);
+            const fareTypes = Array.from(document.querySelectorAll('.filter-fare:checked')).map(cb => cb.value);
+            const stopsVals = Array.from(document.querySelectorAll('.filter-stop-btn.selected')).map(btn => parseInt(btn.getAttribute('data-val')));
+            const connBtnList = Array.from(document.querySelectorAll('.filter-conn-btn.selected'));
+            const depBtnList = Array.from(document.querySelectorAll('.filter-dep-btn.selected'));
+            const arrBtnList = Array.from(document.querySelectorAll('.filter-arr-btn.selected'));
+            
+            const selectedAirlinesEl = document.querySelectorAll('.filter-airline:checked');
+            const selectedAirlines = selectedAirlinesEl ? Array.from(selectedAirlinesEl).map(cb => cb.value) : [];
+            const selectedAirports = Array.from(document.querySelectorAll('.filter-airport:checked')).map(cb => cb.value);
+
+            let filtered = cachedFlights.filter(f => {
+                // Price Filter
+                const fPriceLkr = parseFloat(f.price) * 300;
+                if (fPriceLkr > maxPrice) return false;
+                
+                // Fare Type (GDS=Refundable, LCC=Non Refundable)
+                const isRef = f.flight_type !== 'LCC';
+                if (isRef && !fareTypes.includes('REFUNDABLE')) return false;
+                if (!isRef && !fareTypes.includes('NON_REFUNDABLE')) return false;
+                
+                // Stops Filter
+                let stops = f.segment_count - 1;
+                if (stops > 2) stops = 2;
+                if (!stopsVals.includes(stops)) return false;
+                
+                // Connection/Duration Filter
+                const depTime = new Date(f.departure_time);
+                const arrTime = new Date(f.arrival_time);
+                const hoursDuration = Math.floor(Math.abs(arrTime - depTime) / 36e5);
+                
+                let connMatch = false;
+                for (let btn of connBtnList) {
+                    const minH = parseInt(btn.getAttribute('data-min'));
+                    const maxH = parseInt(btn.getAttribute('data-max'));
+                    if (hoursDuration >= minH && hoursDuration < maxH) {
+                        connMatch = true;
+                        break;
+                    }
+                }
+                if (!connMatch) return false;
+                
+                // Timing logic using active tab state
+                let outTimeVal, retTimeVal;
+                if (activeTimingTab === 'DEPARTURE') {
+                    outTimeVal = depTime.getHours();
+                    if (f.return_flight) {
+                        retTimeVal = new Date(f.return_flight.departure_time).getHours();
+                    } else {
+                        retTimeVal = arrTime.getHours();
+                    }
+                } else {
+                    outTimeVal = arrTime.getHours();
+                    if (f.return_flight) {
+                        retTimeVal = new Date(f.return_flight.arrival_time).getHours();
+                    } else {
+                        retTimeVal = arrTime.getHours();
+                    }
+                }
+
+                // Match outbound timings against depBtnList
+                let outMatch = false;
+                for (let btn of depBtnList) {
+                    const minH = parseInt(btn.getAttribute('data-min'));
+                    const maxH = parseInt(btn.getAttribute('data-max'));
+                    if (outTimeVal >= minH && outTimeVal < maxH) {
+                        outMatch = true;
+                        break;
+                    }
+                }
+                if (!outMatch) return false;
+                
+                // Match return timings against arrBtnList
+                let retMatch = false;
+                for (let btn of arrBtnList) {
+                    const minH = parseInt(btn.getAttribute('data-min'));
+                    const maxH = parseInt(btn.getAttribute('data-max'));
+                    if (retTimeVal >= minH && retTimeVal < maxH) {
+                        retMatch = true;
+                        break;
+                    }
+                }
+                if (!retMatch) return false;
+                
+                // Airline Filter (Sidebar checkboxes)
+                if (selectedAirlines.length > 0) {
+                    if (!selectedAirlines.includes(f.airline)) return false;
+                    if (f.return_flight && !selectedAirlines.includes(f.return_flight.airline)) return false;
+                }
+
+                // Airline Filter (Carousel quick filter)
+                if (activeAirlineFilter) {
+                    if (f.airline !== activeAirlineFilter && (!f.return_flight || f.return_flight.airline !== activeAirlineFilter)) return false;
+                }
+
+                // Connecting Airports Filter
+                const outLayover = getLayoverAirport(f);
+                if (outLayover && !selectedAirports.includes(outLayover)) return false;
+                if (f.return_flight) {
+                    const retLayover = getLayoverAirport(f.return_flight);
+                    if (retLayover && !selectedAirports.includes(retLayover)) return false;
+                }
+                
+                return true;
+            });
+
+            // Sorting
+            if (currentSort === 'cheapest') {
+                filtered.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+            } else if (currentSort === 'fastest') {
+                filtered.sort((a, b) => {
+                    const durA = (new Date(a.arrival_time) - new Date(a.departure_time)) + (a.return_flight ? (new Date(a.return_flight.arrival_time) - new Date(a.return_flight.departure_time)) : 0);
+                    const durB = (new Date(b.arrival_time) - new Date(b.departure_time)) + (b.return_flight ? (new Date(b.return_flight.arrival_time) - new Date(b.return_flight.departure_time)) : 0);
+                    return durA - durB;
+                });
+            } else if (currentSort === 'best') {
+                filtered.sort((a, b) => {
+                    const scoreA = parseFloat(a.price) * 300 + (a.segment_count * 20000) + (a.return_flight ? a.return_flight.segment_count * 20000 : 0);
+                    const scoreB = parseFloat(b.price) * 300 + (b.segment_count * 20000) + (b.return_flight ? b.return_flight.segment_count * 20000 : 0);
+                    return scoreA - scoreB;
+                });
+            }
+            
+            renderResults(filtered);
+        }
+
+        function formatDateFriendly(dateObj) {
+            return dateObj.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' });
+        }
+        function formatTimeFriendly(dateObj) {
+            return dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+        }
+
+        function renderResults(flights) {
+            const container = document.getElementById('flight-list-container');
+            container.innerHTML = '';
+            if(flights.length === 0) {
+                if (!flightsLoaded) {
+                    container.innerHTML = `
+                        <div class="loading-state">
+                            <i class="fa-solid fa-spinner fa-spin fa-2x" style="color: var(--primary-blue); margin-bottom: 15px;"></i>
+                            <h3>Interrogating Global Distribution Systems...</h3>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `<div class="loading-state">No flights matched your filters.</div>`;
+                }
+                return;
+            }
+            
+            flights.forEach(f => {
+                const dep = new Date(f.departure_time);
+                const arr = new Date(f.arrival_time);
+                const hours = Math.floor(Math.abs(arr - dep) / 36e5);
+                const mins = Math.round((Math.abs(arr - dep) % 36e5) / 60000);
+                
+                const priceLkr = parseFloat(f.price) * 300;
+                const originalPriceLkr = priceLkr * 1.08;
+                const priceFormatted = "LKR " + Math.round(priceLkr).toLocaleString();
+                const originalPriceFormatted = "LKR " + Math.round(originalPriceLkr).toLocaleString();
+                
+                const depDateStr = formatDateFriendly(dep);
+                const depTimeStr = formatTimeFriendly(dep);
+                const arrDateStr = formatDateFriendly(arr);
+                const arrTimeStr = formatTimeFriendly(arr);
+
+                let isRoundTrip = !!f.return_flight;
+                
+                let cardHtml = `
+                    <div class="flight-card" style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: box-shadow 0.2s; margin-bottom: 15px;">
+                        <!-- Top Header bar -->
+                        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; width: 100%;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-plane" style="color: #ff8c00;"></i>
+                                <span style="font-weight: bold; font-size: 14px;">${f.airline}</span>
+                                <span style="color: #ccc; margin: 0 5px;">|</span>
+                                <span style="color: var(--primary-blue); font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                                    <i class="fa-solid fa-tags"></i> BEST OFFERS <i class="fa-solid fa-angle-down"></i>
+                                </span>
+                            </div>
+                            <div style="font-size: 13px; color: var(--primary-blue); cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                Share <i class="fa-solid fa-share-nodes"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Middle content: Legs and Price -->
+                        <div style="display: flex; align-items: stretch; justify-content: space-between; width: 100%;">
+                            <!-- Legs column -->
+                            <div style="flex: 1; display: flex; flex-direction: column; gap: 15px; justify-content: center;">
+                                <!-- Outbound Leg -->
+                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 20px;">
+                                    <!-- Bullet indicator -->
+                                    <div style="display: flex; align-items: center; justify-content: center; width: 24px;">
+                                        <div style="width: 14px; height: 14px; border: 4px solid var(--primary-blue); border-radius: 50%; background: white;"></div>
+                                    </div>
+                                    
+                                    <!-- Route points and details -->
+                                    <div style="flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 15px;">
+                                        <!-- Origin -->
+                                        <div style="width: 140px;">
+                                            <div style="font-size: 16px; font-weight: 700; color: var(--text-main);">${f.origin}</div>
+                                            <div style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">${depDateStr}, ${depTimeStr}</div>
+                                        </div>
+                                        
+                                        <!-- Duration -->
+                                        <div style="flex: 1; text-align: center; position: relative;">
+                                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">${hours}h ${mins}m</div>
+                                            <div style="position: relative; display: flex; align-items: center; justify-content: center;">
+                                                <div style="height: 2px; background: #ccc; width: 100%; position: absolute; z-index: 1;"></div>
+                                                <i class="fa-solid fa-arrow-right" style="position: absolute; right: 0; background: var(--card-bg); padding-left: 5px; z-index: 2; color: #ccc;"></i>
+                                            </div>
+                                            <div style="font-size: 11px; color: var(--primary-blue); font-weight: 600; margin-top: 4px;">
+                                                ${f.segment_count === 1 ? 'Direct' : (f.segment_count-1) + ' Stop(s)'}
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Destination -->
+                                        <div style="width: 140px; padding-left: 20px;">
+                                            <div style="font-size: 16px; font-weight: 700; color: var(--text-main);">${f.destination}</div>
+                                            <div style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">${arrDateStr}, ${arrTimeStr}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                `;
+
+                if (isRoundTrip) {
+                    const retDep = new Date(f.return_flight.departure_time);
+                    const retArr = new Date(f.return_flight.arrival_time);
+                    const retHours = Math.floor(Math.abs(retArr - retDep) / 36e5);
+                    const retMins = Math.round((Math.abs(retArr - retDep) % 36e5) / 60000);
+                    
+                    const retDepDateStr = formatDateFriendly(retDep);
+                    const retDepTimeStr = formatTimeFriendly(retDep);
+                    const retArrDateStr = formatDateFriendly(retArr);
+                    const retArrTimeStr = formatTimeFriendly(retArr);
+
+                    cardHtml += `
+                                <!-- Dotted divider -->
+                                <div style="border-top: 1px dotted var(--border-color); margin: 10px 0; width: 100%;"></div>
+                                
+                                <!-- Return Leg -->
+                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 20px;">
+                                    <!-- Bullet indicator -->
+                                    <div style="display: flex; align-items: center; justify-content: center; width: 24px;">
+                                        <div style="width: 14px; height: 14px; border: 4px solid var(--primary-blue); border-radius: 50%; background: white;"></div>
+                                    </div>
+                                    
+                                    <!-- Route points and details -->
+                                    <div style="flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 15px;">
+                                        <!-- Origin -->
+                                        <div style="width: 140px;">
+                                            <div style="font-size: 16px; font-weight: 700; color: var(--text-main);">${f.return_flight.origin}</div>
+                                            <div style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">${retDepDateStr}, ${retDepTimeStr}</div>
+                                        </div>
+                                        
+                                        <!-- Duration -->
+                                        <div style="flex: 1; text-align: center; position: relative;">
+                                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">${retHours}h ${retMins}m</div>
+                                            <div style="position: relative; display: flex; align-items: center; justify-content: center;">
+                                                <div style="height: 2px; background: #ccc; width: 100%; position: absolute; z-index: 1;"></div>
+                                                <i class="fa-solid fa-arrow-right" style="position: absolute; right: 0; background: var(--card-bg); padding-left: 5px; z-index: 2; color: #ccc;"></i>
+                                            </div>
+                                            <div style="font-size: 11px; color: var(--primary-blue); font-weight: 600; margin-top: 4px;">
+                                                ${f.return_flight.segment_count === 1 ? 'Direct' : (f.return_flight.segment_count-1) + ' Stop(s)'}
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Destination -->
+                                        <div style="width: 140px; padding-left: 20px;">
+                                            <div style="font-size: 16px; font-weight: 700; color: var(--text-main);">${f.return_flight.destination}</div>
+                                            <div style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">${retArrDateStr}, ${retArrTimeStr}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                    `;
+                }
+
+                cardHtml += `
+                            </div>
+                            
+                            <!-- Price column -->
+                            <div style="width: 210px; text-align: right; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 6px; border-left: 1px solid var(--border-color); padding-left: 20px; margin-left: 20px;">
+                                <div style="font-size: 13px; text-decoration: line-through; color: var(--text-muted);">${originalPriceFormatted}</div>
+                                <div class="fc-price" style="font-size: 24px; font-weight: 800; color: var(--success-green); line-height: 1.1;">${priceFormatted}</div>
+                                <div style="font-size: 11px; color: var(--text-muted); margin-top: -3px; margin-bottom: 5px;">Per Adult</div>
+                                
+                                <button class="btn-book" onclick="openBookingModal(${f.id}, ${isRoundTrip ? f.return_flight.id : 'null'}, ${priceLkr}, true)" style="background: var(--success-green); color: white; border: none; padding: 10px 24px; border-radius: 4px; font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; transition: background 0.2s;">Book</button>
+                                
+                                <div onclick="openBookingModal(${f.id}, ${isRoundTrip ? f.return_flight.id : 'null'}, ${priceLkr}, false)" style="font-size: 12px; color: #ff8c00; font-weight: bold; display: flex; align-items: center; gap: 4px; cursor: pointer; margin-top: 4px; justify-content: flex-end;">
+                                    HOLD for FREE <i class="fa-solid fa-hand-pointer"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Bottom Footer bar -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 15px; width: 100%;">
+                            <div style="font-size: 13px; color: var(--primary-blue); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <i class="fa-solid fa-calendar-days"></i> Pay monthly ${"LKR " + Math.round(priceLkr / 12).toLocaleString()}
+                            </div>
+                            <div style="font-size: 13px; color: var(--primary-blue); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <i class="fa-solid fa-circle-info"></i> View flight details
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                container.innerHTML += cardHtml;
+            });
+        }
+
+        // Helper: Populate DOB and Expiry date dropdowns
+        function populateDobAndExpiryDropdowns() {
+            const days = document.querySelectorAll('#book-dob-day, #book-exp-day');
+            const months = document.querySelectorAll('#book-dob-month, #book-exp-month');
+            const dobYearSelect = document.getElementById('book-dob-year');
+            const expYearSelect = document.getElementById('book-exp-year');
+            
+            // Only populate if they are not already filled
+            if (days[0].options.length > 0) return;
+            
+            days.forEach(sel => {
+                sel.innerHTML = '<option value="">Day</option>';
+                for (let d = 1; d <= 31; d++) {
+                    const dStr = String(d).padStart(2, '0');
+                    sel.innerHTML += `<option value="${dStr}">${d}</option>`;
+                }
+            });
+            
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            months.forEach(sel => {
+                sel.innerHTML = '<option value="">Month</option>';
+                monthNames.forEach((m, idx) => {
+                    const mVal = String(idx + 1).padStart(2, '0');
+                    sel.innerHTML += `<option value="${mVal}">${m}</option>`;
+                });
+            });
+            
+            // DOB years (1920 to current year)
+            const currentYear = new Date().getFullYear();
+            dobYearSelect.innerHTML = '<option value="">Year</option>';
+            for (let y = currentYear; y >= 1920; y--) {
+                dobYearSelect.innerHTML += `<option value="${y}">${y}</option>`;
+            }
+            
+            // Expiry years (current year to 20 years in future)
+            expYearSelect.innerHTML = '<option value="">Year</option>';
+            for (let y = currentYear; y <= currentYear + 20; y++) {
+                expYearSelect.innerHTML += `<option value="${y}">${y}</option>`;
+            }
+        }
+        
+        // Helper: Toggle traveler card visibility
+        function toggleTravelerDetails() {
+            const body = document.getElementById('traveler-form-body');
+            const chev = document.getElementById('traveler-chevron');
+            if (body.style.display === 'none') {
+                body.style.display = 'block';
+                chev.className = 'fa-solid fa-chevron-down';
+            } else {
+                body.style.display = 'none';
+                chev.className = 'fa-solid fa-chevron-right';
+            }
+        }
+        
+        // Helper: Toggle Frequent Flyer program
+        function toggleFrequentFlyer() {
+            const container = document.getElementById('flyer-container');
+            const sign = document.getElementById('flyer-toggle-sign');
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+                sign.innerText = '-';
+            } else {
+                container.style.display = 'none';
+                sign.innerText = '+';
+            }
+        }
+        
+        // Helper: Concatenate title, first and last name to book-pax-name
+        function updateFormattedPaxName() {
+            const title = document.getElementById('book-title').value;
+            const lastname = document.getElementById('book-lastname').value.trim();
+            const firstname = document.getElementById('book-firstname').value.trim();
+            const fullname = `${title} ${firstname} ${lastname}`.trim();
+            document.getElementById('book-pax-name').value = fullname;
+        }
+        
+        // Helper: Synchronize mobile, email, passport to original form hidden fields
+        function syncFormValues() {
+            // Passport
+            const passportNew = document.getElementById('book-passport-new').value.trim();
+            document.getElementById('book-passport').value = passportNew;
+            
+            // Mobile
+            const prefix = document.getElementById('book-phone-prefix').value;
+            const number = document.getElementById('book-phone-number').value.trim();
+            document.getElementById('book-phone').value = prefix + ' ' + number;
+            
+            // Email
+            const emailNew = document.getElementById('book-email-new').value.trim();
+            document.getElementById('book-email').value = emailNew;
+        }
+
+        // --- Interactive Seat Map fuselage selector logic ---
+        let selectedOutboundSeat = '';
+        let selectedReturnSeat = '';
+        let activeSeatTab = 'outbound';
+        let seatOccupancyMap = {}; 
+
+        function initializeSeats(outboundId, returnId) {
+            selectedOutboundSeat = '';
+            selectedReturnSeat = '';
+            activeSeatTab = 'outbound';
+            
+            // Seed occupancy based on flight IDs to make it look realistic
+            seatOccupancyMap = {};
+            const seed = (outboundId || 0) + (returnId || 0);
+            const rows = 8;
+            const cols = ['A', 'B', 'C', 'D', 'E', 'F'];
+            rows.forEach(r => {
+                cols.forEach(c => {
+                    const seatName = `${r}${c}`;
+                    const hash = (parseInt(r) * 31 + c.charCodeAt(0) * 17 + seed) % 100;
+                    seatOccupancyMap[seatName] = hash < 25; // 25% occupancy
+                });
+            });
+
+            // Reset inputs
+            document.getElementById('book-seat').value = '';
+            document.getElementById('book-return-seat').value = '';
+            
+            // Setup tab display
+            const returnTab = document.getElementById('seat-tab-return');
+            if (returnId) {
+                returnTab.style.display = 'block';
+            } else {
+                returnTab.style.display = 'none';
+            }
+            
+            switchSeatTab('outbound');
+        }
+
+        function switchSeatTab(tab) {
+            activeSeatTab = tab;
+            document.getElementById('seat-tab-outbound').classList.toggle('active', tab === 'outbound');
+            document.getElementById('seat-tab-return').classList.toggle('active', tab === 'return');
+            
+            renderSeatGrid();
+        }
+
+        function renderSeatGrid() {
+            const grid = document.getElementById('seat-grid-inner');
+            grid.innerHTML = '';
+            
+            const rows = 8;
+            const cols = ['A', 'B', 'C', 'aisle', 'D', 'E', 'F'];
+            const currentSelection = (activeSeatTab === 'outbound') ? selectedOutboundSeat : selectedReturnSeat;
+            
+            for (let r = 1; r <= rows; r++) {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'seat-row';
+                
+                cols.forEach(c => {
+                    const seatDiv = document.createElement('div');
+                    if (c === 'aisle') {
+                        seatDiv.className = 'seat aisle';
+                        seatDiv.innerText = '';
+                    } else {
+                        const seatName = `${r}${c}`;
+                        const isOccupied = seatOccupancyMap[seatName];
+                        const isSelected = currentSelection === seatName;
+                        
+                        seatDiv.className = `seat ${isOccupied ? 'occupied' : ''} ${isSelected ? 'selected' : ''}`;
+                        seatDiv.innerText = seatName;
+                        
+                        if (!isOccupied) {
+                            seatDiv.onclick = function() {
+                                selectSeat(seatName);
+                            };
+                        }
+                    }
+                    rowDiv.appendChild(seatDiv);
+                });
+                grid.appendChild(rowDiv);
+            }
+            
+            const selectedText = currentSelection ? currentSelection : 'None';
+            document.getElementById('selected-seat-display').innerText = selectedText;
+        }
+
+        function selectSeat(seatName) {
+            if (activeSeatTab === 'outbound') {
+                selectedOutboundSeat = seatName;
+                document.getElementById('book-seat').value = seatName;
+            } else {
+                selectedReturnSeat = seatName;
+                document.getElementById('book-return-seat').value = seatName;
+            }
+            renderSeatGrid();
+        }
+
+        function openBookingModal(outboundId, returnId, priceLkr, ticketNow) {
+            document.getElementById('book-outbound-id').value = outboundId;
+            document.getElementById('book-return-id').value = returnId || '';
+            document.getElementById('book-ticket-now').value = ticketNow ? 'true' : 'false';
+            document.getElementById('book-display-price').innerText = "LKR " + Math.round(priceLkr).toLocaleString();
+            
+            const titleEl = document.getElementById('booking-modal-title');
+            const submitBtn = document.getElementById('book-submit-btn');
+            
+            if (ticketNow) {
+                titleEl.innerHTML = `<i class="fa-solid fa-plane-departure" style="margin-right: 8px;"></i>GDS Flight Instant Issuance`;
+                submitBtn.innerText = "Issue GDS Ticket";
+                submitBtn.style.background = 'var(--success-green)';
+            } else {
+                titleEl.innerHTML = `<i class="fa-solid fa-plane-departure" style="margin-right: 8px;"></i>GDS Flight Hold (HOLD for FREE)`;
+                submitBtn.innerText = "Hold Booking (Free)";
+                submitBtn.style.background = '#ff8c00';
+            }
+            
+            // Initialize forms & select components
+            populateDobAndExpiryDropdowns();
+            initializeSeats(outboundId, returnId);
+            
+            // Clean inputs
+            document.getElementById('book-lastname').value = '';
+            document.getElementById('book-firstname').value = '';
+            document.getElementById('book-passport-new').value = '';
+            document.getElementById('book-phone-number').value = '';
+            document.getElementById('book-email-new').value = '';
+            document.getElementById('book-confirm-names').checked = false;
+            
+            // Show modal
+            document.getElementById('booking-modal').style.display = 'flex';
+        }
+
+        function closeBookingModal() {
+            document.getElementById('booking-modal').style.display = 'none';
+        }
+
+        function submitBooking(event) {
+            event.preventDefault();
+            
+            const outboundId = parseInt(document.getElementById('book-outbound-id').value);
+            const returnIdVal = document.getElementById('book-return-id').value;
+            const returnId = returnIdVal ? parseInt(returnIdVal) : null;
+            const ticketNow = document.getElementById('book-ticket-now').value === 'true';
+            
+            const submitBtn = document.getElementById('book-submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Processing GDS transaction...";
+            
+            const payload = {
+                flight_id: outboundId,
+                passenger_name: document.getElementById('book-pax-name').value,
+                passport_number: document.getElementById('book-passport').value,
+                mobile: document.getElementById('book-phone').value,
+                email: document.getElementById('book-email').value,
+                seat_number: document.getElementById('book-seat').value,
+                ticket_now: ticketNow
+            };
+            
+            if (returnId) {
+                payload.return_flight_id = returnId;
+                payload.return_seat_number = document.getElementById('book-return-seat').value;
+            }
+            
+            fetch('/api/flights/book', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`GDS Transaction Successful!\n\nInvoice: ${data.invoice_number}\nPNR: ${data.pnr_reference || 'N/A'}\nStatus: ${data.status.toUpperCase()}`);
+                    closeBookingModal();
+                } else {
+                    alert("Error confirming booking: " + data.error);
+                }
+            })
+            .catch(err => {
+                alert("Error communicating with booking server.");
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                if (ticketNow) {
+                    submitBtn.innerText = "Issue GDS Ticket";
+                } else {
+                    submitBtn.innerText = "Hold Booking (Free)";
+                }
+            });
+        }
+    </script>
+</body>
+</html>

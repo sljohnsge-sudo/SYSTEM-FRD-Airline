@@ -208,8 +208,19 @@ def initialize_database():
             ('SQ-421', 'Singapore Airlines', 'SIN', 'SYD', 'NDC', 'Amadeus', 2, 750.00, 22),
             ('6E-451', 'IndiGo', 'DEL', 'CMB', 'LCC', 'Amadeus', 1, 180.00, 60),
             ('BA-117', 'British Airways', 'LHR', 'JFK', 'GDS', 'Amadeus', 1, 550.00, 40),
-            ('UL-308', 'SriLankan Airlines', 'CMB', 'SIN', 'GDS', 'Amadeus', 1, 310.00, 28)
+            ('UL-308', 'SriLankan Airlines', 'CMB', 'SIN', 'GDS', 'Amadeus', 1, 310.00, 28),
+            
+            # Seed flights for CMB <-> MEL Colombo-Melbourne
+            ('EY-264', 'Etihad Airways', 'CMB', 'MEL', 'GDS', 'Amadeus', 2, 504.10, 9),
+            ('EY-265', 'Etihad Airways', 'MEL', 'CMB', 'GDS', 'Amadeus', 2, 504.10, 9),
+            ('6E-804', 'IndiGo', 'CMB', 'MEL', 'LCC', 'Amadeus', 2, 594.60, 9),
+            ('6E-805', 'IndiGo', 'MEL', 'CMB', 'LCC', 'Amadeus', 2, 594.60, 9),
+            ('MH-178', 'Malaysia Airlines', 'CMB', 'MEL', 'GDS', 'Amadeus', 2, 676.21, 9),
+            ('MH-179', 'Malaysia Airlines', 'MEL', 'CMB', 'GDS', 'Amadeus', 2, 676.21, 9),
+            ('CX-610', 'Cathay Pacific', 'CMB', 'MEL', 'NDC', 'Amadeus', 2, 787.05, 9),
+            ('CX-611', 'Cathay Pacific', 'MEL', 'CMB', 'NDC', 'Amadeus', 2, 787.05, 9)
         ]
+
         
         now = datetime.datetime.now()
         for i, f in enumerate(flights_data):
