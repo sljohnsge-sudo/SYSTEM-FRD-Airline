@@ -81,7 +81,7 @@
             cursor: pointer;
         }
 
-        .results-main { display: flex; flex-direction: column; gap: 15px; }
+        .results-main { display: flex; flex-direction: column; gap: 15px; min-width: 0; }
 
         .sort-bar {
             display: flex;
@@ -147,6 +147,35 @@
             background: var(--blue-tint) !important;
         }
 
+        
+        .ribbon {
+            width: 65px;
+            height: 60px;
+            background: #ff8c00;
+            color: white;
+            text-align: center;
+            font-weight: 800;
+            font-size: 13px;
+            line-height: 1.2;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .ribbon::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 0;
+            border-left: 32.5px solid #ff8c00;
+            border-right: 32.5px solid #ff8c00;
+            border-bottom: 15px solid transparent;
+        }
+        
+        .cal-cell:hover {
+            background: #effcff !important;
+        }
         /* Modal Styles */
         .modal-overlay {
             position: fixed;
@@ -406,7 +435,7 @@
         <!-- Right Main results container -->
         <main class="results-main">
             <!-- Search Summary Card -->
-            <div class="summary-card" style="background: white; border: 1px solid var(--border-color); border-radius: 8px; padding: 15px 25px; display: flex; align-items: center; justify-content: space-between; gap: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <div class="summary-card" style="background: white; border: 1px solid var(--border-color); border-radius: 8px; padding: 15px 25px; display: flex; align-items: center; justify-content: space-between; gap: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); flex-wrap: wrap;">
                 <div style="display: flex; flex-direction: column; gap: 4px;">
                     <span style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;" id="summary-trip-type">ROUND-TRIP</span>
                     <span style="font-size: 16px; font-weight: 700; color: var(--text-main);" id="summary-cities">Colombo ⇄ Melbourne</span>
@@ -476,6 +505,31 @@
             </div>
 
             <!-- Date Matrix Carousel Removed -->
+
+            
+            <!-- Fare Calendar Banner -->
+            <div class="fare-calendar-banner" style="background: white; border: 1px solid var(--border-color); border-radius: 4px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px 0 0; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); height: 60px;">
+                <div style="display: flex; align-items: center; height: 100%;">
+                    <!-- Orange Ribbon -->
+                    <div class="ribbon">
+                        LOW<br>PRICE
+                    </div>
+                    
+                    <div style="padding-left: 20px; display: flex; align-items: center; gap: 10px; color: #475569; font-weight: 600; font-size: 15px;">
+                        <i class="fa-solid fa-chart-area" style="font-size: 20px;"></i>
+                        Flexible with your dates? We found cheaper fares for you!
+                    </div>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button onclick="openFareCalendar()" style="background: white; border: 1px solid #3b82f6; color: #3b82f6; padding: 8px 16px; border-radius: 4px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 14px; transition: all 0.2s;">
+                        <i class="fa-regular fa-calendar-days"></i> View Fare Calendar
+                    </button>
+                    <button style="background: white; border: 1px solid #3b82f6; color: #003b95; padding: 8px 12px; border-radius: 4px; cursor: pointer; transition: all 0.2s;">
+                        <i class="fa-solid fa-share-nodes"></i>
+                    </button>
+                </div>
+            </div>
 
             <!-- Sorting tabs -->
             <div class="sort-bar">
@@ -1029,88 +1083,252 @@
     <!-- MODAL OVERLAY: BOOKING SUCCESS & E-TICKET RECEIPT -->
     <!-- ========================================================= -->
     <div id="success-receipt-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 10500; align-items: center; justify-content: center; backdrop-filter: blur(4px); overflow-y: auto; padding: 20px 0;">
-        <div style="background: white; border-radius: 12px; max-width: 580px; width: 90%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); overflow: hidden; margin: auto;">
-            <!-- Animation Top -->
-            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px; text-align: center; color: white; position: relative;">
-                <div style="width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
-                    <i class="fa-solid fa-check" style="font-size: 32px; color: white;"></i>
-                </div>
-                <h2 style="margin: 0 0 4px 0; font-weight: bold; font-size: 22px; letter-spacing: 0.5px;" id="receipt-header-title">GDS Booking Confirmed!</h2>
-                <div style="font-size: 13.5px; opacity: 0.9;">Thank you for selecting our service for your travel partner</div>
-                
-                <!-- Confetti particles styling in background -->
-                <div style="position: absolute; top: 10px; left: 10px; font-size: 16px; opacity: 0.4;">🎉</div>
-                <div style="position: absolute; top: 20px; right: 20px; font-size: 16px; opacity: 0.4;">✨</div>
-                <div style="position: absolute; bottom: 15px; left: 30px; font-size: 16px; opacity: 0.4;">✈️</div>
-            </div>
-            
-            <!-- Details Container -->
-            <div style="padding: 25px;" id="printable-receipt-content">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px dashed #e2e8f0; padding-bottom: 15px;">
-                    <div>
-                        <div style="font-size: 10.5px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">PNR Reference</div>
-                        <div style="font-size: 20px; font-weight: 800; color: #1e3a8b; font-family: monospace;" id="receipt-pnr">-</div>
+        <div style="background: white; border-radius: 20px; max-width: 580px; width: 90%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); overflow: hidden; margin: auto; border: 1px solid #e2e8f0;">
+            <!-- Printable Receipt Content Area -->
+            <div id="printable-receipt-content">
+                <!-- Check Icon and Main Confirmed Heading (Matching exact layout request) -->
+                <div style="text-align: center; padding: 30px 20px 10px 20px;">
+                    <div style="width: 54px; height: 54px; border: 3px solid #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px auto; background: #eff6ff;">
+                        <i class="fa-solid fa-check" style="font-size: 26px; color: #3b82f6;"></i>
                     </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 10.5px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Invoice Number</div>
-                        <div style="font-size: 16px; font-weight: 700; color: #334155;" id="receipt-invoice">-</div>
-                    </div>
-                </div>
-                
-                <table style="width: 100%; font-size: 13.5px; border-collapse: collapse; margin-bottom: 20px;">
-                    <tr style="border-bottom: 1px solid #f1f5f9;">
-                        <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Passenger Name:</td>
-                        <td style="padding: 8px 0; font-weight: 700; color: #0f172a; text-align: right;" id="receipt-pax-name">-</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid #f1f5f9;">
-                        <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Passport Number:</td>
-                        <td style="padding: 8px 0; color: #334155; text-align: right;" id="receipt-passport">-</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid #f1f5f9;">
-                        <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Sector Route:</td>
-                        <td style="padding: 8px 0; font-weight: 700; color: #0f172a; text-align: right;" id="receipt-route">-</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid #f1f5f9;">
-                        <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Seat Assignment:</td>
-                        <td style="padding: 8px 0; font-weight: 700; color: #1e3a8b; text-align: right;" id="receipt-seats">-</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid #f1f5f9;">
-                        <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Payment Method:</td>
-                        <td style="padding: 8px 0; color: #334155; text-align: right; font-weight: 600;" id="receipt-pay-method">-</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid #f1f5f9;">
-                        <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Status:</td>
-                        <td style="padding: 8px 0; text-align: right;" id="receipt-status">-</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 12px 0 0 0; color: #64748b; font-weight: 600; font-size: 14px;">Total Paid:</td>
-                        <td style="padding: 12px 0 0 0; font-size: 18px; font-weight: 800; color: #10b981; text-align: right;" id="receipt-total-price">-</td>
-                    </tr>
-                </table>
-                
-                <!-- Special Service Request Confirmation Mini Card -->
-                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 15px; font-size: 12.5px; margin-bottom: 20px;">
-                    <div style="font-weight: 700; color: #475569; margin-bottom: 6px;"><i class="fa-solid fa-bell-concierge"></i> Value Added Services Configured</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; color: #64748b;">
-                        <div>Meal: <strong style="color: #334155;" id="receipt-meal">-</strong></div>
-                        <div>Wheelchair: <strong style="color: #334155;" id="receipt-wheelchair">-</strong></div>
-                    </div>
+                    <h2 style="margin: 0 0 6px 0; font-weight: 700; font-size: 25px; color: #1e3a8b; font-family: 'Outfit', 'Inter', sans-serif;" id="receipt-header-title">Your booking has been confirmed</h2>
+                    <div style="font-size: 13px; color: #64748b; font-weight: 500;">Thank you for selecting our service for your travel partner</div>
                 </div>
 
-                <div style="text-align: center; padding: 10px 0; color: #94a3b8; font-size: 11px; border-top: 1px solid #f1f5f9;">
-                    💡 This document serves as your official electronic booking confirmation slip.
+                <!-- Live Dynamic Itinerary Cards (Matches attached format exactly) -->
+                <div id="receipt-itineraries-container" style="display: flex; flex-direction: column; gap: 15px; margin: 20px 25px 15px 25px;">
+                    <!-- Outbound and Return flight itinerary cards will be rendered dynamically here -->
+                </div>
+
+                <!-- Ticket Details Card -->
+                <div style="padding: 0 25px 25px 25px;">
+                    <div style="background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 12px; padding: 20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                        <div style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-ticket" style="color: #3b82f6;"></i> E-Ticket Voucher & Booking Details
+                        </div>
+                        
+                        <table style="width: 100%; font-size: 13.5px; border-collapse: collapse;">
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Passenger Name:</td>
+                                <td style="padding: 8px 0; font-weight: 700; color: #0f172a; text-align: right;" id="receipt-pax-name">-</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Passport Number:</td>
+                                <td style="padding: 8px 0; color: #334155; text-align: right; font-weight: 600;" id="receipt-passport">-</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 8px 0; color: #64748b; font-weight: 500;">PNR Number:</td>
+                                <td style="padding: 8px 0; font-weight: 800; color: #1e3a8b; text-align: right; font-family: monospace; font-size: 15px;" id="receipt-pnr">-</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Ticket Number:</td>
+                                <td style="padding: 8px 0; font-weight: 800; color: #10b981; text-align: right; font-family: monospace; font-size: 14px;" id="receipt-ticket-number">-</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Seat Assignment:</td>
+                                <td style="padding: 8px 0; font-weight: 700; color: #1e3a8b; text-align: right;" id="receipt-seats">-</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Value Added Services:</td>
+                                <td style="padding: 8px 0; color: #334155; text-align: right; font-size: 12.5px; line-height: 1.4;" id="receipt-vas-list">-</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Sector Route:</td>
+                                <td style="padding: 8px 0; color: #334155; text-align: right;" id="receipt-route">-</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Payment Method:</td>
+                                <td style="padding: 8px 0; color: #334155; text-align: right; font-weight: 600;" id="receipt-pay-method">-</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Booking Status:</td>
+                                <td style="padding: 8px 0; text-align: right;" id="receipt-status">-</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px 0 0 0; color: #64748b; font-weight: 600; font-size: 14px;">Total Price Paid:</td>
+                                <td style="padding: 12px 0 0 0; font-size: 18px; font-weight: 800; color: #10b981; text-align: right;" id="receipt-total-price">-</td>
+                            </tr>
+                        </table>
+                    </div>
                 </div>
             </div>
-            
-            <!-- Actions -->
+
+            <!-- Modal Footer Actions (Hides during printing) -->
             <div style="background: #f8fafc; border-top: 1px solid #f1f5f9; padding: 18px 24px; display: flex; justify-content: flex-end; gap: 10px;" class="no-print">
                 <button type="button" onclick="closeSuccessReceiptModal()" style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 13.5px; font-weight: bold;">
                     Close Portal
                 </button>
-                <button type="button" onclick="printReceipt()" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 13.5px; font-weight: bold; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);">
-                    <i class="fa-solid fa-print"></i> Print E-Receipt
+                <button type="button" onclick="printReceipt()" style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 13.5px; font-weight: bold; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-print"></i> Print Receipt
+                </button>
+                <button type="button" onclick="downloadTicket()" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 13.5px; font-weight: bold; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);">
+                    <i class="fa-solid fa-cloud-arrow-down"></i> Download Ticket
                 </button>
                 <a id="receipt-whatsapp-btn" target="_blank" href="#" style="background: #25d366; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 13.5px; font-weight: bold; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 6px -1px rgba(37, 211, 102, 0.2);">
+                    <i class="fa-brands fa-whatsapp"></i> Share on WhatsApp
+                </a>
+            </div>
+        </div>
+    </div>
+
+    
+    
+    <!-- Fare Calendar Modal -->
+    <div class="modal-overlay" id="fare-calendar-modal" style="z-index: 10500;">
+        <div class="modal-content" style="width: 900px; max-width: 95vw; background: white; border-radius: 8px; display: flex; flex-direction: column; max-height: 90vh;">
+            <div style="padding: 15px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0; font-size: 18px; color: #0f172a;">Weekly Fare</h2>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="background: #22c55e; color: white; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 2px;">CHEAPEST</span>
+                    <span style="background: #f59e0b; color: white; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 2px;">MEDIUM</span>
+                    <span style="background: #ef4444; color: white; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 2px;">HIGH</span>
+                    <i class="fa-solid fa-xmark" style="color: #94a3b8; font-size: 20px; cursor: pointer; margin-left: 15px;" onclick="closeFareCalendar()"></i>
+                </div>
+            </div>
+            
+            <div style="padding: 20px; flex: 1; overflow-y: auto;">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                    <span style="font-size: 14px; color: #475569;">Select Preferred Airline:</span>
+                    <div style="display: flex; border: 1px solid #cbd5e1; border-radius: 4px; overflow: hidden;">
+                        <button style="background: #0284c7; color: white; border: none; padding: 8px 16px; font-size: 14px; font-weight: 600; cursor: pointer;">Any Airline</button>
+                        <input type="text" placeholder="+ Airline" style="border: none; padding: 8px 12px; outline: none; border-left: 1px solid #cbd5e1; width: 150px;">
+                    </div>
+                    <button style="background: #0369a1; color: white; border: none; padding: 8px 24px; border-radius: 4px; font-weight: 600; cursor: pointer;">Find</button>
+                </div>
+                
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; min-width: 800px; text-align: center; border: 1px solid #e2e8f0; font-size: 12px;">
+                        <thead id="fare-calendar-head" style="background: #f8fafc;">
+                        </thead>
+                        <tbody id="fare-calendar-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- E-Ticket Modal -->
+    <div id="eticket-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 10600; align-items: center; justify-content: center; backdrop-filter: blur(4px); overflow-y: auto; padding: 20px 0;">
+        <div style="background: white; width: 100%; max-width: 800px; border-radius: 8px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); overflow: hidden; margin: auto; font-family: 'Inter', sans-serif;">
+            <div id="printable-eticket-content" style="padding: 40px; color: #333;">
+                <!-- Header -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                    <div>
+                        <h1 style="margin: 0; color: #1e3a8a; font-size: 28px; font-weight: 800;">SKYLINE</h1>
+                        <div style="color: #64748b; font-size: 12px; letter-spacing: 2px;">AIRWAYS</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="color: #64748b; font-size: 10px; font-weight: bold; margin-bottom: 2px;">BOOKING REFERENCE (PNR)</div>
+                        <div id="eticket-pnr" style="color: #1e3a8a; font-size: 24px; font-weight: 800;">-</div>
+                    </div>
+                </div>
+
+                <!-- Title banner -->
+                <div style="border-top: 2px solid #1e3a8a; border-bottom: 2px solid #1e3a8a; padding: 8px 0; text-align: center; margin-bottom: 20px;">
+                    <span style="color: #1e3a8a; font-weight: 700; letter-spacing: 1px; font-size: 15px;">E-TICKET ITINERARY & RECEIPT</span>
+                </div>
+
+                <!-- Info box -->
+                <div style="border: 1px solid #cbd5e1; border-radius: 4px; padding: 12px; font-size: 10px; color: #475569; margin-bottom: 20px; line-height: 1.4;">
+                    This is your travel itinerary and e-ticket receipt, which forms part of your contract of carriage. Your electronic ticket is recorded in the airline's computer reservation system. You may need to show this receipt to enter the airport and/or to prove return or onward travel to customs and immigration officials.<br>
+                    <b>All timings mentioned are local.</b>
+                </div>
+
+                <!-- Section 1 -->
+                <div style="background: #e2e8f0; color: #1e3a8a; padding: 6px 12px; font-weight: 700; font-size: 12px; margin-bottom: 10px;">
+                    1. TRAVELER INFORMATION
+                </div>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 11px; border: 1px solid #cbd5e1;">
+                    <tr>
+                        <td style="padding: 10px; border-right: 1px solid #cbd5e1; width: 50%;">
+                            <div style="color: #94a3b8; font-size: 9px; margin-bottom: 4px;">PASSENGER NAME</div>
+                            <div id="eticket-pax" style="font-weight: 700; color: #0f172a; font-size: 13px;">-</div>
+                        </td>
+                        <td style="padding: 10px;">
+                            <div style="color: #94a3b8; font-size: 9px; margin-bottom: 4px;">TICKET NUMBER</div>
+                            <div id="eticket-ticket" style="font-weight: 700; color: #0f172a; font-size: 13px;">-</div>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Section 2 -->
+                <div style="background: #e2e8f0; color: #1e3a8a; padding: 6px 12px; font-weight: 700; font-size: 12px; margin-bottom: 10px;" id="eticket-flight-title">
+                    2. FLIGHT ITINERARY
+                </div>
+                <div id="eticket-flights-container" style="margin-bottom: 20px;">
+                    <!-- Flight blocks will be injected here -->
+                </div>
+
+                <!-- Section 3 -->
+                <div style="background: #e2e8f0; color: #1e3a8a; padding: 6px 12px; font-weight: 700; font-size: 12px; margin-bottom: 10px;">
+                    3. BAGGAGE ALLOWANCE
+                </div>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 11px; border: 1px solid #cbd5e1;">
+                    <tr>
+                        <td style="padding: 10px; border-right: 1px solid #cbd5e1; width: 50%;">
+                            <div style="color: #94a3b8; font-size: 9px; margin-bottom: 4px;">CHECKED BAGGAGE ALLOWANCE</div>
+                            <div style="font-weight: 700; color: #0f172a; font-size: 12px;">30 KG (Per Adult Passenger)</div>
+                        </td>
+                        <td style="padding: 10px;">
+                            <div style="color: #94a3b8; font-size: 9px; margin-bottom: 4px;">HAND CABIN LUGGAGE</div>
+                            <div style="font-weight: 700; color: #0f172a; font-size: 12px;">7 KG (1 Piece Max)</div>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Section 4 -->
+                <div style="background: #e2e8f0; color: #1e3a8a; padding: 6px 12px; font-weight: 700; font-size: 12px; margin-bottom: 10px;">
+                    4. VALUE ADDED SERVICES & SPECIAL REQUESTS
+                </div>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 11px; border: 1px solid #cbd5e1;">
+                    <tr>
+                        <td style="padding: 10px; border-right: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; width: 50%;">
+                            <div style="color: #94a3b8; font-size: 9px; margin-bottom: 4px;">SPECIAL MEAL REQUEST</div>
+                            <div id="eticket-meal" style="font-weight: 700; color: #0f172a; font-size: 12px;">Standard Meal (No Preference)</div>
+                        </td>
+                        <td style="padding: 10px; border-bottom: 1px solid #cbd5e1;">
+                            <div style="color: #94a3b8; font-size: 9px; margin-bottom: 4px;">WHEELCHAIR REQUEST</div>
+                            <div id="eticket-wheelchair" style="font-weight: 700; color: #0f172a; font-size: 12px;">No wheelchair assistance required</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-right: 1px solid #cbd5e1; width: 50%;">
+                            <div style="color: #94a3b8; font-size: 9px; margin-bottom: 4px;">AIRPORT SPECIAL ASSISTANCE</div>
+                            <div id="eticket-assist" style="font-weight: 700; color: #0f172a; font-size: 12px;">No special airport assistance</div>
+                        </td>
+                        <td style="padding: 10px;">
+                            <div style="color: #94a3b8; font-size: 9px; margin-bottom: 4px;">ALLERGY CONDITIONS</div>
+                            <div id="eticket-allergy" style="font-weight: 700; color: #0f172a; font-size: 12px;">None Reported</div>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Section 5 -->
+                <div style="background: #e2e8f0; color: #1e3a8a; padding: 6px 12px; font-weight: 700; font-size: 12px; margin-bottom: 10px;">
+                    5. TERMS, CONDITIONS & IMPORTANT NOTICES
+                </div>
+                <ul style="font-size: 9.5px; color: #dc2626; padding-left: 15px; margin-top: 5px; margin-bottom: 30px; line-height: 1.5; list-style-type: square;">
+                    <li><span style="color: #475569;">A Processing Fee will apply to all documents refunded in addition to any fees charged by the supplier. You will receive the refund, where applicable, within 30 working days. For details, please call hotline number 0112222222.</span></li>
+                    <li><span style="color: #475569;">Re-issue or re-validation may attract Airline fees.</span></li>
+                    <li><span style="color: #475569;">Please ensure that you carry all valid travel documents for the destination / transit city prior to departure.</span></li>
+                    <li><span style="color: #475569;">All timings are based on a city's local time.</span></li>
+                    <li><span style="color: #475569;">Flight times given above may change without any prior notice from the Airline. Kindly call the local Airline office to obtain updated information on your flight timings.</span></li>
+                    <li><span style="color: #475569;">Carriage and other services provided by the airline are subject to conditions of carriage, which are hereby incorporated by reference. The conditions of carriage may be obtained directly from the airline.</span></li>
+                    <li><span style="color: #475569;">Standard airport check-in begins 3 hours prior to the scheduled departure time. Late arrival at the check-in counter may prevent you from boarding the flights.</span></li>
+                    <li><span style="color: #475569;">Prior to travel check with the departure airport for restrictions on carriage of liquids, aerosols and gels in hand baggage.</span></li>
+                </ul>
+            </div>
+
+            <!-- Action Footer -->
+            <div style="background: #f8fafc; border-top: 1px solid #f1f5f9; padding: 18px 24px; display: flex; justify-content: flex-end; gap: 10px;" class="no-print">
+                <button type="button" onclick="closeEticketModal()" style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 13.5px; font-weight: bold;">
+                    Done
+                </button>
+                <button type="button" onclick="printEticket()" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 13.5px; font-weight: bold; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-print"></i> Print E-Ticket
+                </button>
+                <a id="eticket-whatsapp-btn" target="_blank" href="#" style="background: #25d366; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 13.5px; font-weight: bold; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 6px -1px rgba(37, 211, 102, 0.2);">
                     <i class="fa-brands fa-whatsapp"></i> Share on WhatsApp
                 </a>
             </div>
@@ -1123,7 +1341,7 @@
             body > * {
                 display: none !important;
             }
-            #success-receipt-modal {
+            .printable-modal {
                 display: flex !important;
                 position: absolute !important;
                 left: 0 !important;
@@ -1134,7 +1352,7 @@
                 z-index: 999999 !important;
                 padding: 0 !important;
             }
-            #success-receipt-modal > div {
+            .printable-modal > div {
                 box-shadow: none !important;
                 border: none !important;
                 max-width: 100% !important;
@@ -1169,6 +1387,7 @@
         };
 
         function getCityName(code) {
+            if (!code) return "";
             return CITY_NAME_MAPPING[code.toUpperCase()] || code;
         }
 
@@ -2301,40 +2520,371 @@
             window.location.reload();
         }
 
-        function printReceipt() {
+function printReceipt() {
+            document.getElementById('success-receipt-modal').classList.add('printable-modal');
+            document.getElementById('eticket-modal').classList.remove('printable-modal');
             window.print();
         }
 
+        function downloadTicket() {
+            if (!window.currentBookingData) return;
+            document.getElementById('success-receipt-modal').style.display = 'none';
+            generateEticket(window.currentBookingData.data, window.currentBookingData.payload);
+            document.getElementById('eticket-modal').style.display = 'flex';
+        }
+
+        function closeEticketModal() {
+            document.getElementById('eticket-modal').style.display = 'none';
+            window.location.reload();
+        }
+
+        function printEticket() {
+            document.getElementById('success-receipt-modal').classList.remove('printable-modal');
+            document.getElementById('eticket-modal').classList.add('printable-modal');
+            window.print();
+        }
+
+        function generateEticket(data, payload) {
+            document.getElementById('eticket-pnr').innerText = data.pnr_reference || '-';
+            document.getElementById('eticket-pax').innerText = payload.passenger_name || 'N/A';
+            document.getElementById('eticket-ticket').innerText = data.ticket_number || 'PENDING';
+            
+            document.getElementById('eticket-meal').innerText = payload.meal_preference || 'Standard Meal (No Preference)';
+            document.getElementById('eticket-wheelchair').innerText = payload.wheelchair_assistance || 'No wheelchair assistance required';
+            document.getElementById('eticket-assist').innerText = payload.airport_assistance || 'No special airport assistance';
+            document.getElementById('eticket-allergy').innerText = payload.allergy_conditions || 'None Reported';
+
+            const whatsappText = `SKYLINE AIRWAYS E-TICKET\nPNR: ${data.pnr_reference || '-'}\nPassenger: ${payload.passenger_name || '-'}\nTicket: ${data.ticket_number || 'PENDING'}\nHave a safe flight!`;
+            document.getElementById('eticket-whatsapp-btn').href = `https://wa.me/?text=${encodeURIComponent(whatsappText)}`;
+
+            const outboundFlight = cachedFlights.find(fl => fl.id === payload.flight_id);
+            const returnFlight = (outboundFlight && outboundFlight.return_flight && outboundFlight.return_flight.id === payload.return_flight_id) ? outboundFlight.return_flight : null;
+            
+            document.getElementById('eticket-flight-title').innerText = returnFlight ? '2. FLIGHT ITINERARY (ROUND TRIP)' : '2. FLIGHT ITINERARY (ONE WAY)';
+            
+            const container = document.getElementById('eticket-flights-container');
+            container.innerHTML = '';
+            
+            if (outboundFlight) {
+                const depDate = formatFlightDate(outboundFlight.departure_time);
+                const depTime = formatFlightTime(outboundFlight.departure_time);
+                const durText = getFlightDuration(outboundFlight);
+                const depCity = getCityName(outboundFlight.origin);
+                const arrCity = getCityName(outboundFlight.destination);
+                const seatNum = payload.seat_number || '[ ]';
+                
+                container.innerHTML += `
+                <div style="border: 1px solid #cbd5e1; border-radius: 4px; overflow: hidden; margin-bottom: 10px;">
+                    <div style="background: #1e3a8a; color: white; padding: 6px 12px; font-size: 10.5px; font-weight: 700; text-transform: uppercase;">
+                        OUTBOUND FLIGHT: ${depCity} (${outboundFlight.origin}) TO ${arrCity} (${outboundFlight.destination})
+                    </div>
+                    <div style="padding: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #cbd5e1;">
+                        <div style="width: 150px;">
+                            <div style="font-size: 22px; font-weight: 800; color: #0f172a;">${outboundFlight.origin}</div>
+                            <div style="font-size: 10px; color: #475569;">${depCity}</div>
+                        </div>
+                        <div style="flex: 1; text-align: center; position: relative;">
+                            <div style="height: 1px; background: #cbd5e1; width: 100%; position: absolute; top: 50%; z-index: 1;"></div>
+                            <i class="fa-solid fa-plane" style="color: #3b82f6; background: white; padding: 0 5px; position: relative; z-index: 2; font-size: 14px;"></i>
+                            <div style="font-size: 9px; color: #94a3b8; margin-top: 5px;">${durText} (Direct)</div>
+                        </div>
+                        <div style="width: 150px; text-align: right;">
+                            <div style="font-size: 22px; font-weight: 800; color: #0f172a;">${outboundFlight.destination}</div>
+                            <div style="font-size: 10px; color: #475569;">${arrCity}</div>
+                        </div>
+                    </div>
+                    <div style="padding: 12px; display: flex; justify-content: space-between; font-size: 10px; background: #f8fafc;">
+                        <div>
+                            <div style="color: #94a3b8; margin-bottom: 2px;">FLIGHT NUMBER</div>
+                            <div style="font-weight: 700; color: #0f172a;">${outboundFlight.flight_number}</div>
+                        </div>
+                        <div>
+                            <div style="color: #94a3b8; margin-bottom: 2px;">DEPARTURE DATE & TIME</div>
+                            <div style="font-weight: 700; color: #0f172a;">${depDate} / ${depTime}</div>
+                        </div>
+                        <div>
+                            <div style="color: #94a3b8; margin-bottom: 2px;">SEAT NUMBER</div>
+                            <div style="font-weight: 700; color: #0f172a;">${seatNum}</div>
+                        </div>
+                        <div>
+                            <div style="color: #94a3b8; margin-bottom: 2px;">CABIN CLASS</div>
+                            <div style="font-weight: 700; color: #0f172a;">Economy (G)</div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+            
+            if (returnFlight) {
+                const depDate = formatFlightDate(returnFlight.departure_time);
+                const depTime = formatFlightTime(returnFlight.departure_time);
+                const durText = getFlightDuration(returnFlight);
+                const depCity = getCityName(returnFlight.origin);
+                const arrCity = getCityName(returnFlight.destination);
+                const seatNum = payload.return_seat_number || '[ ]';
+                
+                container.innerHTML += `
+                <div style="border: 1px solid #cbd5e1; border-radius: 4px; overflow: hidden; margin-bottom: 10px;">
+                    <div style="background: #1e3a8a; color: white; padding: 6px 12px; font-size: 10.5px; font-weight: 700; text-transform: uppercase;">
+                        RETURN FLIGHT: ${depCity} (${returnFlight.origin}) TO ${arrCity} (${returnFlight.destination})
+                    </div>
+                    <div style="padding: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #cbd5e1;">
+                        <div style="width: 150px;">
+                            <div style="font-size: 22px; font-weight: 800; color: #0f172a;">${returnFlight.origin}</div>
+                            <div style="font-size: 10px; color: #475569;">${depCity}</div>
+                        </div>
+                        <div style="flex: 1; text-align: center; position: relative;">
+                            <div style="height: 1px; background: #cbd5e1; width: 100%; position: absolute; top: 50%; z-index: 1;"></div>
+                            <i class="fa-solid fa-plane" style="color: #3b82f6; background: white; padding: 0 5px; position: relative; z-index: 2; font-size: 14px; transform: rotate(180deg);"></i>
+                            <div style="font-size: 9px; color: #94a3b8; margin-top: 5px;">${durText} (Direct)</div>
+                        </div>
+                        <div style="width: 150px; text-align: right;">
+                            <div style="font-size: 22px; font-weight: 800; color: #0f172a;">${returnFlight.destination}</div>
+                            <div style="font-size: 10px; color: #475569;">${arrCity}</div>
+                        </div>
+                    </div>
+                    <div style="padding: 12px; display: flex; justify-content: space-between; font-size: 10px; background: #f8fafc;">
+                        <div>
+                            <div style="color: #94a3b8; margin-bottom: 2px;">FLIGHT NUMBER</div>
+                            <div style="font-weight: 700; color: #0f172a;">${returnFlight.flight_number}</div>
+                        </div>
+                        <div>
+                            <div style="color: #94a3b8; margin-bottom: 2px;">DEPARTURE DATE & TIME</div>
+                            <div style="font-weight: 700; color: #0f172a;">${depDate} / ${depTime}</div>
+                        </div>
+                        <div>
+                            <div style="color: #94a3b8; margin-bottom: 2px;">SEAT NUMBER</div>
+                            <div style="font-weight: 700; color: #0f172a;">${seatNum}</div>
+                        </div>
+                        <div>
+                            <div style="color: #94a3b8; margin-bottom: 2px;">CABIN CLASS</div>
+                            <div style="font-weight: 700; color: #0f172a;">Economy (G)</div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+        }
+
+        function formatFlightDate(dateStr) {
+            if (!dateStr) return "June, 23 2019";
+            const dateObj = new Date(dateStr);
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const month = months[dateObj.getMonth()];
+            const day = dateObj.getDate();
+            const year = dateObj.getFullYear();
+            return `${month}, ${day} ${year}`;
+        }
+
+        function formatFlightTime(timeStr) {
+            if (!timeStr) return "1:35 PM";
+            if (timeStr.includes(':')) {
+                let parts = timeStr.split(' ');
+                let timePart = parts[parts.length - 1]; 
+                let tParts = timePart.split(':');
+                let hr = parseInt(tParts[0]);
+                let min = tParts[1] || '00';
+                let ampm = hr >= 12 ? 'PM' : 'AM';
+                let displayHr = hr % 12;
+                if (displayHr === 0) displayHr = 12;
+                return `${displayHr}:${min} ${ampm}`;
+            }
+            return timeStr;
+        }
+
+        function getFlightTerminal(flightCode, isArrival) {
+            let hash = 0;
+            const code = flightCode || "FL123";
+            for (let i = 0; i < code.length; i++) {
+                hash = code.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const val = Math.abs(hash) % 3;
+            if (isArrival) {
+                return ['Terminal 3', 'Terminal A', 'Terminal C'][val];
+            } else {
+                return ['Terminal C', 'Terminal 2', 'Terminal 1'][val];
+            }
+        }
+
+        function getFlightDuration(fl) {
+            if (!fl) return "Total flight 8h 43m";
+            const org = (fl.origin || 'CMB').toUpperCase();
+            const dest = (fl.destination || 'MEL').toUpperCase();
+            if (org === 'CMB' && dest === 'MEL') return "Total flight 10h 30m";
+            if (org === 'MEL' && dest === 'CMB') return "Total flight 10h 45m";
+            if (org === 'CMB' && dest === 'SIN') return "Total flight 4h 15m";
+            if (org === 'SIN' && dest === 'CMB') return "Total flight 4h 20m";
+            return "Total flight 7h 50m";
+        }
+
+        
+        function openFareCalendar() {
+            document.getElementById('fare-calendar-modal').style.display = 'flex';
+            generateFareGrid();
+        }
+
+        function closeFareCalendar() {
+            document.getElementById('fare-calendar-modal').style.display = 'none';
+        }
+        
+        function formatCalDate(d) {
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${String(d.getDate()).padStart(2, '0')} ${months[d.getMonth()]}, ${days[d.getDay()]}`;
+        }
+
+        function formatYMD(d) {
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+
+        function searchNewDates(depDate, retDate) {
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('date', depDate);
+            urlParams.set('returnDate', retDate);
+            window.location.search = urlParams.toString();
+        }
+
+        function generateFareGrid() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const baseDepStr = urlParams.get('date');
+            const baseDepDate = baseDepStr ? new Date(baseDepStr + 'T00:00:00') : new Date();
+            const retDateParam = urlParams.get('returnDate');
+            let baseRetDate = new Date(baseDepDate);
+            if (retDateParam) {
+                baseRetDate = new Date(retDateParam + 'T00:00:00');
+            } else {
+                baseRetDate.setDate(baseRetDate.getDate() + 5);
+            }
+            
+            const depDates = [];
+            for(let i = -3; i <= 3; i++) {
+                let d = new Date(baseDepDate);
+                d.setDate(d.getDate() + i);
+                depDates.push(d);
+            }
+            
+            const retDates = [];
+            for(let i = -3; i <= 3; i++) {
+                let d = new Date(baseRetDate);
+                d.setDate(d.getDate() + i);
+                retDates.push(d);
+            }
+            
+            const thead = document.getElementById('fare-calendar-head');
+            let headHTML = '<tr><th style="padding: 15px; border: 1px solid #e2e8f0; background: white;"></th>';
+            depDates.forEach(d => {
+                headHTML += `<th style="padding: 15px 5px; border: 1px solid #e2e8f0; font-weight: normal; color: #475569;">
+                    <div style="font-size: 10px; font-weight: 600;">DEPART</div>
+                    <div>${formatCalDate(d)}</div>
+                </th>`;
+            });
+            headHTML += '</tr>';
+            thead.innerHTML = headHTML;
+            
+            const tbody = document.getElementById('fare-calendar-body');
+            let bodyHTML = '';
+            
+            let basePrice = 175678;
+            if (cachedFlights && cachedFlights.length > 0) {
+                basePrice = Math.min(...cachedFlights.map(f => f.price));
+            }
+            
+            retDates.forEach((rd, rIdx) => {
+                bodyHTML += `<tr>`;
+                bodyHTML += `<td style="padding: 15px 5px; border: 1px solid #e2e8f0; font-weight: normal; color: #475569; background: #f8fafc;">
+                    <div style="font-size: 10px; font-weight: 600;">RETURN</div>
+                    <div>${formatCalDate(rd)}</div>
+                </td>`;
+                
+                depDates.forEach((dd, dIdx) => {
+                    // Make it empty if return is before departure
+                    let strippedRd = new Date(rd.getFullYear(), rd.getMonth(), rd.getDate());
+                    let strippedDd = new Date(dd.getFullYear(), dd.getMonth(), dd.getDate());
+                    if (strippedRd < strippedDd) {
+                        bodyHTML += `<td style="padding: 15px; border: 1px solid #e2e8f0; background: white;"></td>`;
+                        return;
+                    }
+                    
+                    let offset = (Math.sin(rIdx * 3 + dIdx * 7) * (basePrice * 0.25));
+                    if (rIdx === 3 && dIdx === 3) offset = 0; 
+                    let price = Math.round((basePrice + offset) / 10) * 10;
+                    
+                    let color = '#22c55e'; // CHEAPEST (Green)
+                    if (price > basePrice * 1.05 && price < basePrice * 1.25) color = '#f59e0b'; // MEDIUM (Orange)
+                    if (price >= basePrice * 1.25) color = '#ef4444'; // HIGH (Red)
+                    
+                    bodyHTML += `<td class="cal-cell" style="padding: 15px; border: 1px solid #e2e8f0; cursor: pointer; transition: background 0.2s; background: white;" onclick="searchNewDates('${formatYMD(dd)}', '${formatYMD(rd)}')">
+                        <div style="color: ${color}; font-weight: 700; font-size: 13px;">LKR ${price.toLocaleString()}</div>
+                        <div style="color: #64748b; font-size: 9px; margin-top: 4px; text-decoration: underline;">Select</div>
+                    </td>`;
+                });
+                bodyHTML += `</tr>`;
+            });
+            tbody.innerHTML = bodyHTML;
+        }
+
         function showSuccessReceipt(data, payload) {
+            window.currentBookingData = { data, payload };
             const paymentMethod = payload.payment_method;
             const ticketNow = payload.ticket_now;
+            
+            // Find selected flight details from cachedFlights
+            const outboundFlight = cachedFlights.find(fl => fl.id === payload.flight_id);
+            const returnFlight = (outboundFlight && outboundFlight.return_flight && outboundFlight.return_flight.id === payload.return_flight_id) ? outboundFlight.return_flight : null;
             
             // Populate header title based on hold or purchase
             const headerTitle = document.getElementById('receipt-header-title');
             const statusText = document.getElementById('receipt-status');
+            const itinerariesContainer = document.getElementById('receipt-itineraries-container');
             
             if (ticketNow) {
-                headerTitle.innerText = "GDS Booking Confirmed!";
-                statusText.innerHTML = '<span style="background: #d1fae5; color: #065f46; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;">TICKETED</span>';
+                headerTitle.innerText = "Payment Confirmation";
+                statusText.innerText = "Confirmed & Ticketed";
+                statusText.style.color = "#10b981";
             } else {
-                headerTitle.innerText = "GDS Seat Hold Confirmed!";
-                statusText.innerHTML = '<span style="background: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;">HOLD (PENDING PAYMENT)</span>';
+                headerTitle.innerText = "Booking Hold Confirmation";
+                statusText.innerText = "Hold Confirmed";
+                statusText.style.color = "#f59e0b";
             }
             
+            // Clear existing itineraries
+            itinerariesContainer.innerHTML = '';
+            itinerariesContainer.style.display = 'none'; // Hide the itinerary section completely
+
+
             const outSeat = payload.seat_number || 'Not Selected';
             const retSeat = payload.return_seat_number;
             const seatDisplay = retSeat ? `${outSeat} (Outbound), ${retSeat} (Return)` : outSeat;
             
+            const ticketNum = data.ticket_number || 'HOLD - PENDING PAYMENT';
+            
+            // Format Value Added Services dynamically
+            let vasList = [];
+            if (payload.meal_preference && payload.meal_preference !== 'Standard Meal') {
+                vasList.push(`🍱 Meal: ${payload.meal_preference}`);
+            }
+            if (payload.wheelchair_assistance && payload.wheelchair_assistance.toLowerCase() !== 'no wheelchair assistance required') {
+                vasList.push(`♿ Wheelchair: ${payload.wheelchair_assistance}`);
+            }
+            if (payload.airport_assistance && payload.airport_assistance.toLowerCase() !== 'no special airport assistance') {
+                vasList.push(`🙋‍♂️ Assist: ${payload.airport_assistance}`);
+            }
+            if (payload.allergy_conditions) {
+                vasList.push(`⚠️ Allergies: ${payload.allergy_conditions}`);
+            }
+            if (payload.other_requests) {
+                vasList.push(`📝 Request: ${payload.other_requests}`);
+            }
+            const vasHTML = vasList.length > 0 ? vasList.join('<br>') : 'Standard Services';
+
+            // Populate table values
             document.getElementById('receipt-pnr').innerText = data.pnr_reference || 'PNR-GDS' + Math.floor(Math.random() * 900000 + 100000);
-            document.getElementById('receipt-invoice').innerText = data.invoice_number || 'INV-' + Math.floor(Math.random() * 900000 + 100000);
+            document.getElementById('receipt-ticket-number').innerText = ticketNum;
             document.getElementById('receipt-pax-name').innerText = payload.passenger_name || 'Sanka Lasitha';
             document.getElementById('receipt-passport').innerText = payload.passport_number || 'N/A';
             document.getElementById('receipt-route').innerText = document.getElementById('summary-cities').innerText || 'Colombo to Melbourne';
             document.getElementById('receipt-seats').innerText = seatDisplay;
+            document.getElementById('receipt-vas-list').innerHTML = vasHTML;
             document.getElementById('receipt-pay-method').innerText = (paymentMethod === 'card') ? 'Corporate Credit Card (PG)' : 'Account Credit Wallet';
             document.getElementById('receipt-total-price').innerText = document.getElementById('summary-total-price').innerText;
-            document.getElementById('receipt-meal').innerText = payload.meal_preference || 'Standard Meal';
-            document.getElementById('receipt-wheelchair').innerText = payload.wheelchair_assistance || 'None';
             
             // Construct WhatsApp message
             const pnrRef = data.pnr_reference || 'Pending';
@@ -2342,7 +2892,8 @@
             const totalPrice = document.getElementById('summary-total-price').innerText;
             const payMethodDisplay = paymentMethod === 'card' ? 'Corporate Credit Card' : 'Agency Credit Wallet';
             
-            const messageText = `✈️ *SYSTEM FRD Airline - Ticket Confirmation* ✈️\n\nThank you for selecting our service for your travel partner.\n\nHere are your travel details:\n👤 *Passenger:* ${payload.passenger_name}\n🎫 *PNR Reference:* ${pnrRef}\n🧾 *Invoice Number:* ${data.invoice_number}\n🎟 *Status:* ${ticketNow ? 'TICKETED' : 'HOLD'}\n🧳 *Route:* ${routeInfo}\n💺 *Seat(s):* ${seatDisplay}\n💳 *Payment Method:* ${payMethodDisplay}\n💰 *Total Amount:* ${totalPrice}\n\nThank you for selecting our service for your travel partner. We wish you a safe and wonderful flight! ✈️🌟`;
+            const ticketInfo = ticketNow ? `\n🎫 *Ticket Number:* ${ticketNum}` : '';
+            const messageText = `✈️ *SYSTEM FRD Airline - Ticket Confirmation* ✈️\n\nThank you for selecting our service for your travel partner.\n\nHere are your travel details:\n👤 *Passenger:* ${payload.passenger_name}\n🎫 *PNR Reference:* ${pnrRef}${ticketInfo}\n🎟 *Status:* ${ticketNow ? 'TICKETED' : 'HOLD'}\n🧳 *Route:* ${routeInfo}\n💺 *Seat(s):* ${seatDisplay}\n💳 *Payment Method:* ${payMethodDisplay}\n💰 *Total Amount:* ${totalPrice}\n\nThank you for selecting our service for your travel partner. We wish you a safe and wonderful flight! ✈️🌟`;
             
             const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(messageText)}`;
             document.getElementById('receipt-whatsapp-btn').href = whatsappUrl;
@@ -2377,7 +2928,8 @@
                 }
             })
             .catch(err => {
-                alert("Error communicating with booking server.");
+                console.error(err);
+                alert("Client/Network Error: " + err.message + "\n\nPlease check the console for more details.");
             })
             .finally(() => {
                 submitBtn.disabled = false;
@@ -2488,7 +3040,8 @@
                     }
                 })
                 .catch(err => {
-                    alert("Error communicating with booking server.");
+                    console.error(err);
+                    alert("Client/Network Error: " + err.message + "\n\nPlease check the console for more details.");
                 })
                 .finally(() => {
                     submitBtn.disabled = false;

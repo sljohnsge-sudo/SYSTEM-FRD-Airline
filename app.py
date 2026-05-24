@@ -766,20 +766,22 @@ def api_flights_book():
         pnr_reference = f"PNR{random.randint(100000, 999999)}"
         ticket_number = f"TKT-{random.randint(1000000000, 9999999999)}" if booking_status == "ticketed" else None
         
+        outbound_gds_type = (flight.get("gds_source") or "Amadeus") if flight.get("flight_type") == "GDS" else flight.get("flight_type")
         # Insert flight booking details (Outbound)
         cursor.execute("""
             INSERT INTO flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee, pnr_reference, ticket_number, passport_number, mobile, email)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, (booking_id, flight_id, passenger_name, seat_number, flight["flight_type"], booking_status, flight["price"], markup, pnr_reference, ticket_number, passport_number, mobile, email))
+        """, (booking_id, flight_id, passenger_name, seat_number, outbound_gds_type, booking_status, flight["price"], markup, pnr_reference, ticket_number, passport_number, mobile, email))
         
         # Insert flight booking details (Return)
         if return_flight:
+            return_gds_type = (return_flight.get("gds_source") or "Amadeus") if return_flight.get("flight_type") == "GDS" else return_flight.get("flight_type")
             return_pnr = f"PNR{random.randint(100000, 999999)}"
             return_ticket = f"TKT-{random.randint(1000000000, 9999999999)}" if booking_status == "ticketed" else None
             cursor.execute("""
                 INSERT INTO flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee, pnr_reference, ticket_number, passport_number, mobile, email)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (booking_id, return_flight_id, passenger_name, return_seat_number, return_flight["flight_type"], booking_status, return_flight["price"], markup, return_pnr, return_ticket, passport_number, mobile, email))
+            """, (booking_id, return_flight_id, passenger_name, return_seat_number, return_gds_type, booking_status, return_flight["price"], markup, return_pnr, return_ticket, passport_number, mobile, email))
             
         # Deduct wallet if credit option is used
         if payment_method == "credit":
@@ -810,7 +812,9 @@ def api_flights_book():
             "message": status_message, 
             "invoice_number": invoice_number,
             "total_price": float(total_price),
-            "booking_id": booking_id
+            "booking_id": booking_id,
+            "pnr_reference": pnr_reference,
+            "ticket_number": ticket_number
         })
         
     except Exception as e:
