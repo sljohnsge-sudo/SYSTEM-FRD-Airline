@@ -2516,8 +2516,10 @@
 
         function closeSuccessReceiptModal() {
             document.getElementById('success-receipt-modal').style.display = 'none';
-            // Reload page to refresh dashboard and clear wizard state
-            window.location.reload();
+            // Close the flight results tab to return to the dashboard
+            window.close();
+            // Fallback if browser blocks window.close()
+            window.location.href = '/';
         }
 
 function printReceipt() {
@@ -2535,7 +2537,10 @@ function printReceipt() {
 
         function closeEticketModal() {
             document.getElementById('eticket-modal').style.display = 'none';
-            window.location.reload();
+            // Close the flight results tab to return to the dashboard
+            window.close();
+            // Fallback if browser blocks window.close()
+            window.location.href = '/';
         }
 
         function printEticket() {

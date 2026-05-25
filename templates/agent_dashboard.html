@@ -18,7 +18,7 @@
     <div class="app-layout">
         <!-- Sidebar Navigation -->
         <aside class="app-sidebar">
-            <div class="sidebar-brand">
+            <div class="sidebar-brand" onclick="window.location.href='{{ url_for('index') }}'" style="cursor: pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1" >
                 <div class="brand-icon">
                     <i class="fa-solid fa-plane-departure" style="color: #fff;"></i>
                 </div>
@@ -58,6 +58,17 @@
                     <i class="fa-solid fa-headset"></i>
                     <span>Feedback & Tickets</span>
                 </a>
+            
+                <div style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                    <a href="{{ url_for('index') }}" class="menu-item">
+                        <i class="fa-solid fa-house"></i>
+                        <span>Back to Main Page</span>
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="menu-item" style="color: #ff6b6b;">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Logout Account</span>
+                    </a>
+                </div>
             </nav>
             
             <div class="sidebar-footer">
@@ -70,10 +81,8 @@
                         <div class="profile-role">B2B Travel Agent</div>
                     </div>
                 </div>
-                <a href="{{ url_for('logout') }}" class="btn-logout">
-                    <i class="fa-solid fa-right-from-bracket"></i>
-                    <span>Logout Account</span>
-                </a>
+                
+                
             </div>
         </aside>
 
@@ -378,7 +387,6 @@
                                 <span>Search</span>
                             </button>
                         </div>
-                    </div>
                     </div>
 
                     <!-- Search Results Filter Bar (Initially Hidden) -->
