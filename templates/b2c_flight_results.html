@@ -923,21 +923,10 @@
                     <div style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 15px; margin-top: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
                         <h4 style="font-size: 14px; font-weight: 700; color: #334155; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--primary-blue); padding-bottom: 5px;"><i class="fa-solid fa-credit-card"></i> Choose Payment Method</h4>
                         
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <!-- Option 1: Deduct from Available Credit Balance -->
-                            <label for="pay-method-credit" style="position: relative; border: 2px solid var(--primary-blue); background: #f0f9ff; border-radius: 8px; padding: 15px; cursor: pointer; display: flex; align-items: flex-start; gap: 12px; transition: all 0.2s;" id="pay-tile-credit">
-                                <input type="radio" id="pay-method-credit" name="payment_method_option" value="credit" checked onchange="updatePaymentSelection('credit')" style="margin-top: 3px; width: 18px; height: 18px; accent-color: var(--primary-blue);">
-                                <div style="display: flex; flex-direction: column; gap: 3px;">
-                                    <span style="font-size: 14.5px; font-weight: 700; color: #0369a1; display: flex; align-items: center; gap: 6px;">
-                                        <i class="fa-solid fa-wallet"></i> Deduct from Available Credit Balance
-                                    </span>
-                                    <span style="font-size: 12.5px; color: #64748b;">Instantly deduct the invoice value from your pre-funded agency account.</span>
-                                </div>
-                            </label>
-                            
-                            <!-- Option 2: Pay via Corporate Credit Card / PG -->
-                            <label for="pay-method-card" style="position: relative; border: 1px solid #e2e8f0; background: #ffffff; border-radius: 8px; padding: 15px; cursor: pointer; display: flex; align-items: flex-start; gap: 12px; transition: all 0.2s;" id="pay-tile-card">
-                                <input type="radio" id="pay-method-card" name="payment_method_option" value="card" onchange="updatePaymentSelection('card')" style="margin-top: 3px; width: 18px; height: 18px; accent-color: var(--primary-blue);">
+                        <div style="display: grid; grid-template-columns: 1fr; gap: 15px;">
+                            <!-- Option: Pay via Corporate Credit Card / PG -->
+                            <label for="pay-method-card" style="position: relative; border: 2px solid var(--primary-blue); background: #f0f9ff; border-radius: 8px; padding: 15px; cursor: pointer; display: flex; align-items: flex-start; gap: 12px; transition: all 0.2s;" id="pay-tile-card">
+                                <input type="radio" id="pay-method-card" name="payment_method_option" value="card" checked onchange="updatePaymentSelection('card')" style="margin-top: 3px; width: 18px; height: 18px; accent-color: var(--primary-blue);">
                                 <div style="display: flex; flex-direction: column; gap: 3px;">
                                     <span style="font-size: 14.5px; font-weight: 700; color: #334155; display: flex; align-items: center; gap: 6px;">
                                         <i class="fa-solid fa-credit-card"></i> Pay via Credit/Debit Card (PG)
@@ -949,7 +938,7 @@
                     </div>
 
                     <!-- Payment Gateway Card Form Container -->
-                    <div id="card-payment-form" style="display: none; background: #fafafa; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-top: 15px; transition: all 0.3s ease;">
+                    <div id="card-payment-form" style="display: block; background: #fafafa; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-top: 15px; transition: all 0.3s ease;">
                         <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 25px; align-items: center;">
                             <!-- Column 1: Card Input fields -->
                             <div style="display: flex; flex-direction: column; gap: 15px;">
@@ -2246,29 +2235,16 @@
         }
 
         function updatePaymentSelection(method) {
-            const creditTile = document.getElementById('pay-tile-credit');
             const cardTile = document.getElementById('pay-tile-card');
             const cardForm = document.getElementById('card-payment-form');
             
-            if (method === 'credit') {
-                creditTile.style.borderColor = 'var(--primary-blue)';
-                creditTile.style.background = '#f0f9ff';
-                creditTile.querySelector('span').style.color = '#0369a1';
-                
-                cardTile.style.borderColor = '#e2e8f0';
-                cardTile.style.background = '#ffffff';
-                cardTile.querySelector('span').style.color = '#334155';
-                
-                cardForm.style.display = 'none';
-            } else {
+            if (cardTile) {
                 cardTile.style.borderColor = 'var(--primary-blue)';
                 cardTile.style.background = '#f0f9ff';
-                cardTile.querySelector('span').style.color = '#0369a1';
-                
-                creditTile.style.borderColor = '#e2e8f0';
-                creditTile.style.background = '#ffffff';
-                creditTile.querySelector('span').style.color = '#334155';
-                
+                const span = cardTile.querySelector('span');
+                if (span) span.style.color = '#0369a1';
+            }
+            if (cardForm) {
                 cardForm.style.display = 'block';
             }
         }
@@ -2459,8 +2435,8 @@
             document.getElementById('book-allergies').value = '';
             document.getElementById('book-other-req').value = '';
             
-            document.getElementById('pay-method-credit').checked = true;
-            updatePaymentSelection('credit');
+            document.getElementById('pay-method-card').checked = true;
+            updatePaymentSelection('card');
             
             // Clean Card Payment Gateway details
             document.getElementById('card-name').value = '';
