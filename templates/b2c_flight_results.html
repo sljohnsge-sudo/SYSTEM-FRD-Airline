@@ -2387,11 +2387,20 @@
             if (activeSeatTab === 'outbound') {
                 selectedOutboundSeat = seatName;
                 document.getElementById('book-seat').value = seatName;
+                renderSeatGrid();
+                
+                // Auto switch to return tab if return flight exists
+                const returnId = document.getElementById('book-return-id').value;
+                if (returnId) {
+                    setTimeout(() => {
+                        switchSeatTab('return');
+                    }, 300);
+                }
             } else {
                 selectedReturnSeat = seatName;
                 document.getElementById('book-return-seat').value = seatName;
+                renderSeatGrid();
             }
-            renderSeatGrid();
         }
 
         function openBookingModal(outboundId, returnId, priceLkr, ticketNow) {

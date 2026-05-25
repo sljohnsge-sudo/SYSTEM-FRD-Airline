@@ -17,12 +17,13 @@
             background-color: #f5f7fa;
         }
         .b2c-header {
-            background-color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             padding: 15px 50px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
             position: sticky;
             top: 0;
             z-index: 100;
@@ -63,8 +64,8 @@
             background: #a80c33;
         }
         .hero-banner {
-            height: 400px;
-            background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.4)), url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&q=80&w=2000');
+            height: 480px;
+            background-image: linear-gradient(135deg, rgba(209, 18, 66, 0.85) 0%, rgba(209, 18, 66, 0.4) 40%, rgba(0, 0, 0, 0.6) 100%), url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&q=80&w=2000');
             background-size: cover;
             background-position: center;
             display: flex;
@@ -73,17 +74,33 @@
             align-items: center;
             color: white;
             text-align: center;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            margin-bottom: 20px;
         }
         .hero-banner h1 {
-            font-size: 48px;
+            font-size: 54px;
             font-weight: 800;
-            margin-bottom: 10px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            margin-bottom: 15px;
+            letter-spacing: -1px;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            animation: fadeInDown 0.8s ease-out forwards;
         }
         .hero-banner p {
-            font-size: 20px;
-            font-weight: 500;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            font-size: 22px;
+            font-weight: 400;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.4);
+            opacity: 0;
+            animation: fadeInUp 0.8s ease-out 0.2s forwards;
+        }
+        
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         /* Force styling for the imported form to look clean */
@@ -128,8 +145,8 @@
     </div>
 
     <!-- Search Form -->
-    ﻿<section id="tab-flights" style="width: 100%; max-width: 1100px; margin: -80px auto 40px auto; position: relative; z-index: 10;">
-                <div class="content-card" style="background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); padding: 30px;">
+    ﻿<section id="tab-flights" style="width: 100%; max-width: 1100px; margin: -100px auto 40px auto; position: relative; z-index: 10;">
+                <div class="content-card" style="background: white; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.12); padding: 35px; border: 1px solid rgba(255,255,255,0.8);">
                     <div class="card-header">
                         <div class="card-title">
                             <i class="fa-solid fa-plane"></i>
@@ -198,9 +215,10 @@
                         <!-- Standard Flight Search Fields -->
                         <div id="standard-flight-search" style="display: flex; flex-wrap: wrap; gap: 16px; width: 100%; align-items: flex-end;">
                             <div style="display: flex; gap: 16px; flex: 1 1 100%;">
-                                <div class="search-input-group" style="flex: 1;">
+                                <div class="search-input-group" style="flex: 1; position: relative;">
                                     <label>Origin Airport</label>
-                                    <select id="flight-origin" class="form-control" style="appearance: auto; cursor: pointer;">
+                                    <input type="text" id="flight-origin" class="form-control" list="airports-origin-list" placeholder="Type city or airport code..." value="CMB" autocomplete="off">
+                                    <datalist id="airports-origin-list">
                                         <option value="CMB">CMB - Colombo, Sri Lanka</option>
                                         <option value="MLE">MLE - Male, Maldives</option>
                                         <option value="DXB">DXB - Dubai, UAE</option>
@@ -211,11 +229,12 @@
                                         <option value="MEL">MEL - Melbourne, Australia</option>
                                         <option value="SYD">SYD - Sydney, Australia</option>
                                         <option value="JFK">JFK - New York, USA</option>
-                                    </select>
+                                    </datalist>
                                 </div>
-                                <div class="search-input-group" style="flex: 1;">
+                                <div class="search-input-group" style="flex: 1; position: relative;">
                                     <label>Destination Airport</label>
-                                    <select id="flight-dest" class="form-control" style="appearance: auto; cursor: pointer;">
+                                    <input type="text" id="flight-dest" class="form-control" list="airports-dest-list" placeholder="Type city or airport code..." value="MLE" autocomplete="off">
+                                    <datalist id="airports-dest-list">
                                         <option value="MLE">MLE - Male, Maldives</option>
                                         <option value="CMB">CMB - Colombo, Sri Lanka</option>
                                         <option value="DXB">DXB - Dubai, UAE</option>
@@ -226,7 +245,7 @@
                                         <option value="MEL">MEL - Melbourne, Australia</option>
                                         <option value="SYD">SYD - Sydney, Australia</option>
                                         <option value="JFK">JFK - New York, USA</option>
-                                    </select>
+                                    </datalist>
                                 </div>
                             </div>
                             <div style="display: flex; gap: 16px; flex: 1 1 100%; align-items: flex-start;">
@@ -252,45 +271,47 @@
                                     </div>
                                 </div>
                             </div>
-                        <div class="search-input-group">
-                            <label>Travel Class</label>
-                            <select id="flight-class" class="form-control">
-                                <option value="ALL">All Classes</option>
-                                <option value="ECONOMY">Economy</option>
-                                <option value="PREMIUM_ECONOMY">Premium Economy</option>
-                                <option value="BUSINESS">Business Class</option>
-                                <option value="FIRST">First Class</option>
-                            </select>
-                        </div>
-                        <div class="search-input-group">
-                            <label>Fare Segment Channel</label>
-                            <select id="flight-channel" class="form-control">
-                                <option value="ALL">All Consolidated Fares</option>
-                                <option value="GDS">Flight Hub GDS Fares</option>
-                                <option value="LCC">LCC Low Cost Fares</option>
-                                <option value="NDC">NDC Direct Connect Fares</option>
-                            </select>
-                        </div>
-                        <div class="search-input-group">
-                            <label>Airline (Optional)</label>
-                            <select id="flight-airline" class="form-control">
-                                <option value="">All Airlines</option>
-                                <option value="Air India">Air India</option>
-                                <option value="British Airways">British Airways</option>
-                                <option value="Cathay Pacific">Cathay Pacific</option>
-                                <option value="Emirates">Emirates</option>
-                                <option value="Etihad Airways">Etihad Airways</option>
-                                <option value="IndiGo">IndiGo</option>
-                                <option value="Lufthansa">Lufthansa</option>
-                                <option value="Malaysia Airlines">Malaysia Airlines</option>
-                                <option value="Qatar Airways">Qatar Airways</option>
-                                <option value="Qantas">Qantas</option>
-                                <option value="Singapore Airlines">Singapore Airlines</option>
-                                <option value="SriLankan Airlines">SriLankan Airlines</option>
-                                <option value="Thai Airways">Thai Airways</option>
-                                <option value="Turkish Airlines">Turkish Airlines</option>
-                            </select>
-                        </div>
+                            <div style="display: flex; gap: 16px; flex: 1 1 100%; align-items: flex-start; margin-top: 5px;">
+                                <div class="search-input-group" style="flex: 1;">
+                                    <label>Travel Class</label>
+                                    <select id="flight-class" class="form-control">
+                                        <option value="ALL">All Classes</option>
+                                        <option value="ECONOMY">Economy</option>
+                                        <option value="PREMIUM_ECONOMY">Premium Economy</option>
+                                        <option value="BUSINESS">Business Class</option>
+                                        <option value="FIRST">First Class</option>
+                                    </select>
+                                </div>
+                                <div class="search-input-group" style="flex: 1;">
+                                    <label>Fare Segment Channel</label>
+                                    <select id="flight-channel" class="form-control">
+                                        <option value="ALL">All Consolidated Fares</option>
+                                        <option value="GDS">Flight Hub GDS Fares</option>
+                                        <option value="LCC">LCC Low Cost Fares</option>
+                                        <option value="NDC">NDC Direct Connect Fares</option>
+                                    </select>
+                                </div>
+                                <div class="search-input-group" style="flex: 1;">
+                                    <label>Airline (Optional)</label>
+                                    <select id="flight-airline" class="form-control">
+                                        <option value="">All Airlines</option>
+                                        <option value="Air India">Air India</option>
+                                        <option value="British Airways">British Airways</option>
+                                        <option value="Cathay Pacific">Cathay Pacific</option>
+                                        <option value="Emirates">Emirates</option>
+                                        <option value="Etihad Airways">Etihad Airways</option>
+                                        <option value="IndiGo">IndiGo</option>
+                                        <option value="Lufthansa">Lufthansa</option>
+                                        <option value="Malaysia Airlines">Malaysia Airlines</option>
+                                        <option value="Qatar Airways">Qatar Airways</option>
+                                        <option value="Qantas">Qantas</option>
+                                        <option value="Singapore Airlines">Singapore Airlines</option>
+                                        <option value="SriLankan Airlines">SriLankan Airlines</option>
+                                        <option value="Thai Airways">Thai Airways</option>
+                                        <option value="Turkish Airlines">Turkish Airlines</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div> <!-- End of standard-flight-search -->
 
                         <!-- Multi-City Flight Search Container -->
@@ -303,8 +324,8 @@
                             </button>
                         </div>
                         
-                        <div style="width: 100%; display: flex; justify-content: flex-end; margin-top: 20px;">
-                            <button class="btn-search" onclick="searchFlights()" style="min-width: 150px;">
+                        <div style="width: 100%; display: flex; justify-content: flex-end; margin-top: 25px;">
+                            <button class="btn-search" onclick="searchFlights()" style="min-width: 180px; font-size: 16px; padding: 14px 24px; border-radius: 30px; background: #d11242; color: white; border: none; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(209, 18, 66, 0.4); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(209, 18, 66, 0.5)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(209, 18, 66, 0.4)';">
                                 <i class="fa-solid fa-magnifying-glass"></i>
                                 <span>Search</span>
                             </button>
@@ -339,12 +360,52 @@
             </section>
 
 
-    <!-- Trending Destinations Section -->
-    <div style="max-width: 1100px; margin: 40px auto; padding: 0 20px;">
-        <h2 style="color: #333; font-size: 28px; font-weight: 800; margin-bottom: 25px;"><i class="fa-solid fa-fire" style="color: #d11242;"></i> Trending Destinations</h2>
-        <div style="display: flex; gap: 20px; overflow-x: auto; padding-bottom: 20px;">
+    <!-- ===== STATS BAR ===== -->
+    <div style="background: #d11242; padding: 28px 0; margin-top: 10px;">
+        <div style="max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 20px; padding: 0 20px;">
+            <div style="text-align: center; color: white;">
+                <div style="font-size: 36px; font-weight: 800; letter-spacing: -1px;">500+</div>
+                <div style="font-size: 13px; font-weight: 500; opacity: 0.85; text-transform: uppercase; letter-spacing: 1px;">Airlines Worldwide</div>
+            </div>
+            <div style="width: 1px; height: 50px; background: rgba(255,255,255,0.3);"></div>
+            <div style="text-align: center; color: white;">
+                <div style="font-size: 36px; font-weight: 800; letter-spacing: -1px;">2M+</div>
+                <div style="font-size: 13px; font-weight: 500; opacity: 0.85; text-transform: uppercase; letter-spacing: 1px;">Happy Travellers</div>
+            </div>
+            <div style="width: 1px; height: 50px; background: rgba(255,255,255,0.3);"></div>
+            <div style="text-align: center; color: white;">
+                <div style="font-size: 36px; font-weight: 800; letter-spacing: -1px;">190+</div>
+                <div style="font-size: 13px; font-weight: 500; opacity: 0.85; text-transform: uppercase; letter-spacing: 1px;">Destinations</div>
+            </div>
+            <div style="width: 1px; height: 50px; background: rgba(255,255,255,0.3);"></div>
+            <div style="text-align: center; color: white;">
+                <div style="font-size: 36px; font-weight: 800; letter-spacing: -1px;">24/7</div>
+                <div style="font-size: 13px; font-weight: 500; opacity: 0.85; text-transform: uppercase; letter-spacing: 1px;">Expert Support</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TRUSTED AIRLINES STRIP ===== -->
+    <div style="background: #f8fafc; border-top: 1px solid #e9ecef; border-bottom: 1px solid #e9ecef; padding: 22px 0;">
+        <div style="max-width: 1100px; margin: 0 auto; padding: 0 20px;">
+            <p style="text-align: center; color: #94a3b8; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 18px;">Our Airline Partners</p>
+            <div style="display: flex; justify-content: space-around; align-items: center; gap: 20px; flex-wrap: wrap; opacity: 0.55; filter: grayscale(100%);">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Emirates_logo.svg/320px-Emirates_logo.svg.png" alt="Emirates" style="height: 28px; object-fit: contain;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Qatar_Airways_Logo.svg/320px-Qatar_Airways_Logo.svg.png" alt="Qatar Airways" style="height: 28px; object-fit: contain;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Singapore_Airlines_Logo_2.svg/320px-Singapore_Airlines_Logo_2.svg.png" alt="Singapore Airlines" style="height: 28px; object-fit: contain;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Etihad_Airways_logo.svg/320px-Etihad_Airways_logo.svg.png" alt="Etihad" style="height: 28px; object-fit: contain;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Lufthansa_Logo_2018.svg/320px-Lufthansa_Logo_2018.svg.png" alt="Lufthansa" style="height: 22px; object-fit: contain;">
+                <img src="https://upload.wikimedia.org/wikipedia/en/thumb/6/6c/SriLankan_Airlines_logo.svg/320px-SriLankan_Airlines_logo.svg.png" alt="SriLankan" style="height: 28px; object-fit: contain;">
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TRENDING DESTINATIONS ===== -->
+    <div style="max-width: 1100px; margin: 60px auto 20px auto; padding: 0 20px;">
+        <h2 style="color: #1e293b; font-size: 32px; font-weight: 800; margin-bottom: 30px; letter-spacing: -0.5px;"><i class="fa-solid fa-fire" style="color: #d11242; margin-right: 8px;"></i> Trending Destinations</h2>
+        <div style="display: flex; gap: 25px; overflow-x: auto; padding-bottom: 25px; margin-left: -5px; padding-left: 5px;">
             
-            <div style="min-width: 250px; flex: 1; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.1); position: relative; background: white; cursor: pointer; transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div style="min-width: 260px; flex: 1; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; background: white; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.08)';">
                 <img src="https://images.unsplash.com/photo-1514395462725-fb4566210144?auto=format&fit=crop&q=80&w=800" alt="Melbourne" style="width: 100%; height: 180px; object-fit: cover;">
                 <div style="padding: 20px;">
                     <h3 style="margin: 0 0 5px 0; font-size: 20px; color: #333;">Melbourne</h3>
@@ -353,7 +414,7 @@
                 </div>
             </div>
             
-            <div style="min-width: 250px; flex: 1; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.1); position: relative; background: white; cursor: pointer; transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div style="min-width: 260px; flex: 1; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; background: white; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.08)';">
                 <img src="https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&q=80&w=800" alt="Singapore" style="width: 100%; height: 180px; object-fit: cover;">
                 <div style="padding: 20px;">
                     <h3 style="margin: 0 0 5px 0; font-size: 20px; color: #333;">Singapore</h3>
@@ -362,7 +423,7 @@
                 </div>
             </div>
             
-            <div style="min-width: 250px; flex: 1; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.1); position: relative; background: white; cursor: pointer; transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div style="min-width: 260px; flex: 1; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; background: white; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.08)';">
                 <img src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&q=80&w=800" alt="Dubai" style="width: 100%; height: 180px; object-fit: cover;">
                 <div style="padding: 20px;">
                     <h3 style="margin: 0 0 5px 0; font-size: 20px; color: #333;">Dubai</h3>
@@ -371,7 +432,7 @@
                 </div>
             </div>
             
-            <div style="min-width: 250px; flex: 1; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.1); position: relative; background: white; cursor: pointer; transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div style="min-width: 260px; flex: 1; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; background: white; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.08)';">
                 <img src="https://images.unsplash.com/photo-1505761671935-60b3a7427bad?auto=format&fit=crop&q=80&w=800" alt="London" style="width: 100%; height: 180px; object-fit: cover;">
                 <div style="padding: 20px;">
                     <h3 style="margin: 0 0 5px 0; font-size: 20px; color: #333;">London</h3>
@@ -380,42 +441,176 @@
                 </div>
             </div>
 
+            <!-- 2 more cards -->
+            <div style="min-width: 260px; flex: 1; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; background: white; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.08)';">
+                <div style="position: relative;">
+                    <img src="https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&q=80&w=800" alt="Bangkok" style="width: 100%; height: 180px; object-fit: cover;">
+                    <div style="position: absolute; top: 12px; right: 12px; background: #d11242; color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px;">HOT DEAL</div>
+                </div>
+                <div style="padding: 20px;">
+                    <h3 style="margin: 0 0 4px 0; font-size: 18px; color: #1e293b; font-weight: 700;">Bangkok</h3>
+                    <p style="margin: 0 0 8px; color: #94a3b8; font-size: 13px;">Thailand &bull; 4h 30m</p>
+                    <div style="display: flex; align-items: baseline; gap: 8px;">
+                        <span style="font-size: 22px; font-weight: 800; color: #d11242;">$320</span>
+                        <span style="font-size: 12px; color: #94a3b8; text-decoration: line-through;">$410</span>
+                    </div>
+                </div>
+            </div>
+            <div style="min-width: 260px; flex: 1; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; background: white; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.08)';">
+                <div style="position: relative;">
+                    <img src="https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&q=80&w=800" alt="Rome" style="width: 100%; height: 180px; object-fit: cover;">
+                </div>
+                <div style="padding: 20px;">
+                    <h3 style="margin: 0 0 4px 0; font-size: 18px; color: #1e293b; font-weight: 700;">Rome</h3>
+                    <p style="margin: 0 0 8px; color: #94a3b8; font-size: 13px;">Italy &bull; 10h 15m</p>
+                    <div style="display: flex; align-items: baseline; gap: 8px;">
+                        <span style="font-size: 22px; font-weight: 800; color: #d11242;">$680</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- ===== PROMO BANNER ===== -->
+    <div style="max-width: 1100px; margin: 50px auto; padding: 0 20px;">
+        <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 20px; padding: 50px 60px; display: flex; justify-content: space-between; align-items: center; position: relative; overflow: hidden;">
+            <!-- Decorative circles -->
+            <div style="position: absolute; right: -60px; top: -60px; width: 250px; height: 250px; background: rgba(209,18,66,0.15); border-radius: 50%;"></div>
+            <div style="position: absolute; right: 80px; bottom: -80px; width: 200px; height: 200px; background: rgba(209,18,66,0.10); border-radius: 50%;"></div>
+            <div style="position: relative; z-index: 1;">
+                <div style="background: #d11242; color: white; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 20px; display: inline-block; margin-bottom: 16px; letter-spacing: 1px;">LIMITED TIME OFFER</div>
+                <h2 style="color: white; font-size: 34px; font-weight: 800; margin: 0 0 12px 0; letter-spacing: -0.5px;">Up to 40% Off on Selected Routes</h2>
+                <p style="color: #94a3b8; font-size: 16px; margin: 0;">Book before June 30 and save big on international flights. No promo code needed.</p>
+            </div>
+            <div style="position: relative; z-index: 1; flex-shrink: 0;">
+                <button onclick="document.getElementById('tab-flights').scrollIntoView({behavior:'smooth'})" style="background: #d11242; color: white; border: none; padding: 16px 36px; border-radius: 30px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 20px rgba(209,18,66,0.4); transition: all 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">Book Now &rarr;</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== HOW IT WORKS ===== -->
+    <div style="max-width: 1100px; margin: 50px auto; padding: 0 20px;">
+        <h2 style="color: #1e293b; font-size: 32px; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; text-align: center;">How It Works</h2>
+        <p style="text-align: center; color: #64748b; font-size: 16px; margin-bottom: 50px;">Book your dream trip in 3 simple steps</p>
+        <div style="display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px; text-align: center;">
+                <div style="width: 80px; height: 80px; background: #fff0f3; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; border: 3px solid #ffd6e0; position: relative;">
+                    <span style="font-size: 28px; font-weight: 800; color: #d11242;">1</span>
+                </div>
+                <i class="fa-solid fa-magnifying-glass" style="font-size: 24px; color: #d11242; margin-bottom: 12px;"></i>
+                <h3 style="color: #1e293b; font-weight: 700; margin-bottom: 8px;">Search Flights</h3>
+                <p style="color: #64748b; font-size: 14px; line-height: 1.6;">Enter your origin, destination, and travel dates to find the best available fares.</p>
+            </div>
+            <div style="flex: 0 0 40px; display: flex; align-items: center; justify-content: center; margin-top: 40px;"><i class="fa-solid fa-arrow-right" style="color: #e2e8f0; font-size: 24px;"></i></div>
+            <div style="flex: 1; min-width: 200px; text-align: center;">
+                <div style="width: 80px; height: 80px; background: #fff0f3; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; border: 3px solid #ffd6e0;">
+                    <span style="font-size: 28px; font-weight: 800; color: #d11242;">2</span>
+                </div>
+                <i class="fa-solid fa-plane-departure" style="font-size: 24px; color: #d11242; margin-bottom: 12px;"></i>
+                <h3 style="color: #1e293b; font-weight: 700; margin-bottom: 8px;">Choose Your Flight</h3>
+                <p style="color: #64748b; font-size: 14px; line-height: 1.6;">Compare prices, airlines, and schedules. Pick the option that suits you best.</p>
+            </div>
+            <div style="flex: 0 0 40px; display: flex; align-items: center; justify-content: center; margin-top: 40px;"><i class="fa-solid fa-arrow-right" style="color: #e2e8f0; font-size: 24px;"></i></div>
+            <div style="flex: 1; min-width: 200px; text-align: center;">
+                <div style="width: 80px; height: 80px; background: #fff0f3; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; border: 3px solid #ffd6e0;">
+                    <span style="font-size: 28px; font-weight: 800; color: #d11242;">3</span>
+                </div>
+                <i class="fa-solid fa-ticket" style="font-size: 24px; color: #d11242; margin-bottom: 12px;"></i>
+                <h3 style="color: #1e293b; font-weight: 700; margin-bottom: 8px;">Confirm & Fly</h3>
+                <p style="color: #64748b; font-size: 14px; line-height: 1.6;">Enter passenger details, pay securely, and receive your e-ticket instantly.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== VALUE PROPS ===== -->
     <!-- Popular Destinations / Value Props -->
-    <div style="max-width: 1100px; margin: 0 auto; display: flex; gap: 30px; justify-content: space-between; padding: 20px;">
-        <div style="flex: 1; text-align: center; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-            <i class="fa-solid fa-tags" style="font-size: 40px; color: #d11242; margin-bottom: 20px;"></i>
-            <h3 style="margin-bottom: 10px; color: #333;">Best Price Guarantee</h3>
-            <p style="color: #666; font-size: 14px; line-height: 1.5;">We offer the lowest fares on flights across the globe. No hidden fees.</p>
+    <div style="max-width: 1100px; margin: 20px auto 60px auto; display: flex; gap: 30px; justify-content: space-between; padding: 20px;">
+        <div style="flex: 1; text-align: center; padding: 40px 30px; background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div style="width: 80px; height: 80px; background: #fff0f3; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
+                <i class="fa-solid fa-tags" style="font-size: 32px; color: #d11242;"></i>
+            </div>
+            <h3 style="margin-bottom: 12px; color: #1e293b; font-weight: 700; font-size: 20px;">Best Price Guarantee</h3>
+            <p style="color: #64748b; font-size: 15px; line-height: 1.6; margin: 0;">We offer the lowest fares on flights across the globe. No hidden fees.</p>
         </div>
-        <div style="flex: 1; text-align: center; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-            <i class="fa-solid fa-headset" style="font-size: 40px; color: #d11242; margin-bottom: 20px;"></i>
-            <h3 style="margin-bottom: 10px; color: #333;">24/7 Customer Support</h3>
-            <p style="color: #666; font-size: 14px; line-height: 1.5;">Our dedicated travel experts are always here to help you via chat, email, or phone.</p>
+        <div style="flex: 1; text-align: center; padding: 40px 30px; background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div style="width: 80px; height: 80px; background: #fff0f3; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
+                <i class="fa-solid fa-headset" style="font-size: 32px; color: #d11242;"></i>
+            </div>
+            <h3 style="margin-bottom: 12px; color: #1e293b; font-weight: 700; font-size: 20px;">24/7 Customer Support</h3>
+            <p style="color: #64748b; font-size: 15px; line-height: 1.6; margin: 0;">Our dedicated travel experts are always here to help you via chat, email, or phone.</p>
         </div>
-        <div style="flex: 1; text-align: center; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-            <i class="fa-solid fa-shield-halved" style="font-size: 40px; color: #d11242; margin-bottom: 20px;"></i>
-            <h3 style="margin-bottom: 10px; color: #333;">Secure Payments</h3>
-            <p style="color: #666; font-size: 14px; line-height: 1.5;">Your payment and personal information is fully encrypted and secure.</p>
+        <div style="flex: 1; text-align: center; padding: 40px 30px; background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div style="width: 80px; height: 80px; background: #fff0f3; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
+                <i class="fa-solid fa-shield-halved" style="font-size: 32px; color: #d11242;"></i>
+            </div>
+            <h3 style="margin-bottom: 12px; color: #1e293b; font-weight: 700; font-size: 20px;">Secure Payments</h3>
+            <p style="color: #64748b; font-size: 15px; line-height: 1.6; margin: 0;">Your payment and personal information is fully encrypted and highly secure.</p>
+        </div>
+    </div>
+
+    <!-- ===== NEWSLETTER BANNER ===== -->
+    <div style="background: linear-gradient(135deg, #fef3f6 0%, #fff 100%); border-top: 1px solid #fce7ef; border-bottom: 1px solid #fce7ef; padding: 50px 0; margin-top: 60px;">
+        <div style="max-width: 600px; margin: 0 auto; text-align: center; padding: 0 20px;">
+            <i class="fa-solid fa-envelope-open-text" style="font-size: 36px; color: #d11242; margin-bottom: 15px;"></i>
+            <h2 style="color: #1e293b; font-size: 28px; font-weight: 800; margin-bottom: 10px;">Get Exclusive Deals in Your Inbox</h2>
+            <p style="color: #64748b; margin-bottom: 25px;">Subscribe to receive the best flight deals, travel tips, and special promotions.</p>
+            <div style="display: flex; gap: 12px; max-width: 480px; margin: 0 auto;">
+                <input type="email" placeholder="Enter your email address" style="flex: 1; padding: 14px 18px; border: 2px solid #e2e8f0; border-radius: 30px; font-size: 14px; font-family: 'Outfit', sans-serif; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#d11242'" onblur="this.style.borderColor='#e2e8f0'">
+                <button style="background: #d11242; color: white; border: none; padding: 14px 24px; border-radius: 30px; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; font-family: 'Outfit', sans-serif;">Subscribe</button>
+            </div>
         </div>
     </div>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div>
-            <h2 style="color: white; margin-top: 0;"><i class="fa-solid fa-plane-departure"></i> Findmyfare</h2>
-            <p>Your ultimate travel companion.<br>Making travel simple, affordable, and accessible.</p>
+    <footer style="background: #0f172a; color: #94a3b8; padding: 60px 0 0 0; margin-top: 0;">
+        <div style="max-width: 1100px; margin: 0 auto; padding: 0 20px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 50px;">
+            <div>
+                <a href="/b2c" style="font-size: 26px; font-weight: 800; color: white; text-decoration: none; display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                    <i class="fa-solid fa-plane-departure" style="color: #d11242;"></i> Findmyfare
+                </a>
+                <p style="font-size: 14px; line-height: 1.8; color: #64748b; margin-bottom: 24px;">Your ultimate travel companion. Making travel simple, affordable, and accessible for everyone around the world.</p>
+                <div style="display: flex; gap: 12px;">
+                    <a href="#" style="width: 38px; height: 38px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #94a3b8; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='#d11242'; this.style.color='white'" onmouseout="this.style.background='#1e293b'; this.style.color='#94a3b8'"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#" style="width: 38px; height: 38px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #94a3b8; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='#d11242'; this.style.color='white'" onmouseout="this.style.background='#1e293b'; this.style.color='#94a3b8'"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#" style="width: 38px; height: 38px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #94a3b8; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='#d11242'; this.style.color='white'" onmouseout="this.style.background='#1e293b'; this.style.color='#94a3b8'"><i class="fa-brands fa-x-twitter"></i></a>
+                </div>
+            </div>
+            <div>
+                <h4 style="color: white; font-size: 15px; margin-bottom: 20px; font-weight: 700;">Company</h4>
+                <ul style="list-style: none; padding: 0; line-height: 2.2;">
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px; transition: color 0.2s;" onmouseover="this.style.color='#d11242'" onmouseout="this.style.color='#64748b'">About Us</a></li>
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#d11242'" onmouseout="this.style.color='#64748b'">Careers</a></li>
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#d11242'" onmouseout="this.style.color='#64748b'">Press & Media</a></li>
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#d11242'" onmouseout="this.style.color='#64748b'">Blog</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 style="color: white; font-size: 15px; margin-bottom: 20px; font-weight: 700;">Support</h4>
+                <ul style="list-style: none; padding: 0; line-height: 2.2;">
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#d11242'" onmouseout="this.style.color='#64748b'">Help Center</a></li>
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#d11242'" onmouseout="this.style.color='#64748b'">Contact Us</a></li>
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#d11242'" onmouseout="this.style.color='#64748b'">Manage Booking</a></li>
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#d11242'" onmouseout="this.style.color='#64748b'">Refund Policy</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 style="color: white; font-size: 15px; margin-bottom: 20px; font-weight: 700;">Legal</h4>
+                <ul style="list-style: none; padding: 0; line-height: 2.2;">
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#d11242'" onmouseout="this.style.color='#64748b'">Terms of Service</a></li>
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#d11242'" onmouseout="this.style.color='#64748b'">Privacy Policy</a></li>
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#d11242'" onmouseout="this.style.color='#64748b'">Cookie Policy</a></li>
+                    <li><a href="{{ url_for('login') }}" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#d11242'" onmouseout="this.style.color='#64748b'">Agent Login</a></li>
+                </ul>
+            </div>
         </div>
-        <div>
-            <h4 style="color: white;">Quick Links</h4>
-            <ul style="list-style: none; padding: 0; line-height: 2;">
-                <li><a href="#" style="color: #999; text-decoration: none;">About Us</a></li>
-                <li><a href="#" style="color: #999; text-decoration: none;">Contact Support</a></li>
-                <li><a href="#" style="color: #999; text-decoration: none;">Terms of Service</a></li>
-                <li><a href="#" style="color: #999; text-decoration: none;">Privacy Policy</a></li>
-            </ul>
+        <div style="max-width: 1100px; margin: 40px auto 0; padding: 24px 20px; border-top: 1px solid #1e293b; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <p style="margin: 0; font-size: 13px; color: #475569;">&copy; 2026 Findmyfare.com &mdash; All rights reserved. Powered by Flight Hub GDS.</p>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <i class="fa-brands fa-cc-visa" style="font-size: 28px; color: #475569;"></i>
+                <i class="fa-brands fa-cc-mastercard" style="font-size: 28px; color: #475569;"></i>
+                <i class="fa-brands fa-cc-amex" style="font-size: 28px; color: #475569;"></i>
+                <i class="fa-brands fa-cc-paypal" style="font-size: 28px; color: #475569;"></i>
+            </div>
         </div>
     </footer>
 
@@ -424,12 +619,45 @@
     <script src="{{ url_for('static', filename='js/main.js') }}?v=1.0.6"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            flatpickr(".date-picker", {
+            let retPicker = flatpickr("#flight-return-date", {
                 dateFormat: "Y-m-d",
                 minDate: "today",
                 altInput: true,
                 altFormat: "F j, Y"
             });
+            
+            let depPicker = flatpickr("#flight-date", {
+                dateFormat: "Y-m-d",
+                minDate: "today",
+                altInput: true,
+                altFormat: "F j, Y",
+                onChange: function(selectedDates, dateStr, instance) {
+                    // When departure date is selected, optionally set min return date
+                    if (selectedDates.length > 0) {
+                        retPicker.set('minDate', selectedDates[0]);
+                    }
+                    
+                    // If round-trip is selected, automatically open the return date picker
+                    const isRoundTrip = document.getElementById('pill-roundtrip') && document.getElementById('pill-roundtrip').classList.contains('active');
+                    if (isRoundTrip) {
+                        setTimeout(() => {
+                            if (retPicker) retPicker.open();
+                        }, 150);
+                    }
+                }
+            });
+
+            // Automatically open departure date picker when destination is changed/selected
+            const destInput = document.getElementById('flight-dest');
+            if (destInput) {
+                destInput.addEventListener('change', function() {
+                    if (this.value.trim() !== '') {
+                        setTimeout(() => {
+                            if (depPicker) depPicker.open();
+                        }, 150);
+                    }
+                });
+            }
         });
         
         // Define b2c specific search override if necessary
