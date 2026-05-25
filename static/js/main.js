@@ -466,7 +466,11 @@ function searchFlights() {
         const dt = document.getElementById(`mc-date-1`) ? document.getElementById(`mc-date-1`).value : '';
         
         if (o && d && dt) {
-            window.open(`/flight-results?origin=${encodeURIComponent(o)}&dest=${encodeURIComponent(d)}&date=${encodeURIComponent(dt)}&adults=${adults}`, '_blank');
+            let mcUrl = `/flight-results?origin=${encodeURIComponent(o)}&dest=${encodeURIComponent(d)}&date=${encodeURIComponent(dt)}&adults=${adults}`;
+            if (window.location.pathname.includes('/b2c')) {
+                mcUrl = mcUrl.replace('/flight-results', '/b2c-flight-results');
+            }
+            window.open(mcUrl, '_blank');
         } else {
             alert("Please fill in the first leg of your multi-city journey.");
         }
@@ -499,6 +503,10 @@ function searchFlights() {
     let url = `/flight-results?origin=${encodeURIComponent(origin)}&dest=${encodeURIComponent(dest)}&date=${encodeURIComponent(date)}&adults=${adults}`;
     if (isRoundTrip) {
         url += `&returnDate=${encodeURIComponent(returnDate)}`;
+    }
+    
+    if (window.location.pathname.includes('/b2c')) {
+        url = url.replace('/flight-results', '/b2c-flight-results');
     }
     
     window.open(url, '_blank');

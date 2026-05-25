@@ -111,6 +111,17 @@ def flight_results():
     agent_info = query_db("SELECT * FROM users WHERE id = %s", (agent_id,), one=True)
     
     return render_template("flight_results.html", agent=agent_info)
+
+# Route: B2C Home
+@app.route("/b2c")
+def b2c_home():
+    return render_template("b2c_home.html")
+
+# Route: B2C Flight Results
+@app.route("/b2c-flight-results")
+def b2c_flight_results():
+    return render_template("b2c_flight_results.html", agent=None)
+
 # Route: Admin Dashboard
 @app.route("/admin")
 def admin_dashboard():
@@ -680,8 +691,12 @@ def api_flights_search():
 # API: Flight Booking (with automatic markup application and credit limit validation)
 @app.route("/api/flights/book", methods=["POST"])
 def api_flights_book():
-    if "user_id" not in session or session["role"] != "agent":
-        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    data = request.json
+    is_b2c = data.get("b2c", False)
+    
+    if not is_b2c:
+        if "user_id" not in session or session["role"] != "agent":
+            return jsonify({"success": False, "error": "Unauthorized"}), 401
         
     data = request.json
     flight_id = data.get("flight_id")
@@ -732,9 +747,11 @@ def api_flights_book():
             orig_price = flight["price"]
             total_price = orig_price + markup
         
-        # Check credit balance
-        cursor.execute("SELECT credit_balance FROM users WHERE id = %s", (session["user_id"],))
-        agent_credit = cursor.fetchone()["credit_balance"]
+        # Check credit balance for B2B only
+        agent_credit = Decimal("0.00")
+        if not is_b2c:
+            cursor.execute("SELECT credit_balance FROM users WHERE id = %s", (session["user_id"],))
+            agent_credit = cursor.fetchone()["credit_balance"]
         
         booking_status = "ticketed" if ticket_now else "non-ticketed"
         
@@ -747,7 +764,7 @@ def api_flights_book():
         else:
             payment_to_charge = total_price
             
-        if payment_method == "credit" and agent_credit < payment_to_charge:
+        if not is_b2c and payment_method == "credit" and agent_credit < payment_to_charge:
             return jsonify({
                 "success": False, 
                 "error": "Insufficient credit balance to process this payment. Please top up your account.",
@@ -756,35 +773,61 @@ def api_flights_book():
             
         # Generate Invoice and Booking
         invoice_number = f"INV-F{random.randint(100000, 999999)}"
-        cursor.execute("""
-            INSERT INTO bookings (agent_id, booking_type, status, total_price, invoice_number, created_at)
-            VALUES (%s, 'flight', %s, %s, %s, NOW())
-        """, (session["user_id"], booking_status, payment_to_charge, invoice_number))
         
-        booking_id = cursor.lastrowid
+        if is_b2c:
+            cursor.execute("""
+                INSERT INTO b2c_bookings (b2c_user_id, booking_type, status, total_price, invoice_number, created_at)
+                VALUES (NULL, 'flight', %s, %s, %s, NOW())
+            """, (booking_status, payment_to_charge, invoice_number))
+            booking_id = cursor.lastrowid
+            
+            pnr_reference = f"PNR{random.randint(100000, 999999)}"
+            ticket_number = f"TKT-{random.randint(1000000000, 9999999999)}" if booking_status == "ticketed" else None
+            
+            outbound_gds_type = (flight.get("gds_source") or "Amadeus") if flight.get("flight_type") == "GDS" else flight.get("flight_type")
+            cursor.execute("""
+                INSERT INTO b2c_flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee, pnr_reference, ticket_number, passport_number, mobile, email)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (booking_id, flight_id, passenger_name, seat_number, outbound_gds_type, booking_status, flight["price"], markup, pnr_reference, ticket_number, passport_number, mobile, email))
+            
+            if return_flight:
+                return_gds_type = (return_flight.get("gds_source") or "Amadeus") if return_flight.get("flight_type") == "GDS" else return_flight.get("flight_type")
+                return_pnr = f"PNR{random.randint(100000, 999999)}"
+                return_ticket = f"TKT-{random.randint(1000000000, 9999999999)}" if booking_status == "ticketed" else None
+                cursor.execute("""
+                    INSERT INTO b2c_flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee, pnr_reference, ticket_number, passport_number, mobile, email)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (booking_id, return_flight_id, passenger_name, return_seat_number, return_gds_type, booking_status, return_flight["price"], markup, return_pnr, return_ticket, passport_number, mobile, email))
         
-        pnr_reference = f"PNR{random.randint(100000, 999999)}"
-        ticket_number = f"TKT-{random.randint(1000000000, 9999999999)}" if booking_status == "ticketed" else None
-        
-        outbound_gds_type = (flight.get("gds_source") or "Amadeus") if flight.get("flight_type") == "GDS" else flight.get("flight_type")
-        # Insert flight booking details (Outbound)
-        cursor.execute("""
-            INSERT INTO flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee, pnr_reference, ticket_number, passport_number, mobile, email)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, (booking_id, flight_id, passenger_name, seat_number, outbound_gds_type, booking_status, flight["price"], markup, pnr_reference, ticket_number, passport_number, mobile, email))
-        
-        # Insert flight booking details (Return)
-        if return_flight:
-            return_gds_type = (return_flight.get("gds_source") or "Amadeus") if return_flight.get("flight_type") == "GDS" else return_flight.get("flight_type")
-            return_pnr = f"PNR{random.randint(100000, 999999)}"
-            return_ticket = f"TKT-{random.randint(1000000000, 9999999999)}" if booking_status == "ticketed" else None
+        else:
+            agent_id = session["user_id"]
+            cursor.execute("""
+                INSERT INTO bookings (agent_id, booking_type, status, total_price, invoice_number, created_at)
+                VALUES (%s, 'flight', %s, %s, %s, NOW())
+            """, (agent_id, booking_status, payment_to_charge, invoice_number))
+            
+            booking_id = cursor.lastrowid
+            
+            pnr_reference = f"PNR{random.randint(100000, 999999)}"
+            ticket_number = f"TKT-{random.randint(1000000000, 9999999999)}" if booking_status == "ticketed" else None
+            
+            outbound_gds_type = (flight.get("gds_source") or "Amadeus") if flight.get("flight_type") == "GDS" else flight.get("flight_type")
             cursor.execute("""
                 INSERT INTO flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee, pnr_reference, ticket_number, passport_number, mobile, email)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (booking_id, return_flight_id, passenger_name, return_seat_number, return_gds_type, booking_status, return_flight["price"], markup, return_pnr, return_ticket, passport_number, mobile, email))
+            """, (booking_id, flight_id, passenger_name, seat_number, outbound_gds_type, booking_status, flight["price"], markup, pnr_reference, ticket_number, passport_number, mobile, email))
             
-        # Deduct wallet if credit option is used
-        if payment_method == "credit":
+            if return_flight:
+                return_gds_type = (return_flight.get("gds_source") or "Amadeus") if return_flight.get("flight_type") == "GDS" else return_flight.get("flight_type")
+                return_pnr = f"PNR{random.randint(100000, 999999)}"
+                return_ticket = f"TKT-{random.randint(1000000000, 9999999999)}" if booking_status == "ticketed" else None
+                cursor.execute("""
+                    INSERT INTO flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee, pnr_reference, ticket_number, passport_number, mobile, email)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (booking_id, return_flight_id, passenger_name, return_seat_number, return_gds_type, booking_status, return_flight["price"], markup, return_pnr, return_ticket, passport_number, mobile, email))
+            
+        # Deduct wallet if credit option is used (only valid for B2B)
+        if payment_method == "credit" and not is_b2c:
             cursor.execute("UPDATE users SET credit_balance = credit_balance - %s WHERE id = %s", (payment_to_charge, session["user_id"]))
             
         # If ticketed immediately, deduct seat count and award loyalty points
@@ -795,12 +838,13 @@ def api_flights_book():
             if return_flight:
                 cursor.execute("UPDATE flights SET seats_available = seats_available - 1 WHERE id = %s", (return_flight_id,))
                 
-            # Award loyalty rewards
-            reward_points = int(payment_to_charge / 10)
-            cursor.execute("""
-                INSERT INTO agent_rewards (agent_id, reward_points, description)
-                VALUES (%s, %s, %s)
-            """, (session["user_id"], reward_points, f"Points earned for Flight Ticket {invoice_number}"))
+            # Award loyalty rewards for B2B
+            if not is_b2c:
+                reward_points = int(payment_to_charge / 10)
+                cursor.execute("""
+                    INSERT INTO agent_rewards (agent_id, reward_points, description)
+                    VALUES (%s, %s, %s)
+                """, (session["user_id"], reward_points, f"Points earned for Flight Ticket {invoice_number}"))
             
         conn.commit()
         cursor.close()

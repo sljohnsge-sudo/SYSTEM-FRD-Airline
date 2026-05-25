@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Findmyfare - Book Cheap Flights & Hotels</title>
+    <!-- Stylesheets & Fonts -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=1.0.6">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+        }
+        .b2c-header {
+            background-color: #ffffff;
+            padding: 15px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .b2c-brand {
+            font-size: 24px;
+            font-weight: 800;
+            color: #d11242; /* Brand color */
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        .b2c-nav {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+        .b2c-nav a {
+            color: #333;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            transition: color 0.3s;
+        }
+        .b2c-nav a:hover {
+            color: #d11242;
+        }
+        .btn-b2b-login {
+            background: #d11242;
+            color: #ffffff !important;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        .btn-b2b-login:hover {
+            background: #a80c33;
+        }
+        .hero-banner {
+            height: 400px;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.4)), url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&q=80&w=2000');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+        }
+        .hero-banner h1 {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        .hero-banner p {
+            font-size: 20px;
+            font-weight: 500;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        
+        /* Force styling for the imported form to look clean */
+        .content-card .card-header { display: none; } /* Hide the unified GDS title completely */
+        .content-card label { color: #333 !important; font-weight: 600; }
+        .form-control { background: #f9f9f9 !important; border: 1px solid #ddd !important; color: #333 !important; }
+        .trip-type-selector { background: #f0f0f0 !important; border: none !important; }
+        .trip-type-pill { color: #555 !important; }
+        .trip-type-pill.active { background: #d11242 !important; color: white !important; }
+        
+        .footer {
+            background-color: #1a1a1a;
+            color: #999;
+            padding: 40px 50px;
+            margin-top: 60px;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- B2C Header -->
+    <header class="b2c-header">
+        <a href="/b2c" class="b2c-brand">
+            <i class="fa-solid fa-plane-departure"></i> Findmyfare
+        </a>
+        <nav class="b2c-nav">
+            <a href="#"><i class="fa-solid fa-plane"></i> Flights</a>
+            <a href="#"><i class="fa-solid fa-hotel"></i> Hotels</a>
+            <a href="#"><i class="fa-solid fa-umbrella-beach"></i> Holidays</a>
+            <a href="#"><i class="fa-solid fa-tags"></i> Offers</a>
+            <a href="#"><i class="fa-solid fa-briefcase"></i> My Bookings</a>
+            <a href="{{ url_for('login') }}" class="btn-b2b-login"><i class="fa-solid fa-user"></i> Agent Login</a>
+        </nav>
+    </header>
+
+    <!-- Hero Banner -->
+    <div class="hero-banner">
+        <h1>Discover the World with Findmyfare</h1>
+        <p>Book cheap flights, hotels, and holiday packages instantly.</p>
+    </div>
+
+    <!-- Search Form -->
+    ﻿<section id="tab-flights" style="width: 100%; max-width: 1100px; margin: -80px auto 40px auto; position: relative; z-index: 10;">
+                <div class="content-card" style="background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); padding: 30px;">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-plane"></i>
+                            <span>Search for Cheap Flights & Best Deals</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Search widget -->
+                    <div class="unified-search-panel">
+                        <!-- Trip Type selector -->
+                        <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 12px;">
+                            <div class="trip-type-selector" style="display: flex; gap: 10px; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 30px; width: fit-content; border: 1px solid var(--border-dark);">
+                                <div class="trip-type-pill active" id="pill-roundtrip" onclick="setTripType('roundtrip')" style="padding: 6px 18px; border-radius: 20px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.25s ease; color: #fff; background: var(--primary-gradient);">
+                                    <i class="fa-solid fa-arrows-left-right-to-line" style="margin-right: 6px;"></i>Return Ticket
+                                </div>
+                                <div class="trip-type-pill" id="pill-oneway" onclick="setTripType('oneway')" style="padding: 6px 18px; border-radius: 20px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.25s ease; color: var(--text-muted);">
+                                    <i class="fa-solid fa-arrow-right" style="margin-right: 6px;"></i>One-way Ticket
+                                </div>
+                                <div class="trip-type-pill" id="pill-multicity" onclick="setTripType('multicity')" style="padding: 6px 18px; border-radius: 20px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.25s ease; color: var(--text-muted);">
+                                    <i class="fa-solid fa-location-dot" style="margin-right: 6px;"></i>Multi-City
+                                </div>
+                            </div>
+                            
+                            <div class="passenger-selector" style="margin-left: auto; position: relative;">
+                                <label style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; display: block;">Travelers</label>
+                                <div class="form-control" id="passenger-dropdown-btn" onclick="togglePassengerPopover()" style="width: 180px; padding: 8px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); border: 1px solid var(--border-dark);">
+                                    <span id="passenger-summary-text">1 Adult</span>
+                                    <i class="fa-solid fa-chevron-down" style="font-size: 10px; color: var(--text-muted);"></i>
+                                </div>
+                                
+                                <div id="passenger-popover" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 5px; background: #fff; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); width: 260px; z-index: 100; padding: 15px;">
+                                    <input type="hidden" id="flight-adults" value="1">
+                                    <input type="hidden" id="flight-children" value="0">
+                                    <input type="hidden" id="flight-infants" value="0">
+                                    
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                                        <div style="color: #333; font-weight: 600; font-size: 14px;">Adults</div>
+                                        <div style="display: flex; align-items: center; gap: 15px;">
+                                            <button class="pax-btn" onclick="updatePax('adults', -1)"><i class="fa-solid fa-minus"></i></button>
+                                            <span id="adult-count-display" style="color: #333; font-weight: 600; font-size: 16px; width: 12px; text-align: center;">1</span>
+                                            <button class="pax-btn" onclick="updatePax('adults', 1)"><i class="fa-solid fa-plus"></i></button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                                        <div style="color: #333; font-weight: 600; font-size: 14px;">Child <span style="font-size: 11px; color: #888; font-weight: normal;">(2-11 YRS)</span></div>
+                                        <div style="display: flex; align-items: center; gap: 15px;">
+                                            <button class="pax-btn" onclick="updatePax('children', -1)"><i class="fa-solid fa-minus"></i></button>
+                                            <span id="child-count-display" style="color: #333; font-weight: 600; font-size: 16px; width: 12px; text-align: center;">0</span>
+                                            <button class="pax-btn" onclick="updatePax('children', 1)"><i class="fa-solid fa-plus"></i></button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div style="color: #333; font-weight: 600; font-size: 14px;">Infant <span style="font-size: 11px; color: #888; font-weight: normal;">(Below 2 YRS)</span></div>
+                                        <div style="display: flex; align-items: center; gap: 15px;">
+                                            <button class="pax-btn" onclick="updatePax('infants', -1)"><i class="fa-solid fa-minus"></i></button>
+                                            <span id="infant-count-display" style="color: #333; font-weight: 600; font-size: 16px; width: 12px; text-align: center;">0</span>
+                                            <button class="pax-btn" onclick="updatePax('infants', 1)"><i class="fa-solid fa-plus"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Standard Flight Search Fields -->
+                        <div id="standard-flight-search" style="display: flex; flex-wrap: wrap; gap: 16px; width: 100%; align-items: flex-end;">
+                            <div style="display: flex; gap: 16px; flex: 1 1 100%;">
+                                <div class="search-input-group" style="flex: 1;">
+                                    <label>Origin Airport</label>
+                                    <input type="text" id="flight-origin" class="form-control" placeholder="e.g. CMB" value="CMB" autocomplete="off">
+                                    <div class="autocomplete-dropdown" id="flight-origin-dropdown"></div>
+                                </div>
+                                <div class="search-input-group" style="flex: 1;">
+                                    <label>Destination Airport</label>
+                                    <input type="text" id="flight-dest" class="form-control" placeholder="e.g. MLE" value="MLE" autocomplete="off">
+                                    <div class="autocomplete-dropdown" id="flight-dest-dropdown"></div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 16px; flex: 1 1 100%; align-items: flex-start;">
+                                <div class="search-input-group" style="flex: 1;">
+                                    <label>Departure Date</label>
+                                    <input type="text" id="flight-date" class="form-control date-picker" value="2026-05-28" placeholder="Select Departure Date">
+                                </div>
+                                <div class="search-input-group" id="return-date-container" style="flex: 1;">
+                                    <label>Return Date</label>
+                                    <input type="text" id="flight-return-date" class="form-control date-picker" placeholder="Optional (Select Return Date)">
+                                    <span id="return-date-error" style="display:none; color:var(--danger); font-size:11px; margin-top:4px;"><i class="fa-solid fa-circle-exclamation"></i> Please select the return date</span>
+                                </div>
+                                <div class="search-input-group" style="flex: 1;">
+                                    <label>Depart Before Time</label>
+                                    <div style="display: flex; gap: 8px;">
+                                        <select id="flight-time-mode" class="form-control" style="flex: 1;" onchange="document.getElementById('flight-time-wrapper').style.display = this.value === 'BEFORE' ? 'block' : 'none';">
+                                            <option value="ALL">Anytime</option>
+                                            <option value="BEFORE">Select Time</option>
+                                        </select>
+                                        <div id="flight-time-wrapper" style="flex: 1; display: none;">
+                                            <input type="text" id="flight-time-before" class="form-control time-picker" placeholder="e.g. 06:00 PM">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <div class="search-input-group">
+                            <label>Travel Class</label>
+                            <select id="flight-class" class="form-control">
+                                <option value="ALL">All Classes</option>
+                                <option value="ECONOMY">Economy</option>
+                                <option value="PREMIUM_ECONOMY">Premium Economy</option>
+                                <option value="BUSINESS">Business Class</option>
+                                <option value="FIRST">First Class</option>
+                            </select>
+                        </div>
+                        <div class="search-input-group">
+                            <label>Fare Segment Channel</label>
+                            <select id="flight-channel" class="form-control">
+                                <option value="ALL">All Consolidated Fares</option>
+                                <option value="GDS">Flight Hub GDS Fares</option>
+                                <option value="LCC">LCC Low Cost Fares</option>
+                                <option value="NDC">NDC Direct Connect Fares</option>
+                            </select>
+                        </div>
+                        <div class="search-input-group">
+                            <label>Airline (Optional)</label>
+                            <select id="flight-airline" class="form-control">
+                                <option value="">All Airlines</option>
+                                <option value="Air India">Air India</option>
+                                <option value="British Airways">British Airways</option>
+                                <option value="Cathay Pacific">Cathay Pacific</option>
+                                <option value="Emirates">Emirates</option>
+                                <option value="Etihad Airways">Etihad Airways</option>
+                                <option value="IndiGo">IndiGo</option>
+                                <option value="Lufthansa">Lufthansa</option>
+                                <option value="Malaysia Airlines">Malaysia Airlines</option>
+                                <option value="Qatar Airways">Qatar Airways</option>
+                                <option value="Qantas">Qantas</option>
+                                <option value="Singapore Airlines">Singapore Airlines</option>
+                                <option value="SriLankan Airlines">SriLankan Airlines</option>
+                                <option value="Thai Airways">Thai Airways</option>
+                                <option value="Turkish Airlines">Turkish Airlines</option>
+                            </select>
+                        </div>
+                        </div> <!-- End of standard-flight-search -->
+
+                        <!-- Multi-City Flight Search Container -->
+                        <div id="multi-city-container" style="display: none; width: 100%; margin-top: 15px;">
+                            <div id="multi-city-legs-wrapper" style="display: flex; flex-direction: column; gap: 15px;">
+                                <!-- Legs will be injected here via JS -->
+                            </div>
+                            <button class="btn" style="margin-top: 15px; background: var(--secondary-tint); color: var(--secondary); border: none; padding: 10px 20px; font-weight: 600; border-radius: 8px; cursor: pointer;" onclick="addMultiCityLeg()">
+                                <i class="fa-solid fa-plus"></i> Add city, airport
+                            </button>
+                        </div>
+                        
+                        <div style="width: 100%; display: flex; justify-content: flex-end; margin-top: 20px;">
+                            <button class="btn-search" onclick="searchFlights()" style="min-width: 150px;">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <span>Search</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Search Results Filter Bar (Initially Hidden) -->
+                    <div id="flight-results-filter-bar" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-dark); align-items: center; justify-content: space-between;">
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <span style="color: var(--text-muted); font-size: 14px;"><i class="fa-solid fa-filter"></i> Filter Results:</span>
+                            
+                            <select id="filter-flight-type" class="form-control" style="width: 200px; padding: 8px; height: auto;" onchange="applyFlightFilters()">
+                                <option value="ALL">All Flights (Direct & Transit)</option>
+                                <option value="DIRECT">Direct Flights Only</option>
+                                <option value="TRANSIT">Indirect/Transit Flights Only</option>
+                            </select>
+                        </div>
+                        <div style="font-size: 14px; color: var(--text-muted);">
+                            <span id="filtered-results-count">0</span> flights shown
+                        </div>
+                    </div>
+
+                    <!-- Search Results -->
+                    <div class="flight-results-grid" id="flight-results-container">
+                        <!-- Loaded dynamically -->
+                        <div style="text-align: center; color: var(--text-muted); padding: 40px 0;">
+                            <i class="fa-solid fa-plane-departure" style="font-size: 40px; margin-bottom: 15px; color: rgba(255,255,255,0.1);"></i>
+                            <p>Fill in origin and destination above and click Search.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+    <!-- Trending Destinations Section -->
+    <div style="max-width: 1100px; margin: 40px auto; padding: 0 20px;">
+        <h2 style="color: #333; font-size: 28px; font-weight: 800; margin-bottom: 25px;"><i class="fa-solid fa-fire" style="color: #d11242;"></i> Trending Destinations</h2>
+        <div style="display: flex; gap: 20px; overflow-x: auto; padding-bottom: 20px;">
+            
+            <div style="min-width: 250px; flex: 1; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.1); position: relative; background: white; cursor: pointer; transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                <img src="https://images.unsplash.com/photo-1514395462725-fb4566210144?auto=format&fit=crop&q=80&w=800" alt="Melbourne" style="width: 100%; height: 180px; object-fit: cover;">
+                <div style="padding: 20px;">
+                    <h3 style="margin: 0 0 5px 0; font-size: 20px; color: #333;">Melbourne</h3>
+                    <p style="margin: 0; color: #666; font-size: 14px;">Flights starting from</p>
+                    <div style="font-size: 24px; font-weight: 800; color: #d11242; margin-top: 5px;">$504</div>
+                </div>
+            </div>
+            
+            <div style="min-width: 250px; flex: 1; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.1); position: relative; background: white; cursor: pointer; transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                <img src="https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&q=80&w=800" alt="Singapore" style="width: 100%; height: 180px; object-fit: cover;">
+                <div style="padding: 20px;">
+                    <h3 style="margin: 0 0 5px 0; font-size: 20px; color: #333;">Singapore</h3>
+                    <p style="margin: 0; color: #666; font-size: 14px;">Flights starting from</p>
+                    <div style="font-size: 24px; font-weight: 800; color: #d11242; margin-top: 5px;">$620</div>
+                </div>
+            </div>
+            
+            <div style="min-width: 250px; flex: 1; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.1); position: relative; background: white; cursor: pointer; transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                <img src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&q=80&w=800" alt="Dubai" style="width: 100%; height: 180px; object-fit: cover;">
+                <div style="padding: 20px;">
+                    <h3 style="margin: 0 0 5px 0; font-size: 20px; color: #333;">Dubai</h3>
+                    <p style="margin: 0; color: #666; font-size: 14px;">Flights starting from</p>
+                    <div style="font-size: 24px; font-weight: 800; color: #d11242; margin-top: 5px;">$450</div>
+                </div>
+            </div>
+            
+            <div style="min-width: 250px; flex: 1; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.1); position: relative; background: white; cursor: pointer; transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                <img src="https://images.unsplash.com/photo-1505761671935-60b3a7427bad?auto=format&fit=crop&q=80&w=800" alt="London" style="width: 100%; height: 180px; object-fit: cover;">
+                <div style="padding: 20px;">
+                    <h3 style="margin: 0 0 5px 0; font-size: 20px; color: #333;">London</h3>
+                    <p style="margin: 0; color: #666; font-size: 14px;">Flights starting from</p>
+                    <div style="font-size: 24px; font-weight: 800; color: #d11242; margin-top: 5px;">$550</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Popular Destinations / Value Props -->
+    <div style="max-width: 1100px; margin: 0 auto; display: flex; gap: 30px; justify-content: space-between; padding: 20px;">
+        <div style="flex: 1; text-align: center; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+            <i class="fa-solid fa-tags" style="font-size: 40px; color: #d11242; margin-bottom: 20px;"></i>
+            <h3 style="margin-bottom: 10px; color: #333;">Best Price Guarantee</h3>
+            <p style="color: #666; font-size: 14px; line-height: 1.5;">We offer the lowest fares on flights across the globe. No hidden fees.</p>
+        </div>
+        <div style="flex: 1; text-align: center; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+            <i class="fa-solid fa-headset" style="font-size: 40px; color: #d11242; margin-bottom: 20px;"></i>
+            <h3 style="margin-bottom: 10px; color: #333;">24/7 Customer Support</h3>
+            <p style="color: #666; font-size: 14px; line-height: 1.5;">Our dedicated travel experts are always here to help you via chat, email, or phone.</p>
+        </div>
+        <div style="flex: 1; text-align: center; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+            <i class="fa-solid fa-shield-halved" style="font-size: 40px; color: #d11242; margin-bottom: 20px;"></i>
+            <h3 style="margin-bottom: 10px; color: #333;">Secure Payments</h3>
+            <p style="color: #666; font-size: 14px; line-height: 1.5;">Your payment and personal information is fully encrypted and secure.</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div>
+            <h2 style="color: white; margin-top: 0;"><i class="fa-solid fa-plane-departure"></i> Findmyfare</h2>
+            <p>Your ultimate travel companion.<br>Making travel simple, affordable, and accessible.</p>
+        </div>
+        <div>
+            <h4 style="color: white;">Quick Links</h4>
+            <ul style="list-style: none; padding: 0; line-height: 2;">
+                <li><a href="#" style="color: #999; text-decoration: none;">About Us</a></li>
+                <li><a href="#" style="color: #999; text-decoration: none;">Contact Support</a></li>
+                <li><a href="#" style="color: #999; text-decoration: none;">Terms of Service</a></li>
+                <li><a href="#" style="color: #999; text-decoration: none;">Privacy Policy</a></li>
+            </ul>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}?v=1.0.6"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            flatpickr(".date-picker", {
+                dateFormat: "Y-m-d",
+                minDate: "today",
+                altInput: true,
+                altFormat: "F j, Y"
+            });
+        });
+        
+        // Define b2c specific search override if necessary
+        // Overriding the behavior so the search knows it's B2C
+        // main.js searchFlights will handle the redirection automatically based on path
+    </script>
+</body>
+</html>
