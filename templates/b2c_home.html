@@ -10,102 +10,70 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
+        * { box-sizing: border-box; }
         body {
             font-family: 'Outfit', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f7fa;
+            margin: 0; padding: 0;
+            background-color: #f0f4f8;
         }
+        /* ── TOP PROMO TICKER ── */
+        .promo-ticker {
+            background: linear-gradient(90deg, #d11242, #a80c33);
+            color: white; font-size: 13px; font-weight: 600;
+            text-align: center; padding: 9px 0; letter-spacing: 0.5px;
+        }
+        .promo-ticker a { color: #ffd6e0; text-decoration: underline; margin-left: 8px; }
+        /* ── HEADER ── */
         .b2c-header {
-            background-color: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 15px 50px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            background-color: rgba(255,255,255,0.97);
+            backdrop-filter: blur(12px);
+            padding: 14px 50px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.07);
+            position: sticky; top: 0; z-index: 200;
         }
         .b2c-brand {
-            font-size: 24px;
-            font-weight: 800;
-            color: #d11242; /* Brand color */
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
+            font-size: 26px; font-weight: 800; color: #d11242;
+            display: flex; align-items: center; gap: 10px; text-decoration: none;
         }
-        .b2c-nav {
-            display: flex;
-            gap: 30px;
-            align-items: center;
-        }
+        .b2c-nav { display: flex; gap: 28px; align-items: center; }
         .b2c-nav a {
-            color: #333;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 15px;
-            transition: color 0.3s;
+            color: #334155; text-decoration: none; font-weight: 600;
+            font-size: 14px; transition: color 0.25s;
         }
-        .b2c-nav a:hover {
-            color: #d11242;
-        }
+        .b2c-nav a:hover { color: #d11242; }
         .btn-b2b-login {
-            background: #d11242;
-            color: #ffffff !important;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-weight: 600;
-            transition: background 0.3s;
+            background: #d11242; color: #fff !important;
+            padding: 9px 20px; border-radius: 25px; font-weight: 700;
+            transition: all 0.3s; box-shadow: 0 3px 12px rgba(209,18,66,0.3);
         }
-        .btn-b2b-login:hover {
-            background: #a80c33;
-        }
+        .btn-b2b-login:hover { background: #a80c33; transform: translateY(-1px); }
+        /* ── HERO ── */
         .hero-banner {
-            height: 480px;
-            background-image: linear-gradient(135deg, rgba(209, 18, 66, 0.85) 0%, rgba(209, 18, 66, 0.4) 40%, rgba(0, 0, 0, 0.6) 100%), url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&q=80&w=2000');
-            background-size: cover;
-            background-position: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            text-align: center;
-            border-bottom-left-radius: 30px;
-            border-bottom-right-radius: 30px;
-            margin-bottom: 20px;
+            min-height: 500px;
+            background-image: linear-gradient(135deg, rgba(209,18,66,0.88) 0%, rgba(120,10,40,0.6) 40%, rgba(0,0,0,0.65) 100%),
+                url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&q=80&w=2000');
+            background-size: cover; background-position: center;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            color: white; text-align: center;
+            border-bottom-left-radius: 32px; border-bottom-right-radius: 32px;
+            margin-bottom: 20px; padding: 40px 20px;
+        }
+        .hero-badge {
+            background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35);
+            backdrop-filter: blur(6px); color: white;
+            padding: 7px 20px; border-radius: 30px;
+            font-size: 13px; font-weight: 600; letter-spacing: 1px;
+            margin-bottom: 20px; display: inline-block;
+            animation: fadeInDown 0.6s ease-out forwards;
         }
         .hero-banner h1 {
-            font-size: 54px;
-            font-weight: 800;
-            margin-bottom: 15px;
-            letter-spacing: -1px;
-            text-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            animation: fadeInDown 0.8s ease-out forwards;
+            font-size: 56px; font-weight: 800; margin: 0 0 15px;
+            letter-spacing: -1.5px; text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            animation: fadeInDown 0.8s ease-out 0.1s both;
         }
         .hero-banner p {
-            font-size: 22px;
-            font-weight: 400;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.4);
-            opacity: 0;
-            animation: fadeInUp 0.8s ease-out 0.2s forwards;
-        }
-        
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* Force styling for the imported form to look clean */
-        .content-card .card-header { display: none; } /* Hide the unified GDS title completely */
-        .content-card label { color: #333 !important; font-weight: 600; }
         .form-control { background: #f9f9f9 !important; border: 1px solid #ddd !important; color: #333 !important; }
         .trip-type-selector { background: #f0f0f0 !important; border: none !important; }
         .trip-type-pill { color: #555 !important; }
@@ -124,15 +92,21 @@
 <body>
 
     <!-- B2C Header -->
+    <!-- Promo Ticker -->
+    <div class="promo-ticker">
+        ✈️ &nbsp;FLASH SALE: Up to 40% off on selected routes this week only! &nbsp;<a href="#tab-flights">Book Now &rarr;</a>
+    </div>
+
+    <!-- B2C Header -->
     <header class="b2c-header">
         <a href="/b2c" class="b2c-brand">
             <i class="fa-solid fa-plane-departure"></i> Findmyfare
         </a>
         <nav class="b2c-nav">
-            <a href="#"><i class="fa-solid fa-plane"></i> Flights</a>
+            <a href="#tab-flights"><i class="fa-solid fa-plane"></i> Flights</a>
             <a href="#"><i class="fa-solid fa-hotel"></i> Hotels</a>
             <a href="#"><i class="fa-solid fa-umbrella-beach"></i> Holidays</a>
-            <a href="#"><i class="fa-solid fa-tags"></i> Offers</a>
+            <a href="#"><i class="fa-solid fa-tags" style="color:#d11242;"></i> <span style="color:#d11242;">Offers</span></a>
             <a href="#"><i class="fa-solid fa-briefcase"></i> My Bookings</a>
             <a href="{{ url_for('login') }}" class="btn-b2b-login"><i class="fa-solid fa-user"></i> Agent Login</a>
         </nav>
@@ -140,8 +114,18 @@
 
     <!-- Hero Banner -->
     <div class="hero-banner">
-        <h1>Discover the World with Findmyfare</h1>
-        <p>Book cheap flights, hotels, and holiday packages instantly.</p>
+        <div class="hero-badge">🌍 &nbsp; #1 Travel Booking Platform in Sri Lanka</div>
+        <h1>Discover the World<br>with Findmyfare</h1>
+        <p>Compare 500+ airlines. Best fares, no hidden fees. Instant booking.</p>
+        <div class="hero-trust">
+            <div class="hero-trust-item"><i class="fa-solid fa-shield-halved"></i> Secure Payments</div>
+            <div style="width:1px; height:20px; background:rgba(255,255,255,0.3);"></div>
+            <div class="hero-trust-item"><i class="fa-solid fa-star"></i> 4.9/5 Rating</div>
+            <div style="width:1px; height:20px; background:rgba(255,255,255,0.3);"></div>
+            <div class="hero-trust-item"><i class="fa-solid fa-headset"></i> 24/7 Support</div>
+            <div style="width:1px; height:20px; background:rgba(255,255,255,0.3);"></div>
+            <div class="hero-trust-item"><i class="fa-solid fa-bolt"></i> Instant E-Ticket</div>
+        </div>
     </div>
 
     <!-- Search Form -->
