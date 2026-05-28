@@ -296,162 +296,229 @@
                 {% endif %}
             {% endfor %}
 
+            <!-- Booking Options Tabs -->
+            <div style="display: flex; gap: 15px; margin: 30px 0 25px 0; border-bottom: 1px solid #cbd5e1; padding-bottom: 0;">
+                <button onclick="switchBookingTab('active')" id="tab-active" style="background: transparent; border: none; font-size: 16px; font-weight: 700; color: #d11242; padding: 12px 20px; cursor: pointer; border-bottom: 3px solid #d11242; transition: all 0.2s;">
+                    <i class="fa-solid fa-circle-check"></i> Active Bookings
+                </button>
+                <button onclick="switchBookingTab('cancelled')" id="tab-cancelled" style="background: transparent; border: none; font-size: 16px; font-weight: 600; color: #64748b; padding: 12px 20px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s;">
+                    <i class="fa-solid fa-ban"></i> Cancelled Bookings
+                </button>
+            </div>
+
             <!-- Active Bookings Section -->
-            <h3 style="margin: 30px 0 20px 0; font-size: 20px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
-                <i class="fa-solid fa-circle-check" style="color: #10b981;"></i> Active Bookings
-            </h3>
-            
-            {% if ns.has_active %}
-                {% for booking in results %}
-                    {% if booking.booking_status|lower not in ['cancelled', 'refunded'] %}
-                        <div class="booking-card">
-                            <div class="booking-header">
-                                <h3>Booking Ref: <span style="color: #d11242;">{{ booking.pnr_reference or 'PENDING' }}</span></h3>
-                                <div style="display: flex; gap: 10px; align-items: center;">
-                                    <span style="font-size: 13px; color: #64748b; margin-right: 10px;">{{ booking.created_at.strftime('%Y-%m-%d') if booking.created_at else '' }}</span>
-                                    <span class="status-badge status-{{ booking.booking_status | lower | replace(' ', '-') }}">{{ booking.booking_status }}</span>
-                                </div>
-                            </div>
-                            <div class="booking-body">
-                                <div class="flight-info">
-                                    <div>
-                                        <div style="font-weight: 700; color: #1e293b; margin-bottom: 5px;">{{ booking.airline }}</div>
-                                        <div style="color: #64748b; font-size: 13px;">Flight {{ booking.flight_number }}</div>
-                                    </div>
-                                    <div class="flight-route">
-                                        <div class="route-point">
-                                            <div class="route-city">{{ booking.origin }}</div>
-                                            <div class="route-time">{{ booking.departure_time }}</div>
-                                        </div>
-                                        <i class="fa-solid fa-plane flight-icon"></i>
-                                        <div class="route-point">
-                                            <div class="route-city">{{ booking.destination }}</div>
-                                            <div class="route-time">{{ booking.arrival_time }}</div>
-                                        </div>
-                                    </div>
-                                    <div style="text-align: right;">
-                                        <div style="font-weight: 800; font-size: 24px; color: #1e293b;">LKR {{ "{:,.2f}".format(booking.total_price) }}</div>
-                                        <div style="color: #64748b; font-size: 13px;">Total Paid</div>
-                                    </div>
-                                </div>
-                                
-                                <h4 style="margin-top: 0; margin-bottom: 15px; color: #1e293b;">Passenger Details</h4>
-                                <div class="passenger-details">
-                                    <div class="detail-item">
-                                        <label>Passenger Name</label>
-                                        <div>{{ booking.passenger_name }}</div>
-                                    </div>
-                                    <div class="detail-item">
-                                        <label>Ticket Number</label>
-                                        <div>{{ booking.ticket_number or 'Pending' }}</div>
-                                    </div>
-                                    <div class="detail-item">
-                                        <label>Seat Number</label>
-                                        <div>{{ booking.seat_number or 'Unassigned' }}</div>
-                                    </div>
-                                    <div class="detail-item">
-                                        <label>Invoice Number</label>
-                                        <div>{{ booking.invoice_number }}</div>
-                                    </div>
-                                </div>
-                                
-                                <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0; display: flex; gap: 15px; justify-content: flex-end;">
-                                    <form method="POST" action="/b2c/booking/change" style="margin: 0;" onsubmit="return confirm('Are you sure you want to request a date change for this flight?');">
-                                        <input type="hidden" name="booking_id" value="{{ booking.booking_id }}">
-                                        <button type="submit" class="btn-primary" style="width: auto; padding: 10px 20px; background: white; color: #3b82f6; border: 1px solid #cbd5e1;"><i class="fa-solid fa-calendar-alt" style="margin-right: 8px;"></i> Change Date</button>
-                                    </form>
-                                    
-                                    <form method="POST" action="/b2c/booking/cancel" style="margin: 0;" onsubmit="return confirm('Are you sure you want to cancel this booking? Cancellation fees may apply.');">
-                                        <input type="hidden" name="booking_id" value="{{ booking.booking_id }}">
-                                        <button type="submit" class="btn-primary" style="width: auto; padding: 10px 20px; background: white; color: #ef4444; border: 1px solid #cbd5e1;"><i class="fa-solid fa-xmark" style="margin-right: 8px;"></i> Cancel</button>
-                                    </form>
-                                    
-                                    {% if booking.booking_status|lower == 'ticketed' %}
-                                    <button class="btn-primary" style="width: auto; padding: 10px 20px; background: #1e293b;" onclick="window.print()"><i class="fa-solid fa-download" style="margin-right: 8px;"></i> E-Ticket</button>
-                                    {% endif %}
-                                    <button class="btn-primary" style="width: auto; padding: 10px 20px; background: white; color: #1e293b; border: 1px solid #cbd5e1;"><i class="fa-solid fa-headset" style="margin-right: 8px;"></i> Support</button>
-                                </div>
-                            </div>
-                        </div>
-                    {% endif %}
-                {% endfor %}
-            {% else %}
-                <div style="background: white; border-radius: 12px; padding: 40px; text-align: center; border: 1px dashed #cbd5e1; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
-                    <i class="fa-solid fa-plane-slash" style="font-size: 48px; color: #94a3b8; margin-bottom: 15px;"></i>
-                    <h4 style="margin: 0 0 10px 0; color: #1e293b; font-size: 18px; font-weight: 700;">No Active Bookings</h4>
-                    <p style="color: #64748b; margin: 0; font-size: 14px;">You don't have any upcoming active trips at the moment.</p>
+            <div id="section-active">
+                <div style="margin-bottom: 20px;">
+                    <input type="text" id="search-active" onkeyup="filterBookings('active')" placeholder="Search active bookings by PNR, City, Airline, Passenger Name..." class="form-control" style="width: 100%; max-width: 500px; padding-left: 35px; background: white url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 512 512\' width=\'16\' height=\'16\'><path fill=\'%2364748b\' d=\'M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z\'/></svg>') no-repeat 12px center;">
                 </div>
-            {% endif %}
+                
+                <div id="list-active">
+                {% if ns.has_active %}
+                    {% for booking in results %}
+                        {% if booking.booking_status|lower not in ['cancelled', 'refunded'] %}
+                            <div class="booking-card" data-search="{{ booking.pnr_reference | lower }} {{ booking.airline | lower }} {{ booking.origin | lower }} {{ booking.destination | lower }} {{ booking.passenger_name | lower }}">
+                                <div class="booking-header">
+                                    <h3>Booking Ref: <span style="color: #d11242;">{{ booking.pnr_reference or 'PENDING' }}</span></h3>
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        <span style="font-size: 13px; color: #64748b; margin-right: 10px;">{{ booking.created_at.strftime('%Y-%m-%d') if booking.created_at else '' }}</span>
+                                        <span class="status-badge status-{{ booking.booking_status | lower | replace(' ', '-') }}">{{ booking.booking_status }}</span>
+                                    </div>
+                                </div>
+                                <div class="booking-body">
+                                    <div class="flight-info">
+                                        <div>
+                                            <div style="font-weight: 700; color: #1e293b; margin-bottom: 5px;">{{ booking.airline }}</div>
+                                            <div style="color: #64748b; font-size: 13px;">Flight {{ booking.flight_number }}</div>
+                                        </div>
+                                        <div class="flight-route">
+                                            <div class="route-point">
+                                                <div class="route-city">{{ booking.origin }}</div>
+                                                <div class="route-time">{{ booking.departure_time }}</div>
+                                            </div>
+                                            <i class="fa-solid fa-plane flight-icon"></i>
+                                            <div class="route-point">
+                                                <div class="route-city">{{ booking.destination }}</div>
+                                                <div class="route-time">{{ booking.arrival_time }}</div>
+                                            </div>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <div style="font-weight: 800; font-size: 24px; color: #1e293b;">LKR {{ "{:,.2f}".format(booking.total_price) }}</div>
+                                            <div style="color: #64748b; font-size: 13px;">Total Paid</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <h4 style="margin-top: 0; margin-bottom: 15px; color: #1e293b;">Passenger Details</h4>
+                                    <div class="passenger-details">
+                                        <div class="detail-item">
+                                            <label>Passenger Name</label>
+                                            <div>{{ booking.passenger_name }}</div>
+                                        </div>
+                                        <div class="detail-item">
+                                            <label>Ticket Number</label>
+                                            <div>{{ booking.ticket_number or 'Pending' }}</div>
+                                        </div>
+                                        <div class="detail-item">
+                                            <label>Seat Number</label>
+                                            <div>{{ booking.seat_number or 'Unassigned' }}</div>
+                                        </div>
+                                        <div class="detail-item">
+                                            <label>Invoice Number</label>
+                                            <div>{{ booking.invoice_number }}</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0; display: flex; gap: 15px; justify-content: flex-end;">
+                                        <form method="POST" action="/b2c/booking/change" style="margin: 0;" onsubmit="return confirm('Are you sure you want to request a date change for this flight?');">
+                                            <input type="hidden" name="booking_id" value="{{ booking.booking_id }}">
+                                            <button type="submit" class="btn-primary" style="width: auto; padding: 10px 20px; background: white; color: #3b82f6; border: 1px solid #cbd5e1;"><i class="fa-solid fa-calendar-alt" style="margin-right: 8px;"></i> Change Date</button>
+                                        </form>
+                                        
+                                        <form method="POST" action="/b2c/booking/cancel" style="margin: 0;" onsubmit="return confirm('Are you sure you want to cancel this booking? Cancellation fees may apply.');">
+                                            <input type="hidden" name="booking_id" value="{{ booking.booking_id }}">
+                                            <button type="submit" class="btn-primary" style="width: auto; padding: 10px 20px; background: white; color: #ef4444; border: 1px solid #cbd5e1;"><i class="fa-solid fa-xmark" style="margin-right: 8px;"></i> Cancel</button>
+                                        </form>
+                                        
+                                        {% if booking.booking_status|lower == 'ticketed' %}
+                                        <button type="button" class="btn-primary" style="width: auto; padding: 10px 20px; background: #1e293b;" onclick="window.print()"><i class="fa-solid fa-download" style="margin-right: 8px;"></i> E-Ticket</button>
+                                        {% endif %}
+                                        <button type="button" class="btn-primary" style="width: auto; padding: 10px 20px; background: white; color: #1e293b; border: 1px solid #cbd5e1;"><i class="fa-solid fa-headset" style="margin-right: 8px;"></i> Support</button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <div style="background: white; border-radius: 12px; padding: 40px; text-align: center; border: 1px dashed #cbd5e1; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+                        <i class="fa-solid fa-plane-slash" style="font-size: 48px; color: #94a3b8; margin-bottom: 15px;"></i>
+                        <h4 style="margin: 0 0 10px 0; color: #1e293b; font-size: 18px; font-weight: 700;">No Active Bookings</h4>
+                        <p style="color: #64748b; margin: 0; font-size: 14px;">You don't have any upcoming active trips at the moment.</p>
+                    </div>
+                {% endif %}
+                </div>
+            </div>
 
             <!-- Cancelled & Refunded Bookings Section -->
-            <h3 style="margin: 40px 0 20px 0; font-size: 20px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
-                <i class="fa-solid fa-ban" style="color: #ef4444;"></i> Cancelled Tickets
-            </h3>
-            
-            {% if ns.has_cancelled %}
-                {% for booking in results %}
-                    {% if booking.booking_status|lower in ['cancelled', 'refunded'] %}
-                        <div class="booking-card" style="opacity: 0.85; border-left: 4px solid #ef4444;">
-                            <div class="booking-header" style="background: #fff5f5;">
-                                <h3>Booking Ref: <span style="color: #64748b; text-decoration: line-through;">{{ booking.pnr_reference or 'PENDING' }}</span></h3>
-                                <div style="display: flex; gap: 10px; align-items: center;">
-                                    <span style="font-size: 13px; color: #64748b; margin-right: 10px;">{{ booking.created_at.strftime('%Y-%m-%d') if booking.created_at else '' }}</span>
-                                    <span class="status-badge status-{{ booking.booking_status | lower | replace(' ', '-') }}" style="background: #fee2e2; color: #ef4444;">{{ booking.booking_status }}</span>
-                                </div>
-                            </div>
-                            <div class="booking-body" style="background: #fafafa;">
-                                <div class="flight-info" style="border-bottom: 1px dashed #e2e8f0;">
-                                    <div>
-                                        <div style="font-weight: 700; color: #64748b; margin-bottom: 5px;">{{ booking.airline }}</div>
-                                        <div style="color: #94a3b8; font-size: 13px;">Flight {{ booking.flight_number }}</div>
-                                    </div>
-                                    <div class="flight-route">
-                                        <div class="route-point">
-                                            <div class="route-city" style="color: #64748b;">{{ booking.origin }}</div>
-                                            <div class="route-time">{{ booking.departure_time }}</div>
-                                        </div>
-                                        <i class="fa-solid fa-plane flight-icon" style="color: #cbd5e1;"></i>
-                                        <div class="route-point">
-                                            <div class="route-city" style="color: #64748b;">{{ booking.destination }}</div>
-                                            <div class="route-time">{{ booking.arrival_time }}</div>
-                                        </div>
-                                    </div>
-                                    <div style="text-align: right;">
-                                        <div style="font-weight: 800; font-size: 24px; color: #64748b;">LKR {{ "{:,.2f}".format(booking.total_price) }}</div>
-                                        <div style="color: #94a3b8; font-size: 13px;">Cancelled Booking</div>
-                                    </div>
-                                </div>
-                                
-                                <h4 style="margin-top: 0; margin-bottom: 15px; color: #64748b;">Passenger Details</h4>
-                                <div class="passenger-details">
-                                    <div class="detail-item">
-                                        <label>Passenger Name</label>
-                                        <div style="color: #64748b;">{{ booking.passenger_name }}</div>
-                                    </div>
-                                    <div class="detail-item">
-                                        <label>Ticket Number</label>
-                                        <div style="color: #64748b; text-decoration: line-through;">{{ booking.ticket_number or 'Pending' }}</div>
-                                    </div>
-                                    <div class="detail-item">
-                                        <label>Seat Number</label>
-                                        <div style="color: #64748b;">{{ booking.seat_number or 'Unassigned' }}</div>
-                                    </div>
-                                    <div class="detail-item">
-                                        <label>Invoice Number</label>
-                                        <div style="color: #64748b;">{{ booking.invoice_number }}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    {% endif %}
-                {% endfor %}
-            {% else %}
-                <div style="background: white; border-radius: 12px; padding: 40px; text-align: center; border: 1px dashed #cbd5e1; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
-                    <i class="fa-solid fa-clipboard-question" style="font-size: 48px; color: #cbd5e1; margin-bottom: 15px;"></i>
-                    <h4 style="margin: 0 0 10px 0; color: #64748b; font-size: 16px; font-weight: 600;">No Cancelled Tickets</h4>
-                    <p style="color: #94a3b8; margin: 0; font-size: 13px;">Your cancelled tickets will be listed here for receipt tracking.</p>
+            <div id="section-cancelled" style="display: none;">
+                <div style="margin-bottom: 20px;">
+                    <input type="text" id="search-cancelled" onkeyup="filterBookings('cancelled')" placeholder="Search cancelled bookings by PNR, City, Airline, Passenger Name..." class="form-control" style="width: 100%; max-width: 500px; padding-left: 35px; background: white url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 512 512\' width=\'16\' height=\'16\'><path fill=\'%2364748b\' d=\'M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z\'/></svg>') no-repeat 12px center;">
                 </div>
-            {% endif %}
+                
+                <div id="list-cancelled">
+                {% if ns.has_cancelled %}
+                    {% for booking in results %}
+                        {% if booking.booking_status|lower in ['cancelled', 'refunded'] %}
+                            <div class="booking-card" data-search="{{ booking.pnr_reference | lower }} {{ booking.airline | lower }} {{ booking.origin | lower }} {{ booking.destination | lower }} {{ booking.passenger_name | lower }}" style="opacity: 0.85; border-left: 4px solid #ef4444;">
+                                <div class="booking-header" style="background: #fff5f5;">
+                                    <h3>Booking Ref: <span style="color: #64748b; text-decoration: line-through;">{{ booking.pnr_reference or 'PENDING' }}</span></h3>
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        <span style="font-size: 13px; color: #64748b; margin-right: 10px;">{{ booking.created_at.strftime('%Y-%m-%d') if booking.created_at else '' }}</span>
+                                        <span class="status-badge status-{{ booking.booking_status | lower | replace(' ', '-') }}" style="background: #fee2e2; color: #ef4444;">{{ booking.booking_status }}</span>
+                                    </div>
+                                </div>
+                                <div class="booking-body" style="background: #fafafa;">
+                                    <div class="flight-info" style="border-bottom: 1px dashed #e2e8f0;">
+                                        <div>
+                                            <div style="font-weight: 700; color: #64748b; margin-bottom: 5px;">{{ booking.airline }}</div>
+                                            <div style="color: #94a3b8; font-size: 13px;">Flight {{ booking.flight_number }}</div>
+                                        </div>
+                                        <div class="flight-route">
+                                            <div class="route-point">
+                                                <div class="route-city" style="color: #64748b;">{{ booking.origin }}</div>
+                                                <div class="route-time">{{ booking.departure_time }}</div>
+                                            </div>
+                                            <i class="fa-solid fa-plane flight-icon" style="color: #cbd5e1;"></i>
+                                            <div class="route-point">
+                                                <div class="route-city" style="color: #64748b;">{{ booking.destination }}</div>
+                                                <div class="route-time">{{ booking.arrival_time }}</div>
+                                            </div>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <div style="font-weight: 800; font-size: 24px; color: #64748b;">LKR {{ "{:,.2f}".format(booking.total_price) }}</div>
+                                            <div style="color: #94a3b8; font-size: 13px;">Cancelled Booking</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <h4 style="margin-top: 0; margin-bottom: 15px; color: #64748b;">Passenger Details</h4>
+                                    <div class="passenger-details">
+                                        <div class="detail-item">
+                                            <label>Passenger Name</label>
+                                            <div style="color: #64748b;">{{ booking.passenger_name }}</div>
+                                        </div>
+                                        <div class="detail-item">
+                                            <label>Ticket Number</label>
+                                            <div style="color: #64748b; text-decoration: line-through;">{{ booking.ticket_number or 'Pending' }}</div>
+                                        </div>
+                                        <div class="detail-item">
+                                            <label>Seat Number</label>
+                                            <div style="color: #64748b;">{{ booking.seat_number or 'Unassigned' }}</div>
+                                        </div>
+                                        <div class="detail-item">
+                                            <label>Invoice Number</label>
+                                            <div style="color: #64748b;">{{ booking.invoice_number }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <div style="background: white; border-radius: 12px; padding: 40px; text-align: center; border: 1px dashed #cbd5e1; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+                        <i class="fa-solid fa-clipboard-question" style="font-size: 48px; color: #cbd5e1; margin-bottom: 15px;"></i>
+                        <h4 style="margin: 0 0 10px 0; color: #64748b; font-size: 16px; font-weight: 600;">No Cancelled Tickets</h4>
+                        <p style="color: #94a3b8; margin: 0; font-size: 13px;">Your cancelled tickets will be listed here for receipt tracking.</p>
+                    </div>
+                {% endif %}
+                </div>
+            </div>
+
+            <script>
+                function filterBookings(type) {
+                    const input = document.getElementById('search-' + type);
+                    const filter = input.value.toLowerCase();
+                    const list = document.getElementById('list-' + type);
+                    const cards = list.getElementsByClassName('booking-card');
+                    
+                    for (let i = 0; i < cards.length; i++) {
+                        const searchData = cards[i].getAttribute('data-search') || '';
+                        if (searchData.indexOf(filter) > -1) {
+                            cards[i].style.display = "";
+                        } else {
+                            cards[i].style.display = "none";
+                        }
+                    }
+                }
+                
+                function switchBookingTab(tab) {
+                    const tabActive = document.getElementById('tab-active');
+                    const tabCancelled = document.getElementById('tab-cancelled');
+                    const secActive = document.getElementById('section-active');
+                    const secCancelled = document.getElementById('section-cancelled');
+
+                    if (tab === 'active') {
+                        tabActive.style.color = '#d11242';
+                        tabActive.style.borderBottomColor = '#d11242';
+                        tabActive.style.fontWeight = '700';
+                        
+                        tabCancelled.style.color = '#64748b';
+                        tabCancelled.style.borderBottomColor = 'transparent';
+                        tabCancelled.style.fontWeight = '600';
+                        
+                        secActive.style.display = 'block';
+                        secCancelled.style.display = 'none';
+                    } else {
+                        tabCancelled.style.color = '#d11242';
+                        tabCancelled.style.borderBottomColor = '#d11242';
+                        tabCancelled.style.fontWeight = '700';
+                        
+                        tabActive.style.color = '#64748b';
+                        tabActive.style.borderBottomColor = 'transparent';
+                        tabActive.style.fontWeight = '600';
+                        
+                        secActive.style.display = 'none';
+                        secCancelled.style.display = 'block';
+                    }
+                }
+            </script>
         {% endif %}
         
     </div>

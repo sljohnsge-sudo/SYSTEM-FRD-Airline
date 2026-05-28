@@ -3407,6 +3407,9 @@ function printReceipt() {
             }
             
             const passengers = [];
+            const outSeatsArr = (document.getElementById('book-seat').value || '').split(',').map(s => s.trim()).filter(Boolean);
+            const retSeatsArr = (document.getElementById('book-return-seat').value || '').split(',').map(s => s.trim()).filter(Boolean);
+
             for (let i = 1; i <= window.totalTravelers; i++) {
                 const title = document.getElementById(`book-title-${i}`).value;
                 const last = document.getElementById(`book-lastname-${i}`).value.trim();
@@ -3435,6 +3438,11 @@ function printReceipt() {
                 const ffProg = document.getElementById(`book-flyer-program-${i}`) ? document.getElementById(`book-flyer-program-${i}`).value : 'UL';
                 const ffNum = document.getElementById(`book-flyer-number-${i}`) ? document.getElementById(`book-flyer-number-${i}`).value.trim() : '';
                 
+                const seat = outSeatsArr[i - 1] || '14A';
+                const return_seat = retSeatsArr[i - 1] || '14F';
+                
+                const fullName = `${title} ${first} ${last}`.trim();
+                
                 passengers.push({
                     title,
                     first_name: first,
@@ -3451,7 +3459,9 @@ function printReceipt() {
                     allergy_conditions: al,
                     other_requests: o,
                     frequent_flyer_program: ffProg,
-                    frequent_flyer_number: ffNum
+                    frequent_flyer_number: ffNum,
+                    seat: seat,
+                    return_seat: return_seat
                 });
             }
 
