@@ -454,11 +454,23 @@ function searchFlights() {
     const isMultiCity = document.getElementById("pill-multicity") && document.getElementById("pill-multicity").classList.contains("active");
     
     let adults = "1";
+    const adultsInput = document.getElementById("flight-adults");
     const paxBtn = document.getElementById("passenger-btn");
-    if(paxBtn) {
+    const paxSummary = document.getElementById("passenger-summary-text");
+    
+    if (adultsInput) {
+        adults = adultsInput.value;
+    } else if (paxSummary) {
+        const match = paxSummary.innerText.match(/(\d+)/);
+        if (match) adults = match[1];
+    } else if (paxBtn) {
         const match = paxBtn.innerText.match(/(\d+)/);
-        if(match) adults = match[1];
+        if (match) adults = match[1];
     }
+    
+    const children = document.getElementById("flight-children") ? document.getElementById("flight-children").value : "0";
+    const infants = document.getElementById("flight-infants") ? document.getElementById("flight-infants").value : "0";
+    const isModifying = window.isModifyingBooking ? "true" : "false";
     
     if (isMultiCity) {
         const o = document.getElementById(`mc-origin-1`) ? document.getElementById(`mc-origin-1`).value : '';
@@ -466,7 +478,10 @@ function searchFlights() {
         const dt = document.getElementById(`mc-date-1`) ? document.getElementById(`mc-date-1`).value : '';
         
         if (o && d && dt) {
-            let mcUrl = `/flight-results?origin=${encodeURIComponent(o)}&dest=${encodeURIComponent(d)}&date=${encodeURIComponent(dt)}&adults=${adults}`;
+            let mcUrl = `/flight-results?origin=${encodeURIComponent(o)}&dest=${encodeURIComponent(d)}&date=${encodeURIComponent(dt)}&adults=${adults}&children=${children}&infants=${infants}`;
+            if (isModifying === "true" || window.location.search.includes('action=change')) {
+                mcUrl += `&modifying=true`;
+            }
             if (window.location.pathname.includes('/b2c')) {
                 mcUrl = mcUrl.replace('/flight-results', '/b2c-flight-results');
             }
@@ -500,9 +515,13 @@ function searchFlights() {
         return;
     }
     
-    let url = `/flight-results?origin=${encodeURIComponent(origin)}&dest=${encodeURIComponent(dest)}&date=${encodeURIComponent(date)}&adults=${adults}`;
+    let url = `/flight-results?origin=${encodeURIComponent(origin)}&dest=${encodeURIComponent(dest)}&date=${encodeURIComponent(date)}&adults=${adults}&children=${children}&infants=${infants}`;
     if (isRoundTrip) {
         url += `&returnDate=${encodeURIComponent(returnDate)}`;
+    }
+    
+    if (isModifying === "true" || window.location.search.includes('action=change')) {
+        url += `&modifying=true`;
     }
     
     if (window.location.pathname.includes('/b2c')) {

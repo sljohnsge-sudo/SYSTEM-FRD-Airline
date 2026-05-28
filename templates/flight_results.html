@@ -604,209 +604,8 @@
                         </div>
                     </div>
 
-                    <!-- Adult 1 Card Wrapper -->
-                    <div class="traveler-details-card" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                        <!-- Collapsible Header -->
-                        <div class="traveler-header" onclick="toggleTravelerDetails()" style="display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: 700; color: #1e293b; cursor: pointer; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; margin-bottom: 18px;">
-                            <span style="display: flex; align-items: center; gap: 8px; color: #1e293b;">
-                                <span style="position: relative; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #e0f2fe; color: #0284c7; border-radius: 50%;">
-                                    <i class="fa-solid fa-user" style="font-size: 14px;"></i>
-                                    <i class="fa-solid fa-circle-check" style="position: absolute; bottom: -2px; right: -2px; font-size: 10px; color: #10b981; background: white; border-radius: 50%;"></i>
-                                </span>
-                                Adult 1
-                            </span>
-                            <i class="fa-solid fa-chevron-down" id="traveler-chevron" style="color: #64748b; font-size: 14px;"></i>
-                        </div>
-                        
-                        <div id="traveler-form-body">
-                            <!-- Passenger Name Fields -->
-                            <div style="display: grid; grid-template-columns: 140px 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                                <div>
-                                    <label style="display:block; font-size:12.5px; font-weight:700; color:#334155; margin-bottom:6px;">Adult Name</label>
-                                    <select id="book-title" class="form-control" onchange="updateFormattedPaxName()" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white; outline: none; transition: border-color 0.2s;">
-                                        <option value="Mr">Mr</option>
-                                        <option value="Mrs">Mrs</option>
-                                        <option value="Miss">Miss</option>
-                                        <option value="Ms">Ms</option>
-                                    </select>
-                                </div>
-                                <div style="display: flex; flex-direction: column; justify-content: flex-end;">
-                                    <input type="text" id="book-lastname" placeholder="Surnames (Lastnames)" required oninput="updateFormattedPaxName()" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white; outline: none; transition: border-color 0.2s;">
-                                </div>
-                                <div style="display: flex; flex-direction: column; justify-content: flex-end;">
-                                    <input type="text" id="book-firstname" placeholder="Other Names (Firstnames)" required oninput="updateFormattedPaxName()" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white; outline: none; transition: border-color 0.2s;">
-                                </div>
-                            </div>
-                            
-                            <!-- Date of Birth (DOB) -->
-                            <div style="display: grid; grid-template-columns: 140px 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; align-items: center;">
-                                <label style="font-size:12.5px; font-weight:700; color:#334155; margin-bottom: 0;">Date of Birth</label>
-                                <div>
-                                    <select id="book-dob-day" required style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white;"></select>
-                                </div>
-                                <div>
-                                    <select id="book-dob-month" required style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white;"></select>
-                                </div>
-                                <div>
-                                    <select id="book-dob-year" required style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white;"></select>
-                                </div>
-                            </div>
-                            
-                            <!-- Passport number -->
-                            <div style="display: grid; grid-template-columns: 140px 1fr; gap: 15px; margin-bottom: 20px; align-items: center;">
-                                <label style="font-size:12.5px; font-weight:700; color:#334155; margin-bottom: 0;">Passport No</label>
-                                <div>
-                                    <input type="text" id="book-passport-new" placeholder="Passport Number" required oninput="syncFormValues()" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white; outline: none; transition: border-color 0.2s;">
-                                </div>
-                            </div>
-                            
-                            <!-- Expiry date & country of issue -->
-                            <div style="display: grid; grid-template-columns: 140px 1fr 1fr 1fr 1.5fr; gap: 15px; margin-bottom: 20px; align-items: center;">
-                                <label style="font-size:12.5px; font-weight:700; color:#334155; margin-bottom: 0;">Expiry Date</label>
-                                <div>
-                                    <select id="book-exp-day" required style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white;"></select>
-                                </div>
-                                <div>
-                                    <select id="book-exp-month" required style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white;"></select>
-                                </div>
-                                <div>
-                                    <select id="book-exp-year" required style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white;"></select>
-                                </div>
-                                <div>
-                                    <select id="book-passport-country" required style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white;">
-                                        <option value="LK">Sri Lanka</option>
-                                        <option value="IN">India</option>
-                                        <option value="MV">Maldives</option>
-                                        <option value="SG">Singapore</option>
-                                        <option value="GB">United Kingdom</option>
-                                        <option value="US">United States</option>
-                                        <option value="AE">United Arab Emirates</option>
-                                        <option value="QA">Qatar</option>
-                                        <option value="AU">Australia</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <!-- Frequent Flyer Expansion -->
-                            <div id="flyer-toggle" style="color: #0284c7; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 15px; display: inline-flex; align-items: center; gap: 6px;" onclick="toggleFrequentFlyer()">
-                                <span id="flyer-toggle-sign">+</span> Add optional ( <span style="text-decoration: underline;">Frequent Flyer Number</span> )
-                            </div>
-                            
-                            <!-- Frequent Flyer Expansion Container -->
-                            <div id="flyer-container" class="frequent-flyer-box" style="display: none; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 15px; margin-top: 12px;">
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <span style="font-size: 12.5px; font-weight: 700; color: #334155; width: 150px;">Frequent Flyer Program</span>
-                                        <select id="book-flyer-program" style="flex: 1; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white;" onchange="updateFrequentFlyerPrefix()">
-                                            <option value="UL">Fly Smiles</option>
-                                            <option value="EY">Etihad Guest</option>
-                                            <option value="EK">Emirates Skywards</option>
-                                            <option value="SQ">Singapore KrisFlyer</option>
-                                            <option value="OTHER">Other Airlines</option>
-                                        </select>
-                                    </div>
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <span style="font-size: 12.5px; font-weight: 700; color: #334155;">Frequent Flyer Number</span>
-                                        <div style="display: flex; flex: 1; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: white;">
-                                            <span id="ff-prefix" style="background: #f1f5f9; padding: 10px 12px; font-size: 14px; border-right: 1px solid #cbd5e1; color: #64748b; font-weight: bold;">UL-</span>
-                                            <input type="text" id="book-flyer-number" placeholder="Your Flyer Number" style="border: none; outline: none; padding: 10px 12px; font-size: 14px; flex: 1;">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Additional Value Added Services & Special Requests -->
-                    <div class="traveler-details-card" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                        <!-- Collapsible Header -->
-                        <div class="traveler-header" onclick="toggleSpecialRequests()" style="display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: 700; color: #1e293b; cursor: pointer; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; margin-bottom: 18px;">
-                            <span style="display: flex; align-items: center; gap: 8px; color: #1e293b;">
-                                <span style="position: relative; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #fef3c7; color: #d97706; border-radius: 50%;">
-                                    <i class="fa-solid fa-hand-holding-heart" style="font-size: 14px;"></i>
-                                </span>
-                                Value Added Services & Special Requests
-                            </span>
-                            <i class="fa-solid fa-chevron-down" id="requests-chevron" style="color: #64748b; font-size: 14px;"></i>
-                        </div>
-                        
-                        <div id="requests-form-body">
-                            <!-- Meal preference and Wheelchair request -->
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                                <div>
-                                    <label style="display:block; font-size:12.5px; font-weight:700; color:#334155; margin-bottom:6px;">Special Meal Request</label>
-                                    <select id="book-meal-pref" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white; outline: none;">
-                                        <option value="Standard Meal">Standard Meal (No Preference)</option>
-                                        <option value="Vegetarian Meal (VGML)">Vegetarian Meal (VGML)</option>
-                                        <option value="Halal Meal (MOML)">Halal Meal (MOML)</option>
-                                        <option value="Kosher Meal (KSML)">Kosher Meal (KSML)</option>
-                                        <option value="Diabetic Meal (DBML)">Diabetic Meal (DBML)</option>
-                                        <option value="Gluten-Free Meal (GFML)">Gluten-Free Meal (GFML)</option>
-                                        <option value="Child Meal (CHML)">Child Meal (CHML)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label style="display:block; font-size:12.5px; font-weight:700; color:#334155; margin-bottom:6px;">Wheelchair Request</label>
-                                    <select id="book-wheelchair" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white; outline: none;">
-                                        <option value="No wheelchair assistance required">No wheelchair assistance required</option>
-                                        <option value="Wheelchair for ramp (WCHR)">Wheelchair for ramp (WCHR)</option>
-                                        <option value="Wheelchair for steps (WCHS)">Wheelchair for steps (WCHS)</option>
-                                        <option value="Wheelchair to cabin seat (WCHC)">Wheelchair all the way to cabin seat (WCHC)</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <!-- Airport special assistance and Allergy conditions -->
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                                <div>
-                                    <label style="display:block; font-size:12.5px; font-weight:700; color:#334155; margin-bottom:6px;">Airport Special Assistance</label>
-                                    <select id="book-airport-assist" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white; outline: none;">
-                                        <option value="No special airport assistance">No special airport assistance</option>
-                                        <option value="Meet & Assist (MAAS)">Meet & Assist (MAAS)</option>
-                                        <option value="Deaf passenger assistance (DEAF)">Deaf passenger assistance (DEAF)</option>
-                                        <option value="Blind passenger assistance (BLND)">Blind passenger assistance (BLND)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label style="display:block; font-size:12.5px; font-weight:700; color:#334155; margin-bottom:6px;">Allergy Conditions</label>
-                                    <input type="text" id="book-allergies" placeholder="e.g., Peanut allergy, lactose intolerant..." style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white; outline: none;">
-                                </div>
-                            </div>
-
-                            <!-- Other Requests -->
-                            <div style="margin-bottom: 10px;">
-                                <label style="display:block; font-size:12.5px; font-weight:700; color:#334155; margin-bottom:6px;">Other Requests / Booking Remarks</label>
-                                <textarea id="book-other-req" rows="2" placeholder="Describe any other airport requests or travel assistance requirements here..." style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white; outline: none; resize: vertical; box-sizing: border-box; font-family: inherit;"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Contact details (2-column layout) -->
-                    <div style="display: grid; grid-template-columns: 160px 1fr; gap: 15px; margin-bottom: 20px; align-items: center;">
-                        <label style="font-size: 13.5px; font-weight: 700; color: #334155; margin-bottom: 0;">Mobile Number</label>
-                        <div style="display: flex; gap: 10px;">
-                            <select id="book-phone-prefix" style="padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white; outline: none; width: 110px;" onchange="syncFormValues()">
-                                <option value="+94">🇱🇰 +94</option>
-                                <option value="+91">🇮🇳 +91</option>
-                                <option value="+960">🇲🇻 +960</option>
-                                <option value="+65">🇸🇬 +65</option>
-                                <option value="+44">🇬🇧 +44</option>
-                                <option value="+1">🇺🇸 +1</option>
-                                <option value="+971">🇦🇪 +971</option>
-                                <option value="+974">🇶🇦 +974</option>
-                                <option value="+61">🇦🇺 +61</option>
-                            </select>
-                            <input type="text" id="book-phone-number" placeholder="Your mobile number" required oninput="syncFormValues()" style="flex: 1; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white; outline: none;">
-                        </div>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 160px 1fr; gap: 15px; margin-bottom: 20px; align-items: flex-start;">
-                        <label style="font-size: 13.5px; font-weight: 700; color: #334155; margin-top: 10px;">E-mail Address</label>
-                        <div>
-                            <input type="email" id="book-email-new" placeholder="Your email address" required oninput="syncFormValues()" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white; outline: none;">
-                            <div style="font-size: 11.5px; color: #64748b; margin-top: 5px;">* Your ticket will be sent to this E-mail address</div>
-                        </div>
-                    </div>
+                    <!-- Dynamic Travelers Forms Container -->
+                    <div id="travelers-forms-container"></div>
                     
                     <!-- Confirmation Checkbox -->
                     <div style="margin-top: 20px; margin-bottom: 25px; display: flex; align-items: flex-start; gap: 12px; background: #faf5ff; border: 1px solid #f3e8ff; border-radius: 8px; padding: 15px;">
@@ -1007,6 +806,12 @@
                     <div style="margin-top: 25px; display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px 25px; border-radius: 8px;">
                         <div style="display: flex; flex-direction: column;">
                             <span style="font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Total Price (Inclusive of Taxes)</span>
+                            
+                            <div id="summary-seat-charge-container" style="display: none; margin-bottom: 5px;">
+                                <span style="font-size: 12px; color: #8b5cf6; font-weight: 600; text-transform: uppercase;">Early Seat Selection Charge</span>
+                                <div id="summary-seat-charge" style="font-size: 16px; font-weight: 800; color: #8b5cf6;">LKR 0</div>
+                            </div>
+                            
                             <div id="summary-total-price" style="font-size: 26px; font-weight: 800; color: var(--success-green); line-height: 1.1;">LKR 0</div>
                         </div>
                         
@@ -1078,6 +883,93 @@
             </div>
         </div>
     </div>
+
+    <!-- ========================================================= -->
+    <!-- MODAL OVERLAY: CUSTOM PREMIUM ERROR MODAL -->
+    <!-- ========================================================= -->
+    <div id="error-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 11000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div style="background: white; border-radius: 12px; max-width: 480px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); overflow: hidden; transform: scale(0.95); transition: transform 0.2s ease-out; animation: modalPop 0.2s forwards;">
+            <!-- Header -->
+            <div style="background: #fff5f5; border-bottom: 1px solid #fee2e2; padding: 18px 24px; display: flex; align-items: center; gap: 12px;">
+                <div style="background: #fee2e2; color: #ef4444; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i class="fa-solid fa-circle-exclamation" style="font-size: 18px;"></i>
+                </div>
+                <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #991b1b;">Booking System Notification</h3>
+            </div>
+            
+            <!-- Body -->
+            <div style="padding: 24px;">
+                <p id="error-modal-message" style="margin: 0 0 16px 0; font-size: 14px; color: #374151; line-height: 1.5; font-weight: 500;">
+                    No seats available on this flight
+                </p>
+                
+                <div style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; padding: 15px; display: flex; gap: 12px; align-items: flex-start;">
+                    <i class="fa-solid fa-triangle-exclamation" style="color: #d97706; margin-top: 2px; font-size: 16px;"></i>
+                    <div id="error-modal-alt-text" style="font-size: 12.5px; color: #b45309; line-height: 1.5;">
+                        <strong>Alternative Option:</strong> Please go back to the flight results list and select a different flight or airline, or modify your passenger count.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div style="background: #f8fafc; border-top: 1px solid #f1f5f9; padding: 15px 24px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" id="error-modal-proceed-btn" onclick="proceedWithoutSeats()" style="display: none; background: #16a34a; color: white; border: none; padding: 9px 24px; border-radius: 6px; cursor: pointer; font-size: 13.5px; font-weight: bold; box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.2); transition: all 0.2s;">
+                    Proceed
+                </button>
+                <button type="button" onclick="closeErrorModal(); closeBookingModal();" style="background: #ef4444; color: white; border: none; padding: 9px 24px; border-radius: 6px; cursor: pointer; font-size: 13.5px; font-weight: bold; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2); transition: all 0.2s;">
+                    Go Back & Choose Another Flight
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL OVERLAY: SEAT CHARGE CONFIRMATION -->
+    <div id="seat-charge-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 11000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div style="background: white; border-radius: 12px; max-width: 450px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); overflow: hidden; animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; transform: scale(0.95);">
+            <!-- Header -->
+            <div style="background: #fafafa; border-bottom: 1px solid #f1f5f9; padding: 18px 24px; display: flex; align-items: center; gap: 10px;">
+                <div style="background: #fef08a; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-chair" style="color: #ca8a04; font-size: 16px;"></i>
+                </div>
+                <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #1e293b;">Seat Selection Charge</h3>
+            </div>
+            
+            <!-- Body -->
+            <div style="padding: 24px;">
+                <p id="seat-charge-message" style="margin: 0 0 16px 0; font-size: 14px; color: #374151; line-height: 1.5; font-weight: 500;">
+                    An early seat booking charge applies for your selected seats.
+                </p>
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <span style="font-size: 14px; color: #64748b; font-weight: 600;">Total Charge</span>
+                    <span id="seat-charge-amount" style="font-size: 18px; color: #8b5cf6; font-weight: 800;">LKR 0</span>
+                </div>
+                <p style="margin: 0; font-size: 13px; color: #64748b; line-height: 1.5;">
+                    Do you want to confirm and add this amount to your total ticket price?
+                </p>
+            </div>
+            
+            <!-- Footer -->
+            <div style="background: #f8fafc; border-top: 1px solid #f1f5f9; padding: 15px 24px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                <button type="button" onclick="proceedWithoutSeatsFromCharge()" style="background: transparent; color: #64748b; border: none; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: underline; padding: 0;">
+                    Continue without seat selection
+                </button>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" onclick="cancelSeatCharge()" style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 9px 24px; border-radius: 6px; cursor: pointer; font-size: 13.5px; font-weight: bold; transition: all 0.2s;">
+                        Cancel
+                    </button>
+                    <button type="button" onclick="confirmSeatCharge()" style="background: #16a34a; color: white; border: none; padding: 9px 24px; border-radius: 6px; cursor: pointer; font-size: 13.5px; font-weight: bold; box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.2); transition: all 0.2s;">
+                        Confirm & Proceed
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        @keyframes modalPop {
+            to { transform: scale(1); }
+        }
+    </style>
 
     <!-- ========================================================= -->
     <!-- MODAL OVERLAY: BOOKING SUCCESS & E-TICKET RECEIPT -->
@@ -1405,6 +1297,12 @@
             const dest = urlParams.get('dest') || 'MEL';
             const dateStr = urlParams.get('date') || '2026-05-28';
             const adults = urlParams.get('adults') || '1';
+            const children = urlParams.get('children') || '0';
+            const infants = urlParams.get('infants') || '0';
+            window.searchAdults = parseInt(adults) || 1;
+            window.searchChildren = parseInt(children) || 0;
+            window.searchInfants = parseInt(infants) || 0;
+            window.totalTravelers = window.searchAdults + window.searchChildren + window.searchInfants;
             const returnDateStr = urlParams.get('returnDate') || null;
             
             // Populate Search Summary Card
@@ -1423,9 +1321,9 @@
                 returnDateContainer.style.display = 'none';
             }
             
-            document.getElementById('summary-adults').innerText = adults;
-            document.getElementById('summary-children').innerText = '--';
-            document.getElementById('summary-infant').innerText = '--';
+            document.getElementById('summary-adults').innerText = window.searchAdults;
+            document.getElementById('summary-children').innerText = window.searchChildren;
+            document.getElementById('summary-infant').innerText = window.searchInfants;
 
             fetchFlights(origin, dest, dateStr, returnDateStr);
 
@@ -1452,7 +1350,7 @@
             
             uniqueAirlines.forEach(airline => {
                 const airFlights = flights.filter(f => f.airline === airline);
-                const minPrice = Math.min(...airFlights.map(f => parseFloat(f.price) * 300));
+                const minPrice = Math.min(...airFlights.map(f => parseFloat(f.price) * (window.totalTravelers || 1)));
                 
                 const minDur = Math.min(...airFlights.map(f => {
                     const dur = new Date(f.arrival_time) - new Date(f.departure_time);
@@ -1699,7 +1597,7 @@
 
             let filtered = cachedFlights.filter(f => {
                 // Price Filter
-                const fPriceLkr = parseFloat(f.price) * 300;
+                const fPriceLkr = parseFloat(f.price) * (window.totalTravelers || 1);
                 if (fPriceLkr > maxPrice) return false;
                 
                 // Fare Type (GDS=Refundable, LCC=Non Refundable)
@@ -1803,8 +1701,8 @@
                 });
             } else if (currentSort === 'best') {
                 filtered.sort((a, b) => {
-                    const scoreA = parseFloat(a.price) * 300 + (a.segment_count * 20000) + (a.return_flight ? a.return_flight.segment_count * 20000 : 0);
-                    const scoreB = parseFloat(b.price) * 300 + (b.segment_count * 20000) + (b.return_flight ? b.return_flight.segment_count * 20000 : 0);
+                    const scoreA = parseFloat(a.price) * (window.totalTravelers || 1) + (a.segment_count * 20000) + (a.return_flight ? a.return_flight.segment_count * 20000 : 0);
+                    const scoreB = parseFloat(b.price) * (window.totalTravelers || 1) + (b.segment_count * 20000) + (b.return_flight ? b.return_flight.segment_count * 20000 : 0);
                     return scoreA - scoreB;
                 });
             }
@@ -1842,7 +1740,7 @@
                 const hours = Math.floor(Math.abs(arr - dep) / 36e5);
                 const mins = Math.round((Math.abs(arr - dep) % 36e5) / 60000);
                 
-                const priceLkr = parseFloat(f.price) * 300;
+                const priceLkr = parseFloat(f.price) * (window.totalTravelers || 1);
                 const originalPriceLkr = priceLkr * 1.08;
                 const priceFormatted = "LKR " + Math.round(priceLkr).toLocaleString();
                 const originalPriceFormatted = "LKR " + Math.round(originalPriceLkr).toLocaleString();
@@ -1970,7 +1868,7 @@
                             <div style="width: 210px; text-align: right; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 6px; border-left: 1px solid var(--border-color); padding-left: 20px; margin-left: 20px;">
                                 <div style="font-size: 13px; text-decoration: line-through; color: var(--text-muted);">${originalPriceFormatted}</div>
                                 <div class="fc-price" style="font-size: 24px; font-weight: 800; color: var(--success-green); line-height: 1.1;">${priceFormatted}</div>
-                                <div style="font-size: 11px; color: var(--text-muted); margin-top: -3px; margin-bottom: 5px;">Per Adult</div>
+                                <div style="font-size: 11px; color: var(--text-muted); margin-top: -3px; margin-bottom: 5px;">Total for ${window.totalTravelers || 1} Traveler(s)</div>
                                 
                                 <button class="btn-book" onclick="openBookingModal(${f.id}, ${isRoundTrip ? f.return_flight.id : 'null'}, ${priceLkr}, true)" style="background: var(--success-green); color: white; border: none; padding: 10px 24px; border-radius: 4px; font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; transition: background 0.2s;">Book Now</button>
                                 
@@ -1996,51 +1894,229 @@
             });
         }
 
-        // Helper: Populate DOB and Expiry date dropdowns
-        function populateDobAndExpiryDropdowns() {
-            const days = document.querySelectorAll('#book-dob-day, #book-exp-day');
-            const months = document.querySelectorAll('#book-dob-month, #book-exp-month');
-            const dobYearSelect = document.getElementById('book-dob-year');
-            const expYearSelect = document.getElementById('book-exp-year');
-            
-            // Only populate if they are not already filled
-            if (days[0].options.length > 0) return;
-            
-            days.forEach(sel => {
-                sel.innerHTML = '<option value="">Day</option>';
-                for (let d = 1; d <= 31; d++) {
-                    const dStr = String(d).padStart(2, '0');
-                    sel.innerHTML += `<option value="${dStr}">${d}</option>`;
-                }
-            });
-            
-            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            months.forEach(sel => {
-                sel.innerHTML = '<option value="">Month</option>';
-                monthNames.forEach((m, idx) => {
-                    const mVal = String(idx + 1).padStart(2, '0');
-                    sel.innerHTML += `<option value="${mVal}">${m}</option>`;
-                });
-            });
-            
-            // DOB years (1920 to current year)
-            const currentYear = new Date().getFullYear();
-            dobYearSelect.innerHTML = '<option value="">Year</option>';
-            for (let y = currentYear; y >= 1920; y--) {
-                dobYearSelect.innerHTML += `<option value="${y}">${y}</option>`;
-            }
-            
-            // Expiry years (current year to 20 years in future)
-            expYearSelect.innerHTML = '<option value="">Year</option>';
-            for (let y = currentYear; y <= currentYear + 20; y++) {
-                expYearSelect.innerHTML += `<option value="${y}">${y}</option>`;
-            }
+        function getTravelerFormHtml(index, type, subIndex) {
+            const titleLabel = type === 'adult' ? `Adult ${subIndex}` : type === 'child' ? `Child ${subIndex} (2-11 YRS)` : `Infant ${subIndex} (Under 2 YRS)`;
+            const titleOptions = type === 'adult' 
+                ? `<option value="Mr">Mr</option><option value="Mrs">Mrs</option><option value="Miss">Miss</option><option value="Ms">Ms</option>`
+                : `<option value="Mstr">Mstr</option><option value="Miss">Miss</option>`;
+                
+            const flyerHtml = type === 'adult' ? `
+                <!-- Frequent Flyer Expansion -->
+                <div id="flyer-toggle-${index}" style="color: #0284c7; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 15px; display: inline-flex; align-items: center; gap: 6px;" onclick="toggleFrequentFlyer(${index})">
+                    <span id="flyer-toggle-sign-${index}">+</span> Add optional ( <span style="text-decoration: underline;">Frequent Flyer Number</span> )
+                </div>
+                
+                <!-- Frequent Flyer Expansion Container -->
+                <div id="flyer-container-${index}" class="frequent-flyer-box" style="display: none; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 15px; margin-top: 12px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 12.5px; font-weight: 700; color: #334155; width: 150px;">Frequent Flyer Program</span>
+                            <select id="book-flyer-program-${index}" style="flex: 1; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white;" onchange="updateFrequentFlyerPrefix(${index})">
+                                <option value="UL">Fly Smiles</option>
+                                <option value="EY">Etihad Guest</option>
+                                <option value="EK">Emirates Skywards</option>
+                                <option value="SQ">Singapore KrisFlyer</option>
+                                <option value="OTHER">Other Airlines</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 12.5px; font-weight: 700; color: #334155;">Frequent Flyer Number</span>
+                            <div style="display: flex; flex: 1; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: white;">
+                                <span id="ff-prefix-${index}" style="background: #f1f5f9; padding: 10px 12px; font-size: 14px; border-right: 1px solid #cbd5e1; color: #64748b; font-weight: bold;">UL-</span>
+                                <input type="text" id="book-flyer-number-${index}" placeholder="Your Flyer Number" style="border: none; outline: none; padding: 10px 12px; font-size: 14px; flex: 1;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ` : '';
+
+            return `
+                <div class="traveler-details-card" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                    <!-- Collapsible Header -->
+                    <div class="traveler-header" onclick="toggleTravelerDetails(${index})" style="display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: 700; color: #1e293b; cursor: pointer; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; margin-bottom: 18px;">
+                        <span style="display: flex; align-items: center; gap: 8px; color: #1e293b;">
+                            <span style="position: relative; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #e0f2fe; color: #0284c7; border-radius: 50%;">
+                                <i class="fa-solid fa-user" style="font-size: 14px;"></i>
+                                <i class="fa-solid fa-circle-check" style="position: absolute; bottom: -2px; right: -2px; font-size: 10px; color: #10b981; background: white; border-radius: 50%;"></i>
+                            </span>
+                            ${titleLabel}
+                        </span>
+                        <i class="fa-solid fa-chevron-down" id="traveler-chevron-${index}" style="color: #64748b; font-size: 14px;"></i>
+                    </div>
+                    
+                    <div id="traveler-form-body-${index}">
+                        <!-- Passenger Name Fields -->
+                        <div style="display: grid; grid-template-columns: 140px 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                            <div>
+                                <label style="display:block; font-size:12.5px; font-weight:700; color:#334155; margin-bottom:6px;">Title</label>
+                                <select id="book-title-${index}" class="form-control" onchange="updateFormattedPaxName()" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white; outline: none; transition: border-color 0.2s;">
+                                    ${titleOptions}
+                                </select>
+                            </div>
+                            <div style="display: flex; flex-direction: column; justify-content: flex-end;">
+                                <input type="text" id="book-lastname-${index}" placeholder="Surnames (Lastnames)" required oninput="updateFormattedPaxName()" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white; outline: none; transition: border-color 0.2s;">
+                            </div>
+                            <div style="display: flex; flex-direction: column; justify-content: flex-end;">
+                                <input type="text" id="book-firstname-${index}" placeholder="Other Names (Firstnames)" required oninput="updateFormattedPaxName()" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white; outline: none; transition: border-color 0.2s;">
+                            </div>
+                        </div>
+                        
+                        <!-- Date of Birth (DOB) -->
+                        <div style="display: grid; grid-template-columns: 140px 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; align-items: center;">
+                            <label style="font-size:12.5px; font-weight:700; color:#334155; margin-bottom: 0;">Date of Birth</label>
+                            <div>
+                                <select id="book-dob-day-${index}" required style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white;"></select>
+                            </div>
+                            <div>
+                                <select id="book-dob-month-${index}" required style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white;"></select>
+                            </div>
+                            <div>
+                                <select id="book-dob-year-${index}" required style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white;"></select>
+                            </div>
+                        </div>
+                        
+                        <!-- Passport number -->
+                        <div style="display: grid; grid-template-columns: 140px 1fr; gap: 15px; margin-bottom: 20px; align-items: center;">
+                            <label style="font-size:12.5px; font-weight:700; color:#334155; margin-bottom: 0;">Passport No</label>
+                            <div>
+                                <input type="text" id="book-passport-new-${index}" placeholder="Passport Number" required oninput="syncFormValues()" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white; outline: none; transition: border-color 0.2s;">
+                            </div>
+                        </div>
+                        
+                        <!-- Expiry date & country of issue -->
+                        <div style="display: grid; grid-template-columns: 140px 1fr 1fr 1fr 1.5fr; gap: 15px; margin-bottom: 20px; align-items: center;">
+                            <label style="font-size:12.5px; font-weight:700; color:#334155; margin-bottom: 0;">Expiry Date</label>
+                            <div>
+                                <select id="book-exp-day-${index}" required style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white;"></select>
+                            </div>
+                            <div>
+                                <select id="book-exp-month-${index}" required style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white;"></select>
+                            </div>
+                            <div>
+                                <select id="book-exp-year-${index}" required style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white;"></select>
+                            </div>
+                            <div>
+                                <select id="book-passport-country-${index}" required style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white;">
+                                    <option value="LK">Sri Lanka</option>
+                                    <option value="IN">India</option>
+                                    <option value="MV">Maldives</option>
+                                    <option value="SG">Singapore</option>
+                                    <option value="GB">United Kingdom</option>
+                                    <option value="US">United States</option>
+                                    <option value="AE">United Arab Emirates</option>
+                                    <option value="QA">Qatar</option>
+                                    <option value="AU">Australia</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        ${flyerHtml}
+
+                        <!-- Value Added Services & Special Requests Section for each passenger -->
+                        <div style="margin-top: 20px; border-top: 1.5px dashed #e2e8f0; padding-top: 20px;">
+                            <!-- Header -->
+                            <div onclick="togglePaxSpecialRequests(${index})" style="display: flex; justify-content: space-between; align-items: center; font-size: 14.5px; font-weight: 700; color: #1e293b; cursor: pointer; margin-bottom: 15px;">
+                                <span style="display: flex; align-items: center; gap: 8px; color: #1e293b;">
+                                    <span style="position: relative; display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: #fef3c7; color: #d97706; border-radius: 50%;">
+                                        <i class="fa-solid fa-hand-holding-heart" style="font-size: 12.5px;"></i>
+                                    </span>
+                                    Value Added Services & Special Requests
+                                </span>
+                                <i class="fa-solid fa-chevron-down" id="pax-requests-chevron-${index}" style="color: #64748b; font-size: 13px;"></i>
+                            </div>
+                            
+                            <div id="pax-requests-form-body-${index}">
+                                <!-- Meal preference and Wheelchair request -->
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                    <div>
+                                        <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:6px;">Special Meal Request</label>
+                                        <select id="book-meal-pref-${index}" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; background: white; outline: none;">
+                                            <option value="Standard Meal">Standard Meal (No Preference)</option>
+                                            <option value="Vegetarian Meal (VGML)">Vegetarian Meal (VGML)</option>
+                                            <option value="Halal Meal (MOML)">Halal Meal (MOML)</option>
+                                            <option value="Kosher Meal (KSML)">Kosher Meal (KSML)</option>
+                                            <option value="Diabetic Meal (DBML)">Diabetic Meal (DBML)</option>
+                                            <option value="Gluten-Free Meal (GFML)">Gluten-Free Meal (GFML)</option>
+                                            <option value="Child Meal (CHML)">Child Meal (CHML)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:6px;">Wheelchair Request</label>
+                                        <select id="book-wheelchair-${index}" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; background: white; outline: none;">
+                                            <option value="No wheelchair assistance required">No wheelchair assistance required</option>
+                                            <option value="Wheelchair for ramp (WCHR)">Wheelchair for ramp (WCHR)</option>
+                                            <option value="Wheelchair for steps (WCHS)">Wheelchair for steps (WCHS)</option>
+                                            <option value="Wheelchair to cabin seat (WCHC)">Wheelchair all the way to cabin seat (WCHC)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <!-- Airport special assistance and Allergy conditions -->
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                    <div>
+                                        <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:6px;">Airport Special Assistance</label>
+                                        <select id="book-airport-assist-${index}" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; background: white; outline: none;">
+                                            <option value="No special airport assistance">No special airport assistance</option>
+                                            <option value="Meet & Assist (MAAS)">Meet & Assist (MAAS)</option>
+                                            <option value="Deaf passenger assistance (DEAF)">Deaf passenger assistance (DEAF)</option>
+                                            <option value="Blind passenger assistance (BLND)">Blind passenger assistance (BLND)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:6px;">Allergy Conditions</label>
+                                        <input type="text" id="book-allergies-${index}" placeholder="e.g., Peanut allergy, lactose intolerant..." style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; background: white; outline: none;">
+                                    </div>
+                                </div>
+    
+                                <!-- Other Requests -->
+                                <div style="margin-bottom: 15px;">
+                                    <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:6px;">Other Requests / Booking Remarks</label>
+                                    <textarea id="book-other-req-${index}" rows="2" placeholder="Describe any other airport requests or travel assistance requirements here..." style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; background: white; outline: none; resize: vertical; box-sizing: border-box; font-family: inherit;"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Details for each passenger -->
+                        <div style="margin-top: 15px; border-top: 1.5px dashed #e2e8f0; padding-top: 15px;">
+                            <div style="font-size: 14.5px; font-weight: 700; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                                <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: #e0f2fe; color: #0284c7; border-radius: 50%;">
+                                    <i class="fa-solid fa-address-book" style="font-size: 12.5px;"></i>
+                                </span>
+                                Passenger Contact Details
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 10px;">
+                                <div>
+                                    <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:6px;">Mobile Number</label>
+                                    <div style="display: flex; gap: 6px;">
+                                        <select id="book-phone-prefix-${index}" style="padding: 8px 6px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; background: white; outline: none; width: 85px;">
+                                            <option value="+94">🇱🇰 +94</option>
+                                            <option value="+91">🇮🇳 +91</option>
+                                            <option value="+960">🇲🇻 +960</option>
+                                            <option value="+65">🇸🇬 +65</option>
+                                            <option value="+44">🇬🇧 +44</option>
+                                            <option value="+1">🇺🇸 +1</option>
+                                            <option value="+971">🇦🇪 +971</option>
+                                            <option value="+974">🇶🇦 +974</option>
+                                            <option value="+61">🇦🇺 +61</option>
+                                        </select>
+                                        <input type="text" id="book-phone-number-${index}" placeholder="Mobile number" required style="flex: 1; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; background: white; outline: none;">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:6px;">E-mail Address</label>
+                                    <input type="email" id="book-email-new-${index}" placeholder="Email address" required style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; background: white; outline: none;">
+                                </div>
+                            </div>
+                            <div style="font-size: 11px; color: #64748b; margin-top: 5px;">* E-ticket voucher for this passenger will be sent to this E-mail address</div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
-        
-        // Helper: Toggle traveler card visibility
-        function toggleTravelerDetails() {
-            const body = document.getElementById('traveler-form-body');
-            const chev = document.getElementById('traveler-chevron');
+
+        function toggleTravelerDetails(index) {
+            const body = document.getElementById(`traveler-form-body-${index}`);
+            const chev = document.getElementById(`traveler-chevron-${index}`);
             if (body.style.display === 'none') {
                 body.style.display = 'block';
                 chev.className = 'fa-solid fa-chevron-down';
@@ -2049,11 +2125,22 @@
                 chev.className = 'fa-solid fa-chevron-right';
             }
         }
-        
-        // Helper: Toggle Frequent Flyer program
-        function toggleFrequentFlyer() {
-            const container = document.getElementById('flyer-container');
-            const sign = document.getElementById('flyer-toggle-sign');
+
+        function togglePaxSpecialRequests(index) {
+            const body = document.getElementById(`pax-requests-form-body-${index}`);
+            const chev = document.getElementById(`pax-requests-chevron-${index}`);
+            if (body.style.display === 'none') {
+                body.style.display = 'block';
+                chev.className = 'fa-solid fa-chevron-down';
+            } else {
+                body.style.display = 'none';
+                chev.className = 'fa-solid fa-chevron-right';
+            }
+        }
+
+        function toggleFrequentFlyer(index) {
+            const container = document.getElementById(`flyer-container-${index}`);
+            const sign = document.getElementById(`flyer-toggle-sign-${index}`);
             if (container.style.display === 'none') {
                 container.style.display = 'block';
                 sign.innerText = '-';
@@ -2063,34 +2150,177 @@
             }
         }
         
+        function updateFrequentFlyerPrefix(index) {
+            const prog = document.getElementById(`book-flyer-program-${index}`).value;
+            const prefixEl = document.getElementById(`ff-prefix-${index}`);
+            if (prog === 'OTHER') {
+                const outboundId = parseInt(document.getElementById('book-outbound-id').value);
+                const flight = cachedFlights.find(fl => fl.id === outboundId);
+                if (flight && flight.flight_number) {
+                    prefixEl.innerText = flight.flight_number.split('-')[0] + '-';
+                } else {
+                    prefixEl.innerText = 'EY-';
+                }
+            } else {
+                prefixEl.innerText = prog + '-';
+            }
+        }
+
+        function populateDropdownsForPax(index, type) {
+            const dobDaySelect = document.getElementById(`book-dob-day-${index}`);
+            const dobMonthSelect = document.getElementById(`book-dob-month-${index}`);
+            const dobYearSelect = document.getElementById(`book-dob-year-${index}`);
+            
+            const expDaySelect = document.getElementById(`book-exp-day-${index}`);
+            const expMonthSelect = document.getElementById(`book-exp-month-${index}`);
+            const expYearSelect = document.getElementById(`book-exp-year-${index}`);
+            
+            if (!dobDaySelect) return;
+            
+            // Days (1-31)
+            let daysHtml = '';
+            for (let i = 1; i <= 31; i++) {
+                const dayVal = i < 10 ? '0' + i : '' + i;
+                daysHtml += `<option value="${dayVal}">${i}</option>`;
+            }
+            dobDaySelect.innerHTML = daysHtml;
+            expDaySelect.innerHTML = daysHtml;
+            
+            // Months
+            const months = [
+                { val: '01', name: 'Jan' }, { val: '02', name: 'Feb' }, { val: '03', name: 'Mar' },
+                { val: '04', name: 'Apr' }, { val: '05', name: 'May' }, { val: '06', name: 'Jun' },
+                { val: '07', name: 'Jul' }, { val: '08', name: 'Aug' }, { val: '09', name: 'Sep' },
+                { val: '10', name: 'Oct' }, { val: '11', name: 'Nov' }, { val: '12', name: 'Dec' }
+            ];
+            let monthsHtml = '';
+            months.forEach(m => {
+                monthsHtml += `<option value="${m.val}">${m.name}</option>`;
+            });
+            dobMonthSelect.innerHTML = monthsHtml;
+            expMonthSelect.innerHTML = monthsHtml;
+            
+            // DOB Years
+            let dobYearsHtml = '';
+            const currentYear = new Date().getFullYear();
+            if (type === 'adult') {
+                for (let i = currentYear - 12; i >= currentYear - 100; i--) {
+                    dobYearsHtml += `<option value="${i}">${i}</option>`;
+                }
+            } else if (type === 'child') {
+                for (let i = currentYear - 2; i >= currentYear - 11; i--) {
+                    dobYearsHtml += `<option value="${i}">${i}</option>`;
+                }
+            } else {
+                for (let i = currentYear; i >= currentYear - 2; i--) {
+                    dobYearsHtml += `<option value="${i}">${i}</option>`;
+                }
+            }
+            dobYearSelect.innerHTML = dobYearsHtml;
+            
+            // Expiry Years
+            let expYearsHtml = '';
+            for (let i = currentYear; i <= currentYear + 20; i++) {
+                expYearsHtml += `<option value="${i}">${i}</option>`;
+            }
+            expYearSelect.innerHTML = expYearsHtml;
+        }
+        
         // Helper: Concatenate title, first and last name to book-pax-name
         function updateFormattedPaxName() {
-            const title = document.getElementById('book-title').value;
-            const lastname = document.getElementById('book-lastname').value.trim();
-            const firstname = document.getElementById('book-firstname').value.trim();
-            const fullname = `${title} ${firstname} ${lastname}`.trim();
-            document.getElementById('book-pax-name').value = fullname;
+            let allNames = [];
+            for (let i = 1; i <= window.totalTravelers; i++) {
+                const title = document.getElementById(`book-title-${i}`).value;
+                const lastname = document.getElementById(`book-lastname-${i}`).value.trim();
+                const firstname = document.getElementById(`book-firstname-${i}`).value.trim();
+                if (firstname || lastname) {
+                    allNames.push(`${title} ${firstname} ${lastname}`.trim());
+                }
+            }
+            document.getElementById('book-pax-name').value = allNames.join(' & ');
         }
         
         // Helper: Synchronize mobile, email, passport to original form hidden fields
         function syncFormValues() {
-            // Passport
-            const passportNew = document.getElementById('book-passport-new').value.trim();
-            document.getElementById('book-passport').value = passportNew;
+            // Names
+            updateFormattedPaxName();
+
+            // Passports
+            let allPassports = [];
+            for (let i = 1; i <= window.totalTravelers; i++) {
+                const el = document.getElementById(`book-passport-new-${i}`);
+                const passport = el ? el.value.trim() : '';
+                if (passport) {
+                    allPassports.push(passport);
+                }
+            }
+            document.getElementById('book-passport').value = allPassports.join(', ');
             
             // Mobile
-            const prefix = document.getElementById('book-phone-prefix').value;
-            const number = document.getElementById('book-phone-number').value.trim();
-            document.getElementById('book-phone').value = prefix + ' ' + number;
+            let allMobiles = [];
+            for (let i = 1; i <= window.totalTravelers; i++) {
+                const prefEl = document.getElementById(`book-phone-prefix-${i}`);
+                const numEl = document.getElementById(`book-phone-number-${i}`);
+                const prefix = prefEl ? prefEl.value : '+94';
+                const number = numEl ? numEl.value.trim() : '';
+                if (number) {
+                    allMobiles.push(prefix + ' ' + number);
+                }
+            }
+            document.getElementById('book-phone').value = allMobiles.join(', ');
             
             // Email
-            const emailNew = document.getElementById('book-email-new').value.trim();
-            document.getElementById('book-email').value = emailNew;
+            let allEmails = [];
+            for (let i = 1; i <= window.totalTravelers; i++) {
+                const el = document.getElementById(`book-email-new-${i}`);
+                const emailNew = el ? el.value.trim() : '';
+                if (emailNew) {
+                    allEmails.push(emailNew);
+                }
+            }
+            document.getElementById('book-email').value = allEmails.join(', ');
         }
 
         let currentStep = 1;
 
         function goToStep(stepNum) {
+            if (stepNum === 3 && !window.bypassSeatCheck) {
+                const outboundId = parseInt(document.getElementById('book-outbound-id').value);
+                
+                fetch('/api/flights/seat-availability', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({flight_id: outboundId})
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        if (!data.early_seat_selection_available) {
+                            showNoSeatSelectionModal();
+                        } else {
+                            const totalSelectedSeats = selectedOutboundSeats.length + selectedReturnSeats.length;
+                            if (data.seat_charge > 0 && totalSelectedSeats > 0) {
+                                const totalCharge = data.seat_charge * totalSelectedSeats;
+                                promptSeatCharge(totalCharge);
+                            } else {
+                                window.extraSeatCharge = 0;
+                                finalizeGoToStep(3);
+                            }
+                        }
+                    } else {
+                        finalizeGoToStep(3);
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    finalizeGoToStep(3);
+                });
+                return;
+            }
+            finalizeGoToStep(stepNum);
+        }
+
+        function finalizeGoToStep(stepNum) {
             if (stepNum === 2 && currentStep === 1) {
                 if (!validateStep1()) return;
             }
@@ -2143,31 +2373,41 @@
         }
 
         function validateStep1() {
-            const lastname = document.getElementById('book-lastname');
-            const firstname = document.getElementById('book-firstname');
-            const dobDay = document.getElementById('book-dob-day');
-            const dobMonth = document.getElementById('book-dob-month');
-            const dobYear = document.getElementById('book-dob-year');
-            const passport = document.getElementById('book-passport-new');
-            const expDay = document.getElementById('book-exp-day');
-            const expMonth = document.getElementById('book-exp-month');
-            const expYear = document.getElementById('book-exp-year');
-            const phone = document.getElementById('book-phone-number');
-            const email = document.getElementById('book-email-new');
-            const confirmCB = document.getElementById('book-confirm-names');
-            
             let valid = true;
-            const fields = [lastname, firstname, dobDay, dobMonth, dobYear, passport, expDay, expMonth, expYear, phone, email];
-            
-            fields.forEach(f => {
-                if (!f.value || f.value.trim() === '') {
-                    f.style.borderColor = '#ef4444';
-                    valid = false;
-                } else {
-                    f.style.borderColor = '#cbd5e1';
+            for (let i = 1; i <= window.totalTravelers; i++) {
+                const lastname = document.getElementById(`book-lastname-${i}`);
+                const firstname = document.getElementById(`book-firstname-${i}`);
+                const dobDay = document.getElementById(`book-dob-day-${i}`);
+                const dobMonth = document.getElementById(`book-dob-month-${i}`);
+                const dobYear = document.getElementById(`book-dob-year-${i}`);
+                const passport = document.getElementById(`book-passport-new-${i}`);
+                const expDay = document.getElementById(`book-exp-day-${i}`);
+                const expMonth = document.getElementById(`book-exp-month-${i}`);
+                const expYear = document.getElementById(`book-exp-year-${i}`);
+                const phone = document.getElementById(`book-phone-number-${i}`);
+                const email = document.getElementById(`book-email-new-${i}`);
+                
+                const fields = [lastname, firstname, dobDay, dobMonth, dobYear, passport, expDay, expMonth, expYear, phone, email];
+                fields.forEach(f => {
+                    if (!f || !f.value || f.value.trim() === '') {
+                        if (f) f.style.borderColor = '#ef4444';
+                        valid = false;
+                    } else {
+                        if (f) f.style.borderColor = '#cbd5e1';
+                    }
+                });
+                
+                if (email && email.value && email.value.trim() !== '') {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(email.value.trim())) {
+                        email.style.borderColor = '#ef4444';
+                        alert(`Please enter a valid email address for Traveler ${i}.`);
+                        valid = false;
+                    }
                 }
-            });
+            }
             
+            const confirmCB = document.getElementById('book-confirm-names');
             if (!confirmCB.checked) {
                 confirmCB.parentElement.style.borderColor = '#ef4444';
                 confirmCB.parentElement.style.background = '#fef2f2';
@@ -2182,34 +2422,67 @@
                 return false;
             }
             
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email.value.trim())) {
-                email.style.borderColor = '#ef4444';
-                alert("Please enter a valid email address.");
-                return false;
-            }
-            
             return true;
         }
 
         function populateBookingSummary() {
-            document.getElementById('summary-pax-name').innerText = document.getElementById('book-pax-name').value || 'N/A';
-            document.getElementById('summary-pax-passport').innerText = document.getElementById('book-passport-new').value || 'N/A';
+            let names = [];
+            let passports = [];
+            let dobs = [];
+            let mobiles = [];
+            let emails = [];
+            let ffs = [];
             
-            const dob = `${document.getElementById('book-dob-day').value}/${document.getElementById('book-dob-month').value}/${document.getElementById('book-dob-year').value}`;
-            document.getElementById('summary-pax-dob').innerText = dob || 'N/A';
+            let meals = [];
+            let wheelchairs = [];
+            let airports = [];
+            let allergies = [];
+            let others = [];
             
-            const mobile = document.getElementById('book-phone-prefix').value + ' ' + document.getElementById('book-phone-number').value;
-            document.getElementById('summary-pax-mobile').innerText = mobile || 'N/A';
-            document.getElementById('summary-pax-email').innerText = document.getElementById('book-email-new').value || 'N/A';
-            
-            const ffNum = document.getElementById('book-flyer-number').value.trim();
-            const ffProg = document.getElementById('book-flyer-program').value;
-            if (ffNum) {
-                document.getElementById('summary-pax-ff').innerText = `${ffProg} (${ffNum})`;
-            } else {
-                document.getElementById('summary-pax-ff').innerText = 'None';
+            for (let i = 1; i <= window.totalTravelers; i++) {
+                const title = document.getElementById(`book-title-${i}`).value;
+                const last = document.getElementById(`book-lastname-${i}`).value.trim();
+                const first = document.getElementById(`book-firstname-${i}`).value.trim();
+                names.push(`${title} ${first} ${last}`.trim());
+                
+                const p = document.getElementById(`book-passport-new-${i}`).value.trim();
+                passports.push(p);
+                
+                const dob = `${document.getElementById(`book-dob-day-${i}`).value}/${document.getElementById(`book-dob-month-${i}`).value}/${document.getElementById(`book-dob-year-${i}`).value}`;
+                dobs.push(dob);
+                
+                const pref = document.getElementById(`book-phone-prefix-${i}`).value;
+                const num = document.getElementById(`book-phone-number-${i}`).value.trim();
+                mobiles.push(`${pref} ${num}`);
+                
+                const email = document.getElementById(`book-email-new-${i}`).value.trim();
+                emails.push(email);
+                
+                const ffNum = document.getElementById(`book-flyer-number-${i}`) ? document.getElementById(`book-flyer-number-${i}`).value.trim() : '';
+                const ffProg = document.getElementById(`book-flyer-program-${i}`) ? document.getElementById(`book-flyer-program-${i}`).value : 'UL';
+                if (ffNum) {
+                    ffs.push(`${ffProg} (${ffNum})`);
+                }
+                
+                const meal = document.getElementById(`book-meal-pref-${i}`).value;
+                const wc = document.getElementById(`book-wheelchair-${i}`).value;
+                const ap = document.getElementById(`book-airport-assist-${i}`).value;
+                const al = document.getElementById(`book-allergies-${i}`).value.trim();
+                const o = document.getElementById(`book-other-req-${i}`).value.trim();
+                
+                meals.push(`Pax ${i}: ${meal}`);
+                wheelchairs.push(`Pax ${i}: ${wc}`);
+                airports.push(`Pax ${i}: ${ap}`);
+                if (al) allergies.push(`Pax ${i}: ${al}`);
+                if (o) others.push(`Pax ${i}: ${o}`);
             }
+            
+            document.getElementById('summary-pax-name').innerText = names.join(' & ');
+            document.getElementById('summary-pax-passport').innerText = passports.join(', ');
+            document.getElementById('summary-pax-dob').innerText = dobs.join(', ');
+            document.getElementById('summary-pax-mobile').innerText = mobiles.join(', ');
+            document.getElementById('summary-pax-email').innerText = emails.join(', ');
+            document.getElementById('summary-pax-ff').innerText = ffs.join(', ') || 'None';
             
             const outSeat = document.getElementById('book-seat').value || 'Not selected';
             const retSeat = document.getElementById('book-return-seat').value || 'Not selected';
@@ -2224,14 +2497,27 @@
             }
             
             const displayPrice = document.getElementById('book-display-price').innerText;
-            document.getElementById('summary-total-price').innerText = displayPrice;
+            const priceNum = parseFloat(displayPrice.replace(/[^0-9.]/g, ''));
+            const extraCharge = window.extraSeatCharge || 0;
+            const finalPrice = priceNum + extraCharge;
             
-            // Populate Special Requests & Meals
-            document.getElementById('summary-pax-meal').innerText = document.getElementById('book-meal-pref').value;
-            document.getElementById('summary-pax-wheelchair').innerText = document.getElementById('book-wheelchair').value;
-            document.getElementById('summary-pax-airport').innerText = document.getElementById('book-airport-assist').value;
-            document.getElementById('summary-pax-allergies').innerText = document.getElementById('book-allergies').value.trim() || 'None';
-            document.getElementById('summary-pax-other').innerText = document.getElementById('book-other-req').value.trim() || 'None';
+            const seatChargeContainer = document.getElementById('summary-seat-charge-container');
+            if (seatChargeContainer) {
+                if (extraCharge > 0) {
+                    document.getElementById('summary-seat-charge').innerText = 'LKR ' + extraCharge.toLocaleString('en-US', {minimumFractionDigits: 2});
+                    seatChargeContainer.style.display = 'block';
+                } else {
+                    seatChargeContainer.style.display = 'none';
+                }
+            }
+            
+            document.getElementById('summary-total-price').innerText = 'LKR ' + finalPrice.toLocaleString('en-US', {minimumFractionDigits: 2});
+            
+            document.getElementById('summary-pax-meal').innerText = meals.join(', ') || 'Standard Meal';
+            document.getElementById('summary-pax-wheelchair').innerText = wheelchairs.join(', ') || 'No wheelchair assistance required';
+            document.getElementById('summary-pax-airport').innerText = airports.join(', ') || 'No special airport assistance';
+            document.getElementById('summary-pax-allergies').innerText = allergies.join(', ') || 'None';
+            document.getElementById('summary-pax-other').innerText = others.join(', ') || 'None';
         }
 
         function toggleSpecialRequests() {
@@ -2305,43 +2591,29 @@
             document.getElementById('v-card-expiry').innerText = expiry;
         }
 
-        function updateFrequentFlyerPrefix() {
-            const prog = document.getElementById('book-flyer-program').value;
-            const prefixEl = document.getElementById('ff-prefix');
-            if (prog === 'OTHER') {
-                const outboundId = parseInt(document.getElementById('book-outbound-id').value);
-                const flight = cachedFlights.find(fl => fl.id === outboundId);
-                if (flight && flight.flight_number) {
-                    prefixEl.innerText = flight.flight_number.split('-')[0] + '-';
-                } else {
-                    prefixEl.innerText = 'EY-';
-                }
-            } else {
-                prefixEl.innerText = prog + '-';
-            }
-        }
-
         // --- Interactive Seat Map fuselage selector logic ---
-        let selectedOutboundSeat = '';
-        let selectedReturnSeat = '';
+        let selectedOutboundSeats = [];
+        let selectedReturnSeats = [];
         let activeSeatTab = 'outbound';
-        let seatOccupancyMap = {}; 
+        let seatOccupancyMap = {};
 
         function initializeSeats(outboundId, returnId) {
-            selectedOutboundSeat = '';
-            selectedReturnSeat = '';
+            selectedOutboundSeats = [];
+            selectedReturnSeats = [];
             activeSeatTab = 'outbound';
             
             // Seed occupancy based on flight IDs to make it look realistic
             seatOccupancyMap = {};
             const seed = (outboundId || 0) + (returnId || 0);
             const rows = 8;
-            const cols = ['A', 'B', 'C', 'D', 'E', 'F'];
+            const cols = ['A', 'B', 'C', 'aisle', 'D', 'E', 'F'];
             for (let r = 1; r <= rows; r++) {
                 cols.forEach(c => {
-                    const seatName = `${r}${c}`;
-                    const hash = (r * 31 + c.charCodeAt(0) * 17 + seed) % 100;
-                    seatOccupancyMap[seatName] = hash < 25; // 25% occupancy
+                    if (c !== 'aisle') {
+                        const seatName = `${r}${c}`;
+                        const hash = (r * 31 + c.charCodeAt(0) * 17 + seed) % 100;
+                        seatOccupancyMap[seatName] = hash < 25; // 25% occupancy
+                    }
                 });
             }
 
@@ -2362,6 +2634,28 @@
 
         function switchSeatTab(tab) {
             activeSeatTab = tab;
+            
+            const outboundTab = document.getElementById('seat-tab-outbound');
+            const returnTab = document.getElementById('seat-tab-return');
+            
+            if (tab === 'outbound') {
+                outboundTab.style.background = '#1e3a8a';
+                outboundTab.style.color = '#ffffff';
+                outboundTab.style.borderColor = '#1e3a8a';
+                
+                returnTab.style.background = '#ffffff';
+                returnTab.style.color = '#475569';
+                returnTab.style.borderColor = '#cbd5e1';
+            } else {
+                returnTab.style.background = '#1e3a8a';
+                returnTab.style.color = '#ffffff';
+                returnTab.style.borderColor = '#1e3a8a';
+                
+                outboundTab.style.background = '#ffffff';
+                outboundTab.style.color = '#475569';
+                outboundTab.style.borderColor = '#cbd5e1';
+            }
+            
             document.getElementById('seat-tab-outbound').classList.toggle('active', tab === 'outbound');
             document.getElementById('seat-tab-return').classList.toggle('active', tab === 'return');
             
@@ -2374,7 +2668,7 @@
             
             const rows = 8;
             const cols = ['A', 'B', 'C', 'aisle', 'D', 'E', 'F'];
-            const currentSelection = (activeSeatTab === 'outbound') ? selectedOutboundSeat : selectedReturnSeat;
+            const currentSelectionArray = (activeSeatTab === 'outbound') ? selectedOutboundSeats : selectedReturnSeats;
             
             for (let r = 1; r <= rows; r++) {
                 const rowDiv = document.createElement('div');
@@ -2388,7 +2682,7 @@
                     } else {
                         const seatName = `${r}${c}`;
                         const isOccupied = seatOccupancyMap[seatName];
-                        const isSelected = currentSelection === seatName;
+                        const isSelected = currentSelectionArray.includes(seatName);
                         
                         seatDiv.className = `seat ${isOccupied ? 'occupied' : ''} ${isSelected ? 'selected' : ''}`;
                         seatDiv.innerText = seatName;
@@ -2404,19 +2698,39 @@
                 grid.appendChild(rowDiv);
             }
             
-            const selectedText = currentSelection ? currentSelection : 'None';
+            const selectedText = currentSelectionArray.length > 0 ? currentSelectionArray.join(', ') : 'None';
             document.getElementById('selected-seat-display').innerText = selectedText;
         }
 
         function selectSeat(seatName) {
+            const maxS = window.totalTravelers || 1;
             if (activeSeatTab === 'outbound') {
-                selectedOutboundSeat = seatName;
-                document.getElementById('book-seat').value = seatName;
+                if (selectedOutboundSeats.includes(seatName)) {
+                    selectedOutboundSeats = selectedOutboundSeats.filter(s => s !== seatName);
+                } else if (selectedOutboundSeats.length < maxS) {
+                    selectedOutboundSeats.push(seatName);
+                } else {
+                    alert('You can only select up to ' + maxS + ' seat(s).');
+                    return;
+                }
+                document.getElementById('book-seat').value = selectedOutboundSeats.join(', ');
+                renderSeatGrid();
+                if (selectedOutboundSeats.length === maxS) {
+                    const returnId = document.getElementById('book-return-id').value;
+                    if (returnId) setTimeout(() => switchSeatTab('return'), 300);
+                }
             } else {
-                selectedReturnSeat = seatName;
-                document.getElementById('book-return-seat').value = seatName;
+                if (selectedReturnSeats.includes(seatName)) {
+                    selectedReturnSeats = selectedReturnSeats.filter(s => s !== seatName);
+                } else if (selectedReturnSeats.length < maxS) {
+                    selectedReturnSeats.push(seatName);
+                } else {
+                    alert('You can only select up to ' + maxS + ' seat(s).');
+                    return;
+                }
+                document.getElementById('book-return-seat').value = selectedReturnSeats.join(', ');
+                renderSeatGrid();
             }
-            renderSeatGrid();
         }
 
         function openBookingModal(outboundId, returnId, priceLkr, ticketNow) {
@@ -2441,24 +2755,47 @@
             // Go to step 1
             goToStep(1);
             
-            // Initialize forms & select components
-            populateDobAndExpiryDropdowns();
+            // Dynamically generate traveler forms
+            const travelersContainer = document.getElementById('travelers-forms-container');
+            if (travelersContainer) {
+                travelersContainer.innerHTML = '';
+                let travelerIdx = 1;
+                
+                // Adults
+                for (let i = 1; i <= (window.searchAdults || 1); i++) {
+                    travelersContainer.innerHTML += getTravelerFormHtml(travelerIdx, 'adult', i);
+                    travelerIdx++;
+                }
+                // Children
+                for (let i = 1; i <= (window.searchChildren || 0); i++) {
+                    travelersContainer.innerHTML += getTravelerFormHtml(travelerIdx, 'child', i);
+                    travelerIdx++;
+                }
+                // Infants
+                for (let i = 1; i <= (window.searchInfants || 0); i++) {
+                    travelersContainer.innerHTML += getTravelerFormHtml(travelerIdx, 'infant', i);
+                    travelerIdx++;
+                }
+                
+                // Populate dropdowns for each traveler
+                let currentIdx = 1;
+                for (let i = 1; i <= (window.searchAdults || 1); i++) {
+                    populateDropdownsForPax(currentIdx, 'adult');
+                    currentIdx++;
+                }
+                for (let i = 1; i <= (window.searchChildren || 0); i++) {
+                    populateDropdownsForPax(currentIdx, 'child');
+                    currentIdx++;
+                }
+                for (let i = 1; i <= (window.searchInfants || 0); i++) {
+                    populateDropdownsForPax(currentIdx, 'infant');
+                    currentIdx++;
+                }
+            }
+
             initializeSeats(outboundId, returnId);
             
-            // Clean inputs
-            document.getElementById('book-lastname').value = '';
-            document.getElementById('book-firstname').value = '';
-            document.getElementById('book-passport-new').value = '';
-            document.getElementById('book-phone-number').value = '';
-            document.getElementById('book-email-new').value = '';
             document.getElementById('book-confirm-names').checked = false;
-            
-            // Clean Special service requests
-            document.getElementById('book-meal-pref').value = 'Standard Meal';
-            document.getElementById('book-wheelchair').value = 'No wheelchair assistance required';
-            document.getElementById('book-airport-assist').value = 'No special airport assistance';
-            document.getElementById('book-allergies').value = '';
-            document.getElementById('book-other-req').value = '';
             
             document.getElementById('pay-method-credit').checked = true;
             updatePaymentSelection('credit');
@@ -2475,30 +2812,6 @@
             document.getElementById('book-passport').value = '';
             document.getElementById('book-phone').value = '';
             document.getElementById('book-email').value = '';
-            
-            // Set Frequent Flyer default program & prefix dynamically
-            const flight = cachedFlights.find(fl => fl.id === outboundId);
-            let airlineCode = 'EY'; // fallback
-            if (flight && flight.flight_number) {
-                const parts = flight.flight_number.split('-');
-                if (parts.length > 0) {
-                    airlineCode = parts[0].toUpperCase();
-                }
-            }
-            
-            document.getElementById('ff-prefix').innerText = airlineCode + '-';
-            const flyerProg = document.getElementById('book-flyer-program');
-            let matchedOption = false;
-            for (let i = 0; i < flyerProg.options.length; i++) {
-                if (flyerProg.options[i].value === airlineCode) {
-                    flyerProg.selectedIndex = i;
-                    matchedOption = true;
-                    break;
-                }
-            }
-            if (!matchedOption) {
-                flyerProg.value = 'OTHER';
-            }
             
             // Show modal
             document.getElementById('booking-modal').style.display = 'flex';
@@ -2551,8 +2864,25 @@ function printReceipt() {
 
         function generateEticket(data, payload) {
             document.getElementById('eticket-pnr').innerText = data.pnr_reference || '-';
-            document.getElementById('eticket-pax').innerText = payload.passenger_name || 'N/A';
-            document.getElementById('eticket-ticket').innerText = data.ticket_number || 'PENDING';
+            if (payload.passenger_name) {
+                const names = payload.passenger_name.split(' & ');
+                let formattedPax = '';
+                names.forEach((name, idx) => {
+                    formattedPax += `${idx + 1}. ${name}<br>`;
+                });
+                document.getElementById('eticket-pax').innerHTML = formattedPax;
+            } else {
+                document.getElementById('eticket-pax').innerText = 'N/A';
+            }
+            if (data.ticket_numbers && data.ticket_numbers.length > 0) {
+                let formattedTkts = '';
+                data.ticket_numbers.forEach((tkt, idx) => {
+                    formattedTkts += `${idx + 1}. ${tkt}<br>`;
+                });
+                document.getElementById('eticket-ticket').innerHTML = formattedTkts;
+            } else {
+                document.getElementById('eticket-ticket').innerText = data.ticket_number || 'PENDING';
+            }
             
             document.getElementById('eticket-meal').innerText = payload.meal_preference || 'Standard Meal (No Preference)';
             document.getElementById('eticket-wheelchair').innerText = payload.wheelchair_assistance || 'No wheelchair assistance required';
@@ -2826,6 +3156,58 @@ function printReceipt() {
             tbody.innerHTML = bodyHTML;
         }
 
+        function showErrorModal(message) {
+            if (message) {
+                message = message.replace(/^Error confirming booking:\s*/i, '');
+            }
+            document.getElementById('error-modal-proceed-btn').style.display = 'none';
+            document.getElementById('error-modal-message').innerText = message;
+            document.getElementById('error-modal').style.display = 'flex';
+        }
+        function closeErrorModal() {
+            document.getElementById('error-modal').style.display = 'none';
+            // Restore default values
+            document.getElementById('error-modal-message').innerText = "No seats available on this flight";
+            document.getElementById('error-modal-alt-text').innerHTML = `<strong>Alternative Option:</strong> Please go back to the flight results list and select a different flight or airline, or modify your passenger count.`;
+            document.getElementById('error-modal-proceed-btn').style.display = 'none';
+        }
+        function showNoSeatSelectionModal() {
+            document.getElementById('error-modal-message').innerText = "No early seat selection facility is available for this flight.";
+            document.getElementById('error-modal-alt-text').innerHTML = `If you wish to continue without selecting seats, please click on <strong>Proceed</strong>.<br><br>If you need to select seats, please go back to the flight results list and choose a different flight or airline, or modify the passenger count.`;
+            document.getElementById('error-modal-proceed-btn').style.display = 'block';
+            document.getElementById('error-modal').style.display = 'flex';
+        }
+        function cancelSeatCharge() {
+            document.getElementById('seat-charge-modal').style.display = 'none';
+        }
+        function confirmSeatCharge() {
+            document.getElementById('seat-charge-modal').style.display = 'none';
+            finalizeGoToStep(3);
+        }
+        function promptSeatCharge(totalCharge) {
+            window.extraSeatCharge = totalCharge;
+            document.getElementById('seat-charge-amount').innerText = 'LKR ' + totalCharge.toLocaleString('en-US', {minimumFractionDigits: 2});
+            document.getElementById('seat-charge-modal').style.display = 'flex';
+        }
+        function proceedWithoutSeatsFromCharge() {
+            document.getElementById('seat-charge-modal').style.display = 'none';
+            selectedOutboundSeats = [];
+            selectedReturnSeats = [];
+            if (document.getElementById('book-seat')) document.getElementById('book-seat').value = '';
+            if (document.getElementById('book-return-seat')) document.getElementById('book-return-seat').value = '';
+            window.bypassSeatCheck = true;
+            window.bypassSeatSelection = true;
+            window.extraSeatCharge = 0;
+            finalizeGoToStep(3);
+        }
+
+        function proceedWithoutSeats() {
+            window.bypassSeatCheck = true;
+            window.bypassSeatSelection = true;
+            closeErrorModal();
+            goToStep(3);
+        }
+
         function showSuccessReceipt(data, payload) {
             window.currentBookingData = { data, payload };
             const paymentMethod = payload.payment_method;
@@ -2861,30 +3243,86 @@ function printReceipt() {
             
             const ticketNum = data.ticket_number || 'HOLD - PENDING PAYMENT';
             
-            // Format Value Added Services dynamically
-            let vasList = [];
-            if (payload.meal_preference && payload.meal_preference !== 'Standard Meal') {
-                vasList.push(`🍱 Meal: ${payload.meal_preference}`);
+            let paxNameDisplay = payload.passenger_name;
+            let passportDisplay = payload.passport_number;
+            let vasHTML = 'Standard Services';
+
+            if (payload.passengers && payload.passengers.length > 0) {
+                const names = payload.passengers.map(p => `${p.title} ${p.first_name} ${p.last_name}`.trim());
+                paxNameDisplay = names.join(' & ');
+                
+                const passports = payload.passengers.map(p => p.passport_number);
+                passportDisplay = passports.join(', ');
+                
+                let vasList = [];
+                payload.passengers.forEach((p, idx) => {
+                    let pVasList = [];
+                    if (p.meal_preference && p.meal_preference !== 'Standard Meal') {
+                        pVasList.push(`🍱 Meal: ${p.meal_preference}`);
+                    }
+                    if (p.wheelchair_assistance && p.wheelchair_assistance.toLowerCase() !== 'no wheelchair assistance required') {
+                        pVasList.push(`♿ Wheelchair: ${p.wheelchair_assistance}`);
+                    }
+                    if (p.airport_assistance && p.airport_assistance.toLowerCase() !== 'no special airport assistance') {
+                        pVasList.push(`🙋‍♂️ Assist: ${p.airport_assistance}`);
+                    }
+                    if (p.allergy_conditions) {
+                        pVasList.push(`⚠️ Allergies: ${p.allergy_conditions}`);
+                    }
+                    if (p.other_requests) {
+                        pVasList.push(`📝 Request: ${p.other_requests}`);
+                    }
+                    if (pVasList.length > 0) {
+                        vasList.push(`<strong>Traveler ${idx + 1} (${p.title} ${p.first_name} ${p.last_name}):</strong><br>${pVasList.join('<br>')}`);
+                    }
+                });
+                if (vasList.length > 0) {
+                    vasHTML = vasList.join('<br><br>');
+                }
+            } else {
+                // Fallback to flat fields
+                let vasList = [];
+                if (payload.meal_preference && payload.meal_preference !== 'Standard Meal') {
+                    vasList.push(`🍱 Meal: ${payload.meal_preference}`);
+                }
+                if (payload.wheelchair_assistance && payload.wheelchair_assistance.toLowerCase() !== 'no wheelchair assistance required') {
+                    vasList.push(`♿ Wheelchair: ${payload.wheelchair_assistance}`);
+                }
+                if (payload.airport_assistance && payload.airport_assistance.toLowerCase() !== 'no special airport assistance') {
+                    vasList.push(`🙋‍♂️ Assist: ${payload.airport_assistance}`);
+                }
+                if (payload.allergy_conditions) {
+                    vasList.push(`⚠️ Allergies: ${payload.allergy_conditions}`);
+                }
+                if (payload.other_requests) {
+                    vasList.push(`📝 Request: ${payload.other_requests}`);
+                }
+                vasHTML = vasList.length > 0 ? vasList.join('<br>') : 'Standard Services';
             }
-            if (payload.wheelchair_assistance && payload.wheelchair_assistance.toLowerCase() !== 'no wheelchair assistance required') {
-                vasList.push(`♿ Wheelchair: ${payload.wheelchair_assistance}`);
-            }
-            if (payload.airport_assistance && payload.airport_assistance.toLowerCase() !== 'no special airport assistance') {
-                vasList.push(`🙋‍♂️ Assist: ${payload.airport_assistance}`);
-            }
-            if (payload.allergy_conditions) {
-                vasList.push(`⚠️ Allergies: ${payload.allergy_conditions}`);
-            }
-            if (payload.other_requests) {
-                vasList.push(`📝 Request: ${payload.other_requests}`);
-            }
-            const vasHTML = vasList.length > 0 ? vasList.join('<br>') : 'Standard Services';
 
             // Populate table values
             document.getElementById('receipt-pnr').innerText = data.pnr_reference || 'PNR-GDS' + Math.floor(Math.random() * 900000 + 100000);
-            document.getElementById('receipt-ticket-number').innerText = ticketNum;
-            document.getElementById('receipt-pax-name').innerText = payload.passenger_name || 'Sanka Lasitha';
-            document.getElementById('receipt-passport').innerText = payload.passport_number || 'N/A';
+            if (data.ticket_numbers && data.ticket_numbers.length > 0) {
+                let formattedTkts = '';
+                data.ticket_numbers.forEach((tkt, idx) => {
+                    formattedTkts += `${idx + 1}. ${tkt}<br>`;
+                });
+                document.getElementById('receipt-ticket-number').innerHTML = formattedTkts;
+            } else {
+                document.getElementById('receipt-ticket-number').innerText = ticketNum;
+            }
+            
+            if (paxNameDisplay) {
+                const names = paxNameDisplay.split(' & ');
+                let formattedPax = '';
+                names.forEach((name, idx) => {
+                    formattedPax += `${idx + 1}. ${name}<br>`;
+                });
+                document.getElementById('receipt-pax-name').innerHTML = formattedPax;
+            } else {
+                document.getElementById('receipt-pax-name').innerText = 'Sanka Lasitha';
+            }
+            document.getElementById('receipt-passport').innerText = passportDisplay || 'N/A';
             document.getElementById('receipt-route').innerText = document.getElementById('summary-cities').innerText || 'Colombo to Melbourne';
             document.getElementById('receipt-seats').innerText = seatDisplay;
             document.getElementById('receipt-vas-list').innerHTML = vasHTML;
@@ -2929,12 +3367,12 @@ function printReceipt() {
                 if (data.success) {
                     showSuccessReceipt(data, pendingBookingPayload);
                 } else {
-                    alert("Error confirming booking: " + data.error);
+                    showErrorModal("Error confirming booking: " + data.error);
                 }
             })
             .catch(err => {
                 console.error(err);
-                alert("Client/Network Error: " + err.message + "\n\nPlease check the console for more details.");
+                showErrorModal("Client/Network Error: " + err.message + "\n\nPlease check the console for more details.");
             })
             .finally(() => {
                 submitBtn.disabled = false;
@@ -2968,20 +3406,73 @@ function printReceipt() {
                 }
             }
             
+            const passengers = [];
+            for (let i = 1; i <= window.totalTravelers; i++) {
+                const title = document.getElementById(`book-title-${i}`).value;
+                const last = document.getElementById(`book-lastname-${i}`).value.trim();
+                const first = document.getElementById(`book-firstname-${i}`).value.trim();
+                
+                const dob = `${document.getElementById(`book-dob-day-${i}`).value}/${document.getElementById(`book-dob-month-${i}`).value}/${document.getElementById(`book-dob-year-${i}`).value}`;
+                
+                const passport = document.getElementById(`book-passport-new-${i}`).value.trim();
+                
+                const exp = `${document.getElementById(`book-exp-day-${i}`).value}/${document.getElementById(`book-exp-month-${i}`).value}/${document.getElementById(`book-exp-year-${i}`).value}`;
+                
+                const country = document.getElementById(`book-passport-country-${i}`).value;
+                
+                const pref = document.getElementById(`book-phone-prefix-${i}`).value;
+                const num = document.getElementById(`book-phone-number-${i}`).value.trim();
+                const mobile = `${pref} ${num}`;
+                
+                const email = document.getElementById(`book-email-new-${i}`).value.trim();
+                
+                const meal = document.getElementById(`book-meal-pref-${i}`).value;
+                const wc = document.getElementById(`book-wheelchair-${i}`).value;
+                const ap = document.getElementById(`book-airport-assist-${i}`).value;
+                const al = document.getElementById(`book-allergies-${i}`).value.trim();
+                const o = document.getElementById(`book-other-req-${i}`).value.trim();
+                
+                const ffProg = document.getElementById(`book-flyer-program-${i}`) ? document.getElementById(`book-flyer-program-${i}`).value : 'UL';
+                const ffNum = document.getElementById(`book-flyer-number-${i}`) ? document.getElementById(`book-flyer-number-${i}`).value.trim() : '';
+                
+                passengers.push({
+                    title,
+                    first_name: first,
+                    last_name: last,
+                    date_of_birth: dob,
+                    passport_number: passport,
+                    passport_expiry: exp,
+                    passport_country: country,
+                    mobile,
+                    email,
+                    meal_preference: meal,
+                    wheelchair_assistance: wc,
+                    airport_assistance: ap,
+                    allergy_conditions: al,
+                    other_requests: o,
+                    frequent_flyer_program: ffProg,
+                    frequent_flyer_number: ffNum
+                });
+            }
+
             const payload = {
                 flight_id: outboundId,
+                ticket_now: ticketNow,
+                payment_method: paymentMethod,
+                passengers: passengers,
+                seat_number: document.getElementById('book-seat').value,
+                bypass_seat_selection: window.bypassSeatSelection || false,
+                extra_seat_charge: window.extraSeatCharge || 0,
+                // Hidden inputs sync legacy/backwards-compatible global inputs if any legacy backend endpoint relies on them
                 passenger_name: document.getElementById('book-pax-name').value,
                 passport_number: document.getElementById('book-passport').value,
                 mobile: document.getElementById('book-phone').value,
                 email: document.getElementById('book-email').value,
-                seat_number: document.getElementById('book-seat').value,
-                ticket_now: ticketNow,
-                meal_preference: document.getElementById('book-meal-pref').value,
-                wheelchair_assistance: document.getElementById('book-wheelchair').value,
-                airport_assistance: document.getElementById('book-airport-assist').value,
-                allergy_conditions: document.getElementById('book-allergies').value.trim(),
-                other_requests: document.getElementById('book-other-req').value.trim(),
-                payment_method: paymentMethod
+                meal_preference: passengers[0].meal_preference,
+                wheelchair_assistance: passengers[0].wheelchair_assistance,
+                airport_assistance: passengers[0].airport_assistance,
+                allergy_conditions: passengers[0].allergy_conditions,
+                other_requests: passengers[0].other_requests
             };
             
             if (returnId) {
@@ -3041,12 +3532,12 @@ function printReceipt() {
                     if (data.success) {
                         showSuccessReceipt(data, payload);
                     } else {
-                        alert("Error confirming booking: " + data.error);
+                        showErrorModal("Error confirming booking: " + data.error);
                     }
                 })
                 .catch(err => {
                     console.error(err);
-                    alert("Client/Network Error: " + err.message + "\n\nPlease check the console for more details.");
+                    showErrorModal("Client/Network Error: " + err.message + "\n\nPlease check the console for more details.");
                 })
                 .finally(() => {
                     submitBtn.disabled = false;

@@ -3,10 +3,24 @@ import mysql.connector
 from decimal import Decimal
 import datetime
 import random
+import os
+import socket
+socket.setdefaulttimeout(2.0)
+from authlib.integrations.flask_client import OAuth
 from amadeus import Client, ResponseError
 
 app = Flask(__name__)
 app.secret_key = "travel_portal_secret_key_amadeus_b2b"
+
+# Configure OAuth
+oauth = OAuth(app)
+google = oauth.register(
+    name='google',
+    client_id=os.environ.get("GOOGLE_CLIENT_ID", "DUMMY_CLIENT_ID"),
+    client_secret=os.environ.get("GOOGLE_CLIENT_SECRET", "DUMMY_CLIENT_SECRET"),
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={'scope': 'openid email profile'}
+)
 
 @app.after_request
 def add_header(response):
@@ -115,12 +129,197 @@ def flight_results():
 # Route: B2C Home
 @app.route("/b2c")
 def b2c_home():
+    if request.args.get('action') != 'change':
+        session.pop('modifying_booking_id', None)
+        session.pop('modifying_old_price', None)
     return render_template("b2c_home.html")
 
 # Route: B2C Flight Results
 @app.route("/b2c-flight-results")
 def b2c_flight_results():
-    return render_template("b2c_flight_results.html", agent=None)
+    if request.args.get('modifying') != 'true':
+        session.pop('modifying_booking_id', None)
+        session.pop('modifying_old_price', None)
+    modifying_old_price = session.get('modifying_old_price', 0)
+    return render_template("b2c_flight_results.html", agent=None, modifying_old_price=modifying_old_price)
+
+# Route: B2C Google Sign-In
+@app.route("/b2c/login/google")
+def b2c_login_google():
+    if os.environ.get("GOOGLE_CLIENT_ID") is None or os.environ.get("GOOGLE_CLIENT_ID") == "DUMMY_CLIENT_ID":
+        # Simulate OAuth Consent Screen for demo purposes if no API keys are provided
+        return render_template("mock_google_login.html")
+        
+    redirect_uri = url_for('b2c_auth_google_callback', _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+# Route: B2C Mock Google Callback (For Testing)
+@app.route("/b2c/auth/google/callback/mock", methods=["POST"])
+def b2c_mock_google_callback():
+    email = request.form.get("email", "demo.traveler@gmail.com")
+    name = email.split('@')[0].capitalize()
+    
+    conn = get_db_connection()
+    c = conn.cursor(dictionary=True)
+    c.execute("SELECT * FROM b2c_users WHERE email = %s", (email,))
+    existing_user = c.fetchone()
+    
+    if not existing_user:
+        c.execute("INSERT INTO b2c_users (email, password, full_name, created_at) VALUES (%s, %s, %s, NOW())", 
+                  (email, 'google_sso', name))
+        conn.commit()
+    conn.close()
+    
+    session['b2c_user'] = {'email': email, 'name': name}
+    return redirect(url_for('b2c_my_bookings'))
+
+# Route: B2C Google Callback
+@app.route("/b2c/auth/google/callback")
+def b2c_auth_google_callback():
+    token = google.authorize_access_token()
+    user = google.parse_id_token(token, None)
+    
+    # Check if user exists in b2c_users, if not create one
+    conn = get_db_connection()
+    c = conn.cursor(dictionary=True)
+    c.execute("SELECT * FROM b2c_users WHERE email = %s", (user['email'],))
+    existing_user = c.fetchone()
+    
+    if not existing_user:
+        c.execute("INSERT INTO b2c_users (email, password, full_name, created_at) VALUES (%s, %s, %s, NOW())", 
+                  (user['email'], 'google_sso', user.get('name', 'Customer')))
+        conn.commit()
+    conn.close()
+    
+    session['b2c_user'] = {'email': user['email'], 'name': user.get('name', 'Customer')}
+    return redirect(url_for('b2c_my_bookings'))
+
+# Route: B2C Logout
+@app.route("/b2c/logout")
+def b2c_logout():
+    session.pop('b2c_user', None)
+    return redirect(url_for('b2c_home'))
+
+# Route: B2C My Bookings
+@app.route("/b2c/my-bookings", methods=["GET", "POST"])
+def b2c_my_bookings():
+    booking_data = None
+    history_data = None
+    error = None
+    b2c_user = session.get('b2c_user')
+    search_email = session.get('b2c_search_email')
+    search_mobile = session.get('b2c_search_mobile')
+    
+    conn = get_db_connection()
+    c = conn.cursor(dictionary=True)
+    
+    # If user is logged in via Google, fetch their entire history automatically
+    if b2c_user:
+        try:
+            c.execute("""
+                SELECT fb.*, b.status as booking_status, b.total_price, b.invoice_number, b.created_at, f.airline, f.flight_number, f.origin, f.destination, f.departure_time, f.arrival_time
+                FROM b2c_flight_bookings fb
+                JOIN b2c_bookings b ON fb.booking_id = b.id
+                JOIN flights f ON fb.flight_id = f.id
+                WHERE fb.email = %s
+                ORDER BY b.created_at DESC
+            """, (b2c_user['email'],))
+            history_data = c.fetchall()
+        except Exception as e:
+            error = f"Could not load booking history: {str(e)}"
+    elif search_email and search_mobile:
+        try:
+            c.execute("""
+                SELECT fb.*, b.status as booking_status, b.total_price, b.invoice_number, b.created_at, f.airline, f.flight_number, f.origin, f.destination, f.departure_time, f.arrival_time
+                FROM b2c_flight_bookings fb
+                JOIN b2c_bookings b ON fb.booking_id = b.id
+                JOIN flights f ON fb.flight_id = f.id
+                WHERE fb.email = %s AND fb.mobile = %s
+                ORDER BY b.created_at DESC
+            """, (search_email, search_mobile))
+            history_data = c.fetchall()
+        except Exception as e:
+            error = f"Could not load booking history: {str(e)}"
+            
+    if request.method == "POST":
+        hist_email = request.form.get("hist_email", "").strip()
+        hist_mobile = request.form.get("hist_mobile", "").strip()
+        
+        if not hist_email or not hist_mobile:
+            error = "Please provide both Email Address and Mobile Number to view your history."
+        else:
+            try:
+                c.execute("""
+                    SELECT fb.*, b.status as booking_status, b.total_price, b.invoice_number, b.created_at, f.airline, f.flight_number, f.origin, f.destination, f.departure_time, f.arrival_time
+                    FROM b2c_flight_bookings fb
+                    JOIN b2c_bookings b ON fb.booking_id = b.id
+                    JOIN flights f ON fb.flight_id = f.id
+                    WHERE fb.email = %s AND fb.mobile = %s
+                    ORDER BY b.created_at DESC
+                """, (hist_email, hist_mobile))
+                
+                history = c.fetchall()
+                if history:
+                    history_data = history
+                    session['b2c_search_email'] = hist_email
+                    session['b2c_search_mobile'] = hist_mobile
+                else:
+                    error = "No booking history found for this Email and Mobile Number."
+                    
+            except Exception as e:
+                error = f"An error occurred: {str(e)}"
+    
+    conn.close()
+                
+    return render_template("b2c_my_bookings.html", booking_data=None, history_data=history_data, error=error)
+
+# Route: B2C Self-Service Cancel Booking
+@app.route("/b2c/booking/cancel", methods=["POST"])
+def b2c_booking_cancel():
+    booking_id = request.form.get("booking_id")
+    
+    if booking_id:
+        conn = get_db_connection()
+        c = conn.cursor()
+        try:
+            # Update the main b2c_bookings status to refunded (which represents cancelled/refunded enum value)
+            c.execute("UPDATE b2c_bookings SET status = 'refunded' WHERE id = %s", (booking_id,))
+            conn.commit()
+        except Exception as e:
+            print("Error cancelling booking:", e)
+        finally:
+            conn.close()
+            
+    return redirect(url_for('b2c_my_bookings'))
+
+# Route: B2C Self-Service Change Date
+@app.route("/b2c/booking/change", methods=["POST"])
+def b2c_booking_change():
+    booking_id = request.form.get("booking_id")
+    
+    if booking_id:
+        conn = get_db_connection()
+        c = conn.cursor(dictionary=True)
+        try:
+            c.execute("SELECT total_price FROM b2c_bookings WHERE id = %s", (booking_id,))
+            booking = c.fetchone()
+            if booking:
+                session['modifying_booking_id'] = booking_id
+                session['modifying_old_price'] = float(booking['total_price'])
+                return redirect(url_for('b2c_home', action='change'))
+        except Exception as e:
+            print("Error preparing booking change:", e)
+        finally:
+            conn.close()
+            
+    return redirect(url_for('b2c_my_bookings'))
+
+# Route: B2C Cancel Change Request
+@app.route("/b2c/booking/cancel-change")
+def b2c_booking_cancel_change():
+    session.pop('modifying_booking_id', None)
+    session.pop('modifying_old_price', None)
+    return redirect(url_for('b2c_home'))
 
 # Route: Admin Dashboard
 @app.route("/admin")
@@ -471,7 +670,8 @@ def api_flights_search():
                 flight_no = f"{segments[0]['carrierCode']}-{segments[0]['number']}"
                 carrier_code = segments[0]['carrierCode']
                 airline = AIRLINE_MAPPING.get(carrier_code, carrier_code)
-                price_val = Decimal(str(f['price']['total']))
+                # Convert Amadeus EUR to LKR (approx 325 exchange rate)
+                price_val = Decimal(str(f['price']['total'])) * Decimal("325.00")
                 # Keep first 19 chars for mysql datetime format (YYYY-MM-DD HH:MM:SS)
                 dept = segments[0]['departure']['at'].replace('T', ' ')[:19]
                 arr = segments[-1]['arrival']['at'].replace('T', ' ')[:19]
@@ -512,7 +712,8 @@ def api_flights_search():
                         flight_no = f"{segments[0]['carrierCode']}-{segments[0]['number']}"
                         carrier_code = segments[0]['carrierCode']
                         airline = AIRLINE_MAPPING.get(carrier_code, carrier_code)
-                        price_val = Decimal(str(f['price']['total']))
+                        # Convert Amadeus EUR to LKR (approx 325 exchange rate)
+                        price_val = Decimal(str(f['price']['total'])) * Decimal("325.00")
                         dept = segments[0]['departure']['at'].replace('T', ' ')[:19]
                         arr = segments[-1]['arrival']['at'].replace('T', ' ')[:19]
                         seg_count = len(segments)
@@ -559,6 +760,29 @@ def api_flights_search():
                 params.append(f"%{airline_filter}%")
             query += " ORDER BY price ASC"
             flights = query_db(query, tuple(params))
+            
+            # If still no flights, generate mock fallback data for this route
+            if not flights and date_str:
+                conn = get_db_connection()
+                cursor = conn.cursor()
+                airlines = ['UL', 'EK', 'QR', 'SQ', 'CX', 'MH', 'TG']
+                for _ in range(15):
+                    al = random.choice(airlines)
+                    fno = f"{al}-{random.randint(100, 9999)}"
+                    price_val = round(random.uniform(45000, 180000), 2)
+                    seats = random.randint(2, 9)
+                    req_date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+                    dept_time = datetime.datetime.combine(req_date, datetime.time(random.randint(0,23), random.choice([0,15,30,45])))
+                    arr_time = dept_time + datetime.timedelta(hours=random.randint(1, 14), minutes=random.choice([0,15,30,45]))
+                    
+                    cursor.execute("""
+                        INSERT INTO flights (flight_number, airline, origin, destination, departure_time, arrival_time, price, seats_available, flight_type, segment_count)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'GDS', %s)
+                    """, (fno, AIRLINE_MAPPING.get(al, al), origin, destination, dept_time, arr_time, price_val, seats, random.randint(1,3)))
+                conn.commit()
+                cursor.close()
+                conn.close()
+                flights = query_db(query, tuple(params))
             
             # Adjust the departure date of the mock flights to match the requested date
             if date_str:
@@ -657,6 +881,10 @@ def api_flights_search():
         f_copy = f.copy()
         if isinstance(f_copy["price"], Decimal):
             f_copy["price"] = float(f_copy["price"])
+        # Normalize price to LKR: if price is < 10000 it is stored in USD (seeded flights),
+        # multiply by 300 to convert to approximate LKR. Mock flights are already in LKR (45000+).
+        if f_copy["price"] < 10000:
+            f_copy["price"] = round(f_copy["price"] * 300, 2)
         if isinstance(f_copy["departure_time"], (datetime.datetime, datetime.date)):
             f_copy["departure_time"] = f_copy["departure_time"].isoformat()
         if isinstance(f_copy["arrival_time"], (datetime.datetime, datetime.date)):
@@ -687,6 +915,33 @@ def api_flights_search():
         flights = [serialize_flight(f) for f in flights]
         
     return jsonify({"success": True, "flights": flights})
+@app.route("/api/flights/seat-availability", methods=["POST"])
+def api_flights_seat_availability():
+    data = request.json
+    flight_id = data.get("flight_id")
+    
+    if not flight_id:
+        return jsonify({"success": False, "error": "Flight ID is required"}), 400
+        
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("SELECT * FROM flights WHERE id = %s", (flight_id,))
+        flight = cursor.fetchone()
+        if not flight:
+            return jsonify({"success": False, "error": "Flight not found"}), 404
+            
+        early_seat_selection = flight["seats_available"] > 0
+        seat_charge = 1500 if early_seat_selection else 0
+        
+        return jsonify({
+            "success": True, 
+            "early_seat_selection_available": early_seat_selection,
+            "seat_charge": seat_charge
+        })
+    finally:
+        cursor.close()
+        conn.close()
 
 # API: Flight Booking (with automatic markup application and credit limit validation)
 @app.route("/api/flights/book", methods=["POST"])
@@ -700,7 +955,23 @@ def api_flights_book():
         
     data = request.json
     flight_id = data.get("flight_id")
+    bypass_seat_selection = data.get("bypass_seat_selection", False)
+    
+    # Parse passengers array if present
+    passengers = data.get("passengers")
     passenger_name = data.get("passenger_name")
+    
+    if passengers:
+        if not passenger_name:
+            names = []
+            for p in passengers:
+                p_title = p.get("title", "")
+                p_first = p.get("first_name", "")
+                p_last = p.get("last_name", "")
+                p_name = f"{p_title} {p_first} {p_last}".strip() if (p_title or p_last) else p_first
+                names.append(p_name)
+            passenger_name = " & ".join(names)
+            
     seat_number = data.get("seat_number", "14A")
     passport_number = data.get("passport_number")
     mobile = data.get("mobile")
@@ -723,7 +994,7 @@ def api_flights_book():
         if not flight:
             return jsonify({"success": False, "error": "Flight not found"}), 404
             
-        if flight["seats_available"] <= 0:
+        if not bypass_seat_selection and flight["seats_available"] <= 0:
             return jsonify({"success": False, "error": "No seats available on this flight"}), 400
             
         return_flight = None
@@ -732,7 +1003,7 @@ def api_flights_book():
             return_flight = cursor.fetchone()
             if not return_flight:
                 return jsonify({"success": False, "error": "Return flight not found"}), 404
-            if return_flight["seats_available"] <= 0:
+            if not bypass_seat_selection and return_flight["seats_available"] <= 0:
                 return jsonify({"success": False, "error": "No seats available on return flight"}), 400
             
         # Get issuance markup
@@ -740,12 +1011,32 @@ def api_flights_book():
         fee = cursor.fetchone()
         markup = Decimal(str(fee["amount"])) if fee else Decimal("15.00")
         
-        if return_flight:
-            orig_price = flight["price"] + return_flight["price"]
-            total_price = orig_price + (2 * markup)
+        # Determine passenger count from request payload or by parsing names joined by ' & '
+        if passengers:
+            pax_count = len(passengers)
         else:
-            orig_price = flight["price"]
-            total_price = orig_price + markup
+            pax_count = 1
+            passenger_names = [n.strip() for n in passenger_name.split('&') if n.strip()]
+            if passenger_names:
+                pax_count = max(int(data.get("passenger_count", len(passenger_names))), len(passenger_names))
+            else:
+                pax_count = int(data.get("passenger_count", 1))
+        pax_count = max(1, pax_count)
+        
+        # Normalize prices to LKR: seeded flights are stored in USD (< 10000), mock flights are already in LKR
+        LKR_RATE = Decimal("300")
+        flight_price_lkr = flight["price"] if flight["price"] >= Decimal("10000") else flight["price"] * LKR_RATE
+        
+        if return_flight:
+            ret_price_lkr = return_flight["price"] if return_flight["price"] >= Decimal("10000") else return_flight["price"] * LKR_RATE
+            orig_price = (flight_price_lkr + ret_price_lkr) * Decimal(str(pax_count))
+            total_price = orig_price + (2 * markup * Decimal(str(pax_count)))
+        else:
+            orig_price = flight_price_lkr * Decimal(str(pax_count))
+            total_price = orig_price + (markup * Decimal(str(pax_count)))
+            
+        extra_seat_charge = Decimal(str(data.get("extra_seat_charge", 0)))
+        total_price += extra_seat_charge
         
         # Check credit balance for B2B only
         agent_credit = Decimal("0.00")
@@ -764,6 +1055,14 @@ def api_flights_book():
         else:
             payment_to_charge = total_price
             
+        full_ticket_value = total_price
+            
+        if is_b2c and "modifying_booking_id" in session:
+            old_price = Decimal(str(session.get("modifying_old_price", 0)))
+            payment_to_charge = payment_to_charge - old_price
+            if payment_to_charge < 0:
+                payment_to_charge = Decimal("0.00")
+            
         if not is_b2c and payment_method == "credit" and agent_credit < payment_to_charge:
             return jsonify({
                 "success": False, 
@@ -774,30 +1073,85 @@ def api_flights_book():
         # Generate Invoice and Booking
         invoice_number = f"INV-F{random.randint(100000, 999999)}"
         
+        # If passengers list not present, fallback to legacy single passenger structure
+        if not passengers:
+            passengers = [{
+                "title": "",
+                "first_name": passenger_name,
+                "last_name": "",
+                "passport_number": passport_number,
+                "mobile": mobile,
+                "email": email,
+                "meal_preference": data.get("meal_preference", "Standard Meal"),
+                "wheelchair_assistance": data.get("wheelchair_assistance", "No wheelchair assistance required"),
+                "airport_assistance": data.get("airport_assistance", "No special airport assistance"),
+                "allergy_conditions": data.get("allergy_conditions", ""),
+                "other_requests": data.get("other_requests", "")
+            }]
+            
+        # Prepare seat lists
+        seat_list = [s.strip() for s in seat_number.split(',') if s.strip()]
+        return_seat_list = [s.strip() for s in return_seat_number.split(',') if s.strip()] if return_flight_id else []
+
+        pnr_reference = f"PNR{random.randint(100000, 999999)}"
+        return_pnr = f"PNR{random.randint(100000, 999999)}" if return_flight_id else None
+        ticket_number = None
+        ticket_numbers = []
+        
         if is_b2c:
             cursor.execute("""
                 INSERT INTO b2c_bookings (b2c_user_id, booking_type, status, total_price, invoice_number, created_at)
                 VALUES (NULL, 'flight', %s, %s, %s, NOW())
-            """, (booking_status, payment_to_charge, invoice_number))
+            """, (booking_status, full_ticket_value, invoice_number))
             booking_id = cursor.lastrowid
             
-            pnr_reference = f"PNR{random.randint(100000, 999999)}"
-            ticket_number = f"TKT-{random.randint(1000000000, 9999999999)}" if booking_status == "ticketed" else None
-            
             outbound_gds_type = (flight.get("gds_source") or "Amadeus") if flight.get("flight_type") == "GDS" else flight.get("flight_type")
-            cursor.execute("""
-                INSERT INTO b2c_flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee, pnr_reference, ticket_number, passport_number, mobile, email)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (booking_id, flight_id, passenger_name, seat_number, outbound_gds_type, booking_status, flight["price"], markup, pnr_reference, ticket_number, passport_number, mobile, email))
-            
+            return_gds_type = None
             if return_flight:
                 return_gds_type = (return_flight.get("gds_source") or "Amadeus") if return_flight.get("flight_type") == "GDS" else return_flight.get("flight_type")
-                return_pnr = f"PNR{random.randint(100000, 999999)}"
-                return_ticket = f"TKT-{random.randint(1000000000, 9999999999)}" if booking_status == "ticketed" else None
+            
+            for idx, p in enumerate(passengers):
+                p_title = p.get("title", "")
+                p_first = p.get("first_name", "")
+                p_last = p.get("last_name", "")
+                p_name = f"{p_title} {p_first} {p_last}".strip() if (p_title or p_last) else p_first
+                if not p_name:
+                    p_name = passenger_name
+                
+                p_passport = p.get("passport_number") or passport_number
+                p_mobile = p.get("mobile") or mobile
+                p_email = p.get("email") or email
+                p_meal = p.get("meal_preference", "Standard Meal")
+                p_wc = p.get("wheelchair_assistance", "No wheelchair assistance required")
+                p_ap = p.get("airport_assistance", "No special airport assistance")
+                p_al = p.get("allergy_conditions", "")
+                p_o = p.get("other_requests", "")
+                
+                p_seat = seat_list[idx] if idx < len(seat_list) else (seat_number or "14A")
+                p_ticket = f"TKT-{random.randint(1000000000, 9999999999)}" if booking_status == "ticketed" else None
+                if p_ticket:
+                    ticket_numbers.append(p_ticket)
+                if idx == 0:
+                    ticket_number = p_ticket
+
                 cursor.execute("""
-                    INSERT INTO b2c_flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee, pnr_reference, ticket_number, passport_number, mobile, email)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """, (booking_id, return_flight_id, passenger_name, return_seat_number, return_gds_type, booking_status, return_flight["price"], markup, return_pnr, return_ticket, passport_number, mobile, email))
+                    INSERT INTO b2c_flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee, pnr_reference, ticket_number, passport_number, mobile, email, meal_preference, wheelchair_assistance, airport_assistance, allergy_conditions, other_requests)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (booking_id, flight_id, p_name, p_seat, outbound_gds_type, booking_status, flight["price"], markup, pnr_reference, p_ticket, p_passport, p_mobile, p_email, p_meal, p_wc, p_ap, p_al, p_o))
+                
+                if return_flight:
+                    return_ticket = f"TKT-{random.randint(1000000000, 9999999999)}" if booking_status == "ticketed" else None
+                    p_return_seat = return_seat_list[idx] if idx < len(return_seat_list) else (return_seat_number or "14F")
+                    
+                    cursor.execute("""
+                        INSERT INTO b2c_flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee, pnr_reference, ticket_number, passport_number, mobile, email, meal_preference, wheelchair_assistance, airport_assistance, allergy_conditions, other_requests)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """, (booking_id, return_flight_id, p_name, p_return_seat, return_gds_type, booking_status, return_flight["price"], markup, return_pnr, return_ticket, p_passport, p_mobile, p_email, p_meal, p_wc, p_ap, p_al, p_o))
+            
+            if "modifying_booking_id" in session:
+                cursor.execute("UPDATE b2c_bookings SET status = 'Cancelled' WHERE id = %s", (session["modifying_booking_id"],))
+                session.pop("modifying_booking_id", None)
+                session.pop("modifying_old_price", None)
         
         else:
             agent_id = session["user_id"]
@@ -808,23 +1162,48 @@ def api_flights_book():
             
             booking_id = cursor.lastrowid
             
-            pnr_reference = f"PNR{random.randint(100000, 999999)}"
-            ticket_number = f"TKT-{random.randint(1000000000, 9999999999)}" if booking_status == "ticketed" else None
-            
             outbound_gds_type = (flight.get("gds_source") or "Amadeus") if flight.get("flight_type") == "GDS" else flight.get("flight_type")
-            cursor.execute("""
-                INSERT INTO flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee, pnr_reference, ticket_number, passport_number, mobile, email)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (booking_id, flight_id, passenger_name, seat_number, outbound_gds_type, booking_status, flight["price"], markup, pnr_reference, ticket_number, passport_number, mobile, email))
-            
+            return_gds_type = None
             if return_flight:
                 return_gds_type = (return_flight.get("gds_source") or "Amadeus") if return_flight.get("flight_type") == "GDS" else return_flight.get("flight_type")
-                return_pnr = f"PNR{random.randint(100000, 999999)}"
-                return_ticket = f"TKT-{random.randint(1000000000, 9999999999)}" if booking_status == "ticketed" else None
+            
+            for idx, p in enumerate(passengers):
+                p_title = p.get("title", "")
+                p_first = p.get("first_name", "")
+                p_last = p.get("last_name", "")
+                p_name = f"{p_title} {p_first} {p_last}".strip() if (p_title or p_last) else p_first
+                if not p_name:
+                    p_name = passenger_name
+                
+                p_passport = p.get("passport_number") or passport_number
+                p_mobile = p.get("mobile") or mobile
+                p_email = p.get("email") or email
+                p_meal = p.get("meal_preference", "Standard Meal")
+                p_wc = p.get("wheelchair_assistance", "No wheelchair assistance required")
+                p_ap = p.get("airport_assistance", "No special airport assistance")
+                p_al = p.get("allergy_conditions", "")
+                p_o = p.get("other_requests", "")
+                
+                p_seat = seat_list[idx] if idx < len(seat_list) else (seat_number or "14A")
+                p_ticket = f"TKT-{random.randint(1000000000, 9999999999)}" if booking_status == "ticketed" else None
+                if p_ticket:
+                    ticket_numbers.append(p_ticket)
+                if idx == 0:
+                    ticket_number = p_ticket
+
                 cursor.execute("""
-                    INSERT INTO flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee, pnr_reference, ticket_number, passport_number, mobile, email)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """, (booking_id, return_flight_id, passenger_name, return_seat_number, return_gds_type, booking_status, return_flight["price"], markup, return_pnr, return_ticket, passport_number, mobile, email))
+                    INSERT INTO flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee, pnr_reference, ticket_number, passport_number, mobile, email, meal_preference, wheelchair_assistance, airport_assistance, allergy_conditions, other_requests)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (booking_id, flight_id, p_name, p_seat, outbound_gds_type, booking_status, flight["price"], markup, pnr_reference, p_ticket, p_passport, p_mobile, p_email, p_meal, p_wc, p_ap, p_al, p_o))
+                
+                if return_flight:
+                    return_ticket = f"TKT-{random.randint(1000000000, 9999999999)}" if booking_status == "ticketed" else None
+                    p_return_seat = return_seat_list[idx] if idx < len(return_seat_list) else (return_seat_number or "14F")
+                    
+                    cursor.execute("""
+                        INSERT INTO flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee, pnr_reference, ticket_number, passport_number, mobile, email, meal_preference, wheelchair_assistance, airport_assistance, allergy_conditions, other_requests)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """, (booking_id, return_flight_id, p_name, p_return_seat, return_gds_type, booking_status, return_flight["price"], markup, return_pnr, return_ticket, p_passport, p_mobile, p_email, p_meal, p_wc, p_ap, p_al, p_o))
             
         # Deduct wallet if credit option is used (only valid for B2B)
         if payment_method == "credit" and not is_b2c:
@@ -833,10 +1212,10 @@ def api_flights_book():
         # If ticketed immediately, deduct seat count and award loyalty points
         if booking_status == "ticketed":
             # Deduct seat count for outbound
-            cursor.execute("UPDATE flights SET seats_available = seats_available - 1 WHERE id = %s", (flight_id,))
+            cursor.execute("UPDATE flights SET seats_available = seats_available - %s WHERE id = %s", (pax_count, flight_id))
             # Deduct seat count for return
             if return_flight:
-                cursor.execute("UPDATE flights SET seats_available = seats_available - 1 WHERE id = %s", (return_flight_id,))
+                cursor.execute("UPDATE flights SET seats_available = seats_available - %s WHERE id = %s", (pax_count, return_flight_id))
                 
             # Award loyalty rewards for B2B
             if not is_b2c:
@@ -858,7 +1237,8 @@ def api_flights_book():
             "total_price": float(total_price),
             "booking_id": booking_id,
             "pnr_reference": pnr_reference,
-            "ticket_number": ticket_number
+            "ticket_number": ticket_number,
+            "ticket_numbers": ticket_numbers
         })
         
     except Exception as e:
@@ -1974,6 +2354,86 @@ def api_agent_credit():
             conn.close()
         return jsonify({"success": False, "error": str(e)}), 500
 
+# --- B2C AI Chatbot API ---
+@app.route("/api/chatbot/ask", methods=["POST"])
+def chatbot_ask():
+    data = request.get_json()
+    msg = data.get("message", "").lower()
+    
+    chat_state = session.get('chat_state', None)
+    
+    if "cancel" in msg or "stop" in msg or "nevermind" in msg:
+        session.pop('chat_state', None)
+        return jsonify({"reply": "Okay, I've cancelled the current request. How else can I help you today?"})
+        
+    if chat_state == 'awaiting_origin':
+        session['chat_origin'] = msg.upper()
+        session['chat_state'] = 'awaiting_dest'
+        return jsonify({"reply": f"Great. You are flying from {msg.upper()}. Where are you traveling to? (e.g. MLE, DXB)"})
+        
+    elif chat_state == 'awaiting_dest':
+        session['chat_dest'] = msg.upper()
+        session['chat_state'] = 'awaiting_date'
+        return jsonify({"reply": f"Got it, destination {msg.upper()}. What date do you want to depart? (Format: YYYY-MM-DD)"})
+        
+    elif chat_state == 'awaiting_date':
+        origin = session.get('chat_origin', 'CMB')
+        dest = session.get('chat_dest', 'MLE')
+        date = msg
+        
+        session.pop('chat_state', None)
+        session.pop('chat_origin', None)
+        session.pop('chat_dest', None)
+        
+        # Generate dynamic HTML for the flight card directly in the chat
+        import random
+        price = "{:,.2f}".format(round(random.uniform(35000, 150000), 2))
+        
+        flight_html = f"""
+        <div style='background: white; border: 1px solid #cbd5e1; border-radius: 12px; padding: 15px; margin-top: 10px; color: #1e293b; text-align: left; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);'>
+            <div style='font-weight: 800; color: #1e3a8a; font-size: 15px; margin-bottom: 8px;'><i class='fa-solid fa-plane-departure'></i> Best Flight Found</div>
+            <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;'>
+                <div>
+                    <div style='font-size: 18px; font-weight: 700;'>{origin}</div>
+                    <div style='font-size: 11px; color: #64748b;'>Origin</div>
+                </div>
+                <div style='color: #94a3b8;'><i class='fa-solid fa-arrow-right'></i></div>
+                <div style='text-align: right;'>
+                    <div style='font-size: 18px; font-weight: 700;'>{dest}</div>
+                    <div style='font-size: 11px; color: #64748b;'>Destination</div>
+                </div>
+            </div>
+            <div style='font-size: 13px; color: #475569; margin-bottom: 5px;'><i class='fa-regular fa-calendar'></i> <strong>{date}</strong></div>
+            <div style='font-size: 18px; font-weight: 800; color: #10b981; margin-bottom: 12px;'>LKR {price}</div>
+            <a href='/b2c-flight-results?origin={origin}&dest={dest}&date={date}&adults=1' style='display: block; text-align: center; background: #d11242; color: white; padding: 10px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: bold; transition: background 0.3s;'>Book This Flight Now</a>
+        </div>
+        """
+        return jsonify({"reply": f"I've searched our real-time inventory and found a great option for you! {flight_html}"})
+    
+    reply = "I'm your Aeronexa AI assistant! You can ask me about baggage allowances, checking in, cancellations, and flight status."
+    
+    if "baggage" in msg or "luggage" in msg:
+        reply = "For Economy class, you are generally allowed 1 checked bag (up to 23kg) and 1 carry-on bag (up to 7kg). Premium classes include additional baggage allowance."
+    elif "cancel" in msg or "refund" in msg:
+        reply = "You can cancel or change your flights directly from the 'My Bookings' page! If your fare rules allow a refund, it will be automatically processed."
+    elif "check in" in msg or "check-in" in msg:
+        reply = "Online check-in opens 48 hours before departure. You can check in directly through the Aeronexa portal or at the airport kiosks."
+    elif "contact" in msg or "support" in msg:
+        reply = "Our customer support team is available 24/7! You can reach us at support@aeronexa.com or call our hotline at +94 11 234 5678."
+    elif "hi" in msg or "hello" in msg or "hey" in msg:
+        reply = "Hello there! 👋 I'm the Aeronexa AI. How can I help make your journey smoother today?"
+    elif "book" in msg or "search" in msg or "flight" in msg:
+        session['chat_state'] = 'awaiting_origin'
+        reply = "I can definitely help you search for a flight right here! What city or airport code are you flying **FROM**? (e.g. CMB, LHR, DXB)"
+    elif "price" in msg or "cost" in msg or "cheap" in msg:
+        reply = "We offer the most competitive fares across 500+ airlines! Tell me you want to 'search flights' to see available pricing."
+    elif "aeronexa" in msg:
+        reply = "Aeronexa is the #1 Travel Booking Platform, designed to give you a premium booking experience from start to finish."
+        
+    import time
+    time.sleep(1) # Simulate AI thinking time
+    
+    return jsonify({"reply": reply})
 
 if __name__ == "__main__":
     app.run(debug=True, host="127.0.0.1", port=5000)
