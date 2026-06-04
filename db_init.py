@@ -25,8 +25,8 @@ def initialize_database():
         
         tables_to_drop = [
             "agent_rewards", "timatic_checks", "service_fees", "support_tickets",
-            "hotel_bookings", "flight_bookings", "bookings", "rooms", "hotels",
-            "flights", "users", "popups"
+            "hotel_bookings", "b2c_hotel_bookings", "flight_bookings", "b2c_flight_bookings", "b2c_bookings", "bookings", "rooms", "hotels",
+            "flights", "b2c_users", "users", "popups"
         ]
         for table in tables_to_drop:
             cursor.execute(f"DROP TABLE IF EXISTS {table}")
@@ -36,6 +36,15 @@ def initialize_database():
         
         # Define table schemas
         table_schemas = {
+            "b2c_users": """
+                CREATE TABLE b2c_users (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    email VARCHAR(100) UNIQUE NOT NULL,
+                    password VARCHAR(255) NOT NULL,
+                    full_name VARCHAR(100) NOT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB;
+            """,
             "users": """
                 CREATE TABLE users (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -61,7 +70,7 @@ def initialize_database():
                     price DECIMAL(10, 2) NOT NULL,
                     seats_available INT NOT NULL,
                     flight_type ENUM('LCC', 'NDC', 'GDS') NOT NULL,
-                    gds_source VARCHAR(20) DEFAULT 'Amadeus',
+                    gds_source VARCHAR(20) DEFAULT 'GDS',
                     segment_count INT DEFAULT 1
                 ) ENGINE=InnoDB;
             """,
@@ -104,7 +113,7 @@ def initialize_database():
                     flight_id INT NOT NULL,
                     passenger_name VARCHAR(100) NOT NULL,
                     seat_number VARCHAR(10),
-                    gds_type ENUM('Amadeus', 'Sabre', 'LCC', 'NDC') NOT NULL,
+                    gds_type ENUM('Amadeus', 'Sabre', 'LCC', 'NDC', 'GDS') NOT NULL,
                     ticket_status ENUM('ticketed', 'non-ticketed', 'refunded', 'voided') NOT NULL,
                     original_price DECIMAL(10, 2) NOT NULL,
                     service_fee DECIMAL(10, 2) DEFAULT 0.00,
@@ -115,6 +124,58 @@ def initialize_database():
                     email VARCHAR(100) DEFAULT NULL,
                     FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
                     FOREIGN KEY (flight_id) REFERENCES flights(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB;
+            """,
+            "b2c_bookings": """
+                CREATE TABLE b2c_bookings (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    b2c_user_id INT DEFAULT NULL,
+                    booking_type ENUM('flight', 'hotel') NOT NULL,
+                    status VARCHAR(50) DEFAULT 'non-ticketed',
+                    total_price DECIMAL(12, 2) NOT NULL,
+                    invoice_number VARCHAR(50) UNIQUE NOT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB;
+            """,
+            "b2c_flight_bookings": """
+                CREATE TABLE b2c_flight_bookings (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    booking_id INT NOT NULL,
+                    flight_id INT NOT NULL,
+                    passenger_name VARCHAR(100) NOT NULL,
+                    seat_number VARCHAR(10),
+                    gds_type VARCHAR(50) NOT NULL,
+                    ticket_status VARCHAR(50) NOT NULL,
+                    original_price DECIMAL(10, 2) NOT NULL,
+                    service_fee DECIMAL(10, 2) DEFAULT 0.00,
+                    pnr_reference VARCHAR(20) DEFAULT NULL,
+                    ticket_number VARCHAR(30) DEFAULT NULL,
+                    passport_number VARCHAR(50) DEFAULT NULL,
+                    mobile VARCHAR(30) DEFAULT NULL,
+                    email VARCHAR(100) DEFAULT NULL,
+                    meal_preference VARCHAR(100) DEFAULT NULL,
+                    wheelchair_assistance VARCHAR(100) DEFAULT NULL,
+                    airport_assistance VARCHAR(100) DEFAULT NULL,
+                    allergy_conditions VARCHAR(255) DEFAULT NULL,
+                    other_requests TEXT DEFAULT NULL,
+                    FOREIGN KEY (booking_id) REFERENCES b2c_bookings(id) ON DELETE CASCADE,
+                    FOREIGN KEY (flight_id) REFERENCES flights(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB;
+            """,
+            "b2c_hotel_bookings": """
+                CREATE TABLE b2c_hotel_bookings (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    booking_id INT NOT NULL,
+                    room_id INT NOT NULL,
+                    check_in DATE NOT NULL,
+                    check_out DATE NOT NULL,
+                    guest_name VARCHAR(100) NOT NULL,
+                    email VARCHAR(100) NOT NULL,
+                    mobile VARCHAR(30) NOT NULL,
+                    original_price DECIMAL(10, 2) NOT NULL,
+                    service_fee DECIMAL(10, 2) DEFAULT 0.00,
+                    FOREIGN KEY (booking_id) REFERENCES b2c_bookings(id) ON DELETE CASCADE,
+                    FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
                 ) ENGINE=InnoDB;
             """,
             "hotel_bookings": """
@@ -202,23 +263,23 @@ def initialize_database():
         # Seed flights
         # We need LCC, NDC, and GDS (Amadeus/Sabre) flights
         flights_data = [
-            ('QR-832', 'Qatar Airways', 'DOH', 'LHR', 'GDS', 'Amadeus', 1, 450.00, 48),
-            ('EK-348', 'Emirates', 'DXB', 'SIN', 'GDS', 'Sabre', 1, 620.00, 35),
-            ('UL-101', 'SriLankan Airlines', 'CMB', 'MLE', 'LCC', 'Amadeus', 1, 150.00, 18),
-            ('SQ-421', 'Singapore Airlines', 'SIN', 'SYD', 'NDC', 'Amadeus', 2, 750.00, 22),
-            ('6E-451', 'IndiGo', 'DEL', 'CMB', 'LCC', 'Amadeus', 1, 180.00, 60),
-            ('BA-117', 'British Airways', 'LHR', 'JFK', 'GDS', 'Amadeus', 1, 550.00, 40),
-            ('UL-308', 'SriLankan Airlines', 'CMB', 'SIN', 'GDS', 'Amadeus', 1, 310.00, 28),
+            ('QR-832', 'Qatar Airways', 'DOH', 'LHR', 'GDS', 'GDS', 1, 450.00, 48),
+            ('EK-348', 'Emirates', 'DXB', 'SIN', 'GDS', 'GDS', 1, 620.00, 35),
+            ('UL-101', 'SriLankan Airlines', 'CMB', 'MLE', 'LCC', 'LCC', 1, 150.00, 18),
+            ('SQ-421', 'Singapore Airlines', 'SIN', 'SYD', 'NDC', 'NDC', 2, 750.00, 22),
+            ('6E-451', 'IndiGo', 'DEL', 'CMB', 'LCC', 'LCC', 1, 180.00, 60),
+            ('BA-117', 'British Airways', 'LHR', 'JFK', 'GDS', 'GDS', 1, 550.00, 40),
+            ('UL-308', 'SriLankan Airlines', 'CMB', 'SIN', 'GDS', 'GDS', 1, 310.00, 28),
             
             # Seed flights for CMB <-> MEL Colombo-Melbourne
-            ('EY-264', 'Etihad Airways', 'CMB', 'MEL', 'GDS', 'Amadeus', 2, 504.10, 9),
-            ('EY-265', 'Etihad Airways', 'MEL', 'CMB', 'GDS', 'Amadeus', 2, 504.10, 9),
-            ('6E-804', 'IndiGo', 'CMB', 'MEL', 'LCC', 'Amadeus', 2, 594.60, 9),
-            ('6E-805', 'IndiGo', 'MEL', 'CMB', 'LCC', 'Amadeus', 2, 594.60, 9),
-            ('MH-178', 'Malaysia Airlines', 'CMB', 'MEL', 'GDS', 'Amadeus', 2, 676.21, 9),
-            ('MH-179', 'Malaysia Airlines', 'MEL', 'CMB', 'GDS', 'Amadeus', 2, 676.21, 9),
-            ('CX-610', 'Cathay Pacific', 'CMB', 'MEL', 'NDC', 'Amadeus', 2, 787.05, 9),
-            ('CX-611', 'Cathay Pacific', 'MEL', 'CMB', 'NDC', 'Amadeus', 2, 787.05, 9)
+            ('EY-264', 'Etihad Airways', 'CMB', 'MEL', 'GDS', 'GDS', 2, 504.10, 9),
+            ('EY-265', 'Etihad Airways', 'MEL', 'CMB', 'GDS', 'GDS', 2, 504.10, 9),
+            ('6E-804', 'IndiGo', 'CMB', 'MEL', 'LCC', 'LCC', 2, 594.60, 9),
+            ('6E-805', 'IndiGo', 'MEL', 'CMB', 'LCC', 'LCC', 2, 594.60, 9),
+            ('MH-178', 'Malaysia Airlines', 'CMB', 'MEL', 'GDS', 'GDS', 2, 676.21, 9),
+            ('MH-179', 'Malaysia Airlines', 'MEL', 'CMB', 'GDS', 'GDS', 2, 676.21, 9),
+            ('CX-610', 'Cathay Pacific', 'CMB', 'MEL', 'NDC', 'NDC', 2, 787.05, 9),
+            ('CX-611', 'Cathay Pacific', 'MEL', 'CMB', 'NDC', 'NDC', 2, 787.05, 9)
         ]
 
         

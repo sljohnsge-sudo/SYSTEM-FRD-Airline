@@ -18,5 +18,10 @@ cursor.execute("SELECT * FROM b2c_flight_bookings ORDER BY id DESC LIMIT 5")
 for row in cursor.fetchall():
     print(row)
 
+print("\n--- b2c_hotel_bookings ---")
+cursor.execute("SELECT * FROM b2c_hotel_bookings ORDER BY id DESC LIMIT 5")
+for row in cursor.fetchall():
+    print(row)
+
 cursor.close()
 conn.close()

@@ -7,7 +7,7 @@ import os
 import socket
 socket.setdefaulttimeout(2.0)
 from authlib.integrations.flask_client import OAuth
-from amadeus import Client, ResponseError
+from mock_gds import MockGDSClient as Client
 
 app = Flask(__name__)
 app.secret_key = "travel_portal_secret_key_amadeus_b2b"
@@ -204,7 +204,8 @@ def b2c_logout():
 @app.route("/b2c/my-bookings", methods=["GET", "POST"])
 def b2c_my_bookings():
     booking_data = None
-    history_data = None
+    history_data = []
+    hotel_history_data = []
     error = None
     b2c_user = session.get('b2c_user')
     search_email = session.get('b2c_search_email')
@@ -213,65 +214,130 @@ def b2c_my_bookings():
     conn = get_db_connection()
     c = conn.cursor(dictionary=True)
     
-    # If user is logged in via Google, fetch their entire history automatically
+    emails = set()
+    mobiles = set()
+    
     if b2c_user:
-        try:
-            c.execute("""
-                SELECT fb.*, b.status as booking_status, b.total_price, b.invoice_number, b.created_at, f.airline, f.flight_number, f.origin, f.destination, f.departure_time, f.arrival_time
-                FROM b2c_flight_bookings fb
-                JOIN b2c_bookings b ON fb.booking_id = b.id
-                JOIN flights f ON fb.flight_id = f.id
-                WHERE fb.email = %s
-                ORDER BY b.created_at DESC
-            """, (b2c_user['email'],))
-            history_data = c.fetchall()
-        except Exception as e:
-            error = f"Could not load booking history: {str(e)}"
-    elif search_email and search_mobile:
-        try:
-            c.execute("""
-                SELECT fb.*, b.status as booking_status, b.total_price, b.invoice_number, b.created_at, f.airline, f.flight_number, f.origin, f.destination, f.departure_time, f.arrival_time
-                FROM b2c_flight_bookings fb
-                JOIN b2c_bookings b ON fb.booking_id = b.id
-                JOIN flights f ON fb.flight_id = f.id
-                WHERE fb.email = %s AND fb.mobile = %s
-                ORDER BY b.created_at DESC
-            """, (search_email, search_mobile))
-            history_data = c.fetchall()
-        except Exception as e:
-            error = f"Could not load booking history: {str(e)}"
-            
+        emails.add(b2c_user['email'])
+    
+    if search_email:
+        emails.add(search_email)
+    if search_mobile:
+        mobiles.add(search_mobile)
+        
     if request.method == "POST":
         hist_email = request.form.get("hist_email", "").strip()
         hist_mobile = request.form.get("hist_mobile", "").strip()
         
-        if not hist_email or not hist_mobile:
-            error = "Please provide both Email Address and Mobile Number to view your history."
+        if not hist_email and not hist_mobile:
+            error = "Please provide an Email Address or Mobile Number to view your history."
         else:
-            try:
-                c.execute("""
-                    SELECT fb.*, b.status as booking_status, b.total_price, b.invoice_number, b.created_at, f.airline, f.flight_number, f.origin, f.destination, f.departure_time, f.arrival_time
+            if hist_email:
+                emails.add(hist_email)
+                session['b2c_search_email'] = hist_email
+            if hist_mobile:
+                mobiles.add(hist_mobile)
+                session['b2c_search_mobile'] = hist_mobile
+                
+    if (emails or mobiles) and not error:
+        try:
+            # Step 1: Expand search criteria to automatically sync all related bookings.
+            # Find any other emails and mobile numbers linked to current ones in the database.
+            flight_where = []
+            flight_params = []
+            if emails:
+                flight_where.append(f"email IN ({', '.join(['%s'] * len(emails))})")
+                flight_params.extend(list(emails))
+            if mobiles:
+                flight_where.append(f"mobile IN ({', '.join(['%s'] * len(mobiles))})")
+                flight_params.extend(list(mobiles))
+                
+            if flight_where:
+                c.execute(f"SELECT email, mobile FROM b2c_flight_bookings WHERE {' OR '.join(flight_where)}", tuple(flight_params))
+                for row in c.fetchall():
+                    if row.get('email'):
+                        emails.add(row['email'])
+                    if row.get('mobile'):
+                        mobiles.add(row['mobile'])
+                        
+            # Query hotel bookings for expansion as well
+            hotel_where = []
+            hotel_params = []
+            if emails:
+                hotel_where.append(f"email IN ({', '.join(['%s'] * len(emails))})")
+                hotel_params.extend(list(emails))
+            if mobiles:
+                hotel_where.append(f"mobile IN ({', '.join(['%s'] * len(mobiles))})")
+                hotel_params.extend(list(mobiles))
+                
+            if hotel_where:
+                c.execute(f"SELECT email, mobile FROM b2c_hotel_bookings WHERE {' OR '.join(hotel_where)}", tuple(hotel_params))
+                for row in c.fetchall():
+                    if row.get('email'):
+                        emails.add(row['email'])
+                    if row.get('mobile'):
+                        mobiles.add(row['mobile'])
+            
+            # Step 2: Fetch all flights using expanded email & mobile set
+            final_flight_where = []
+            final_flight_params = []
+            if emails:
+                final_flight_where.append(f"fb.email IN ({', '.join(['%s'] * len(emails))})")
+                final_flight_params.extend(list(emails))
+            if mobiles:
+                final_flight_where.append(f"fb.mobile IN ({', '.join(['%s'] * len(mobiles))})")
+                final_flight_params.extend(list(mobiles))
+                
+            if final_flight_where:
+                flight_query = f"""
+                    SELECT DISTINCT fb.id, fb.*, b.status as booking_status, b.total_price, b.invoice_number, b.created_at, f.airline, f.flight_number, f.origin, f.destination, f.departure_time, f.arrival_time
                     FROM b2c_flight_bookings fb
                     JOIN b2c_bookings b ON fb.booking_id = b.id
                     JOIN flights f ON fb.flight_id = f.id
-                    WHERE fb.email = %s AND fb.mobile = %s
+                    WHERE {' OR '.join(final_flight_where)}
                     ORDER BY b.created_at DESC
-                """, (hist_email, hist_mobile))
+                """
+                c.execute(flight_query, tuple(final_flight_params))
+                history_data = c.fetchall()
                 
-                history = c.fetchall()
-                if history:
-                    history_data = history
-                    session['b2c_search_email'] = hist_email
-                    session['b2c_search_mobile'] = hist_mobile
-                else:
-                    error = "No booking history found for this Email and Mobile Number."
-                    
-            except Exception as e:
-                error = f"An error occurred: {str(e)}"
-    
+            # Step 3: Fetch all hotels using expanded email & mobile set
+            final_hotel_where = []
+            final_hotel_params = []
+            if emails:
+                final_hotel_where.append(f"hb.email IN ({', '.join(['%s'] * len(emails))})")
+                final_hotel_params.extend(list(emails))
+            if mobiles:
+                final_hotel_where.append(f"hb.mobile IN ({', '.join(['%s'] * len(mobiles))})")
+                final_hotel_params.extend(list(mobiles))
+                
+            if final_hotel_where:
+                hotel_query = f"""
+                    SELECT DISTINCT hb.id, hb.*, b.status as booking_status, b.total_price, b.invoice_number, b.created_at, h.name as hotel_name, h.location as hotel_location, r.room_type
+                    FROM b2c_hotel_bookings hb
+                    JOIN b2c_bookings b ON hb.booking_id = b.id
+                    JOIN rooms r ON hb.room_id = r.id
+                    JOIN hotels h ON r.hotel_id = h.id
+                    WHERE {' OR '.join(final_hotel_where)}
+                    ORDER BY b.created_at DESC
+                """
+                c.execute(hotel_query, tuple(final_hotel_params))
+                hotel_history_data = c.fetchall()
+                
+            if request.method == "POST" and not history_data and not hotel_history_data:
+                error = "No booking history found for the provided details."
+                
+        except Exception as e:
+            error = f"An error occurred while loading history: {str(e)}"
+            
     conn.close()
-                
-    return render_template("b2c_my_bookings.html", booking_data=None, history_data=history_data, error=error)
+    return render_template("b2c_my_bookings.html", booking_data=None, history_data=history_data, hotel_history_data=hotel_history_data, error=error)
+
+# Route: B2C Clear Booking Search Session
+@app.route("/b2c/my-bookings/clear")
+def b2c_my_bookings_clear():
+    session.pop('b2c_search_email', None)
+    session.pop('b2c_search_mobile', None)
+    return redirect(url_for('b2c_my_bookings'))
 
 # Route: B2C Self-Service Cancel Booking
 @app.route("/b2c/booking/cancel", methods=["POST"])
@@ -743,58 +809,108 @@ def api_flights_search():
  
     # Query outbound flights
     if origin and destination and date_str:
-        if amadeus_flight_ids:
-            format_strings = ','.join(['%s'] * len(amadeus_flight_ids))
-            query = f"SELECT * FROM flights WHERE id IN ({format_strings}) ORDER BY price ASC"
-            params = amadeus_flight_ids
-            flights = query_db(query, tuple(params))
-        else:
-            # Fallback to local DB without strict date match to ensure mock data shows up
-            query = "SELECT * FROM flights WHERE origin = %s AND destination = %s"
-            params = [origin, destination]
-            if flight_type != "ALL":
-                query += " AND flight_type = %s"
-                params.append(flight_type)
-            if airline_filter:
-                query += " AND airline LIKE %s"
-                params.append(f"%{airline_filter}%")
-            query += " ORDER BY price ASC"
-            flights = query_db(query, tuple(params))
-            
-            # If still no flights, generate mock fallback data for this route
-            if not flights and date_str:
+        # Pre-generate LCC/NDC mock flights if they don't exist for this route
+        if flight_type in ["ALL", "LCC", "NDC"]:
+            existing_lcc_ndc = query_db("SELECT id FROM flights WHERE origin = %s AND destination = %s AND flight_type IN ('LCC', 'NDC') LIMIT 1", (origin, destination))
+            if not existing_lcc_ndc:
                 conn = get_db_connection()
                 cursor = conn.cursor()
                 airlines = ['UL', 'EK', 'QR', 'SQ', 'CX', 'MH', 'TG']
-                for _ in range(15):
+                for _ in range(10):
                     al = random.choice(airlines)
                     fno = f"{al}-{random.randint(100, 9999)}"
-                    price_val = round(random.uniform(45000, 180000), 2)
+                    f_type = random.choice(['LCC', 'NDC'])
+                    if f_type == 'LCC':
+                        gds_src = 'LCC'
+                        price_val = round(random.uniform(15000, 60000), 2)
+                    else:
+                        gds_src = 'NDC'
+                        price_val = round(random.uniform(35000, 120000), 2)
+                        
                     seats = random.randint(2, 9)
                     req_date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
                     dept_time = datetime.datetime.combine(req_date, datetime.time(random.randint(0,23), random.choice([0,15,30,45])))
                     arr_time = dept_time + datetime.timedelta(hours=random.randint(1, 14), minutes=random.choice([0,15,30,45]))
                     
                     cursor.execute("""
-                        INSERT INTO flights (flight_number, airline, origin, destination, departure_time, arrival_time, price, seats_available, flight_type, segment_count)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'GDS', %s)
-                    """, (fno, AIRLINE_MAPPING.get(al, al), origin, destination, dept_time, arr_time, price_val, seats, random.randint(1,3)))
+                        INSERT INTO flights (flight_number, airline, origin, destination, departure_time, arrival_time, price, seats_available, flight_type, gds_source, segment_count)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """, (fno, AIRLINE_MAPPING.get(al, al), origin, destination, dept_time, arr_time, price_val, seats, f_type, gds_src, random.randint(1,3)))
                 conn.commit()
                 cursor.close()
                 conn.close()
-                flights = query_db(query, tuple(params))
+
+        # Build query parameters
+        query_conditions = ["origin = %s AND destination = %s"]
+        params = [origin, destination]
+        
+        if flight_type == "ALL":
+            if amadeus_flight_ids:
+                format_strings = ','.join(['%s'] * len(amadeus_flight_ids))
+                query_conditions.append(f"(flight_type IN ('LCC', 'NDC') OR id IN ({format_strings}))")
+                params.extend(amadeus_flight_ids)
+        elif flight_type == "GDS":
+            if amadeus_flight_ids:
+                format_strings = ','.join(['%s'] * len(amadeus_flight_ids))
+                query_conditions.append(f"id IN ({format_strings})")
+                params.extend(amadeus_flight_ids)
+            else:
+                query_conditions.append("flight_type = 'GDS'")
+        else: # LCC or NDC
+            query_conditions.append("flight_type = %s")
+            params.append(flight_type)
             
-            # Adjust the departure date of the mock flights to match the requested date
-            if date_str:
-                requested_date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
-                for f in flights:
-                    orig_dep = f["departure_time"]
-                    orig_arr = f["arrival_time"]
-                    time_diff = orig_arr - orig_dep
-                    new_dep = datetime.datetime.combine(requested_date, orig_dep.time())
-                    new_arr = new_dep + time_diff
-                    f["departure_time"] = new_dep
-                    f["arrival_time"] = new_arr
+        if airline_filter:
+            query_conditions.append("airline LIKE %s")
+            params.append(f"%{airline_filter}%")
+            
+        query = f"SELECT * FROM flights WHERE " + " AND ".join(query_conditions) + " ORDER BY price ASC"
+        flights = query_db(query, tuple(params))
+        
+        # If still no flights at all (e.g. no GDS results and LCC/NDC wasn't generated for some reason), generate general mix
+        if not flights:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            airlines = ['UL', 'EK', 'QR', 'SQ', 'CX', 'MH', 'TG']
+            for _ in range(15):
+                al = random.choice(airlines)
+                fno = f"{al}-{random.randint(100, 9999)}"
+                f_type = random.choice(['GDS', 'LCC', 'NDC'])
+                if f_type == 'LCC':
+                    gds_src = 'LCC'
+                    price_val = round(random.uniform(15000, 60000), 2)
+                elif f_type == 'NDC':
+                    gds_src = 'NDC'
+                    price_val = round(random.uniform(35000, 120000), 2)
+                else:
+                    gds_src = 'GDS'
+                    price_val = round(random.uniform(45000, 180000), 2)
+                    
+                seats = random.randint(2, 9)
+                req_date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+                dept_time = datetime.datetime.combine(req_date, datetime.time(random.randint(0,23), random.choice([0,15,30,45])))
+                arr_time = dept_time + datetime.timedelta(hours=random.randint(1, 14), minutes=random.choice([0,15,30,45]))
+                
+                cursor.execute("""
+                    INSERT INTO flights (flight_number, airline, origin, destination, departure_time, arrival_time, price, seats_available, flight_type, gds_source, segment_count)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (fno, AIRLINE_MAPPING.get(al, al), origin, destination, dept_time, arr_time, price_val, seats, f_type, gds_src, random.randint(1,3)))
+            conn.commit()
+            cursor.close()
+            conn.close()
+            flights = query_db(query, tuple(params))
+
+        # Adjust the departure date of the mock flights to match the requested date
+        if date_str:
+            requested_date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+            for f in flights:
+                orig_dep = f["departure_time"]
+                orig_arr = f["arrival_time"]
+                time_diff = orig_arr - orig_dep
+                new_dep = datetime.datetime.combine(requested_date, orig_dep.time())
+                new_arr = new_dep + time_diff
+                f["departure_time"] = new_dep
+                f["arrival_time"] = new_arr
     else:
         # Fallback for initial load or general listing to keep other non-search components operational
         query = "SELECT * FROM flights WHERE 1=1"
@@ -820,34 +936,75 @@ def api_flights_search():
     # Query return flights if return date is specified
     return_flights = []
     if return_date_str and origin and destination:
-        if amadeus_return_flight_ids:
-            format_strings = ','.join(['%s'] * len(amadeus_return_flight_ids))
-            query = f"SELECT * FROM flights WHERE id IN ({format_strings}) ORDER BY price ASC"
-            params = amadeus_return_flight_ids
-            return_flights = query_db(query, tuple(params))
-        else:
-            query = "SELECT * FROM flights WHERE origin = %s AND destination = %s"
-            params = [destination, origin]
-            if flight_type != "ALL":
-                query += " AND flight_type = %s"
-                params.append(flight_type)
-            if airline_filter:
-                query += " AND airline LIKE %s"
-                params.append(f"%{airline_filter}%")
-            query += " ORDER BY price ASC"
-            return_flights = query_db(query, tuple(params))
+        # Pre-generate LCC/NDC return flights if they don't exist for this route
+        if flight_type in ["ALL", "LCC", "NDC"]:
+            existing_return_lcc_ndc = query_db("SELECT id FROM flights WHERE origin = %s AND destination = %s AND flight_type IN ('LCC', 'NDC') LIMIT 1", (destination, origin))
+            if not existing_return_lcc_ndc:
+                conn = get_db_connection()
+                cursor = conn.cursor()
+                airlines = ['UL', 'EK', 'QR', 'SQ', 'CX', 'MH', 'TG']
+                for _ in range(10):
+                    al = random.choice(airlines)
+                    fno = f"{al}-{random.randint(100, 9999)}"
+                    f_type = random.choice(['LCC', 'NDC'])
+                    if f_type == 'LCC':
+                        gds_src = 'LCC'
+                        price_val = round(random.uniform(15000, 60000), 2)
+                    else:
+                        gds_src = 'NDC'
+                        price_val = round(random.uniform(35000, 120000), 2)
+                        
+                    seats = random.randint(2, 9)
+                    req_date = datetime.datetime.strptime(return_date_str, "%Y-%m-%d").date()
+                    dept_time = datetime.datetime.combine(req_date, datetime.time(random.randint(0,23), random.choice([0,15,30,45])))
+                    arr_time = dept_time + datetime.timedelta(hours=random.randint(1, 14), minutes=random.choice([0,15,30,45]))
+                    
+                    cursor.execute("""
+                        INSERT INTO flights (flight_number, airline, origin, destination, departure_time, arrival_time, price, seats_available, flight_type, gds_source, segment_count)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """, (fno, AIRLINE_MAPPING.get(al, al), destination, origin, dept_time, arr_time, price_val, seats, f_type, gds_src, random.randint(1,3)))
+                conn.commit()
+                cursor.close()
+                conn.close()
+
+        # Build query parameters
+        query_conditions = ["origin = %s AND destination = %s"]
+        params = [destination, origin]
+        
+        if flight_type == "ALL":
+            if amadeus_return_flight_ids:
+                format_strings = ','.join(['%s'] * len(amadeus_return_flight_ids))
+                query_conditions.append(f"(flight_type IN ('LCC', 'NDC') OR id IN ({format_strings}))")
+                params.extend(amadeus_return_flight_ids)
+        elif flight_type == "GDS":
+            if amadeus_return_flight_ids:
+                format_strings = ','.join(['%s'] * len(amadeus_return_flight_ids))
+                query_conditions.append(f"id IN ({format_strings})")
+                params.extend(amadeus_return_flight_ids)
+            else:
+                query_conditions.append("flight_type = 'GDS'")
+        else: # LCC or NDC
+            query_conditions.append("flight_type = %s")
+            params.append(flight_type)
             
-            # Adjust the departure date of the mock flights to match the requested date
-            if return_date_str:
-                requested_ret_date = datetime.datetime.strptime(return_date_str, "%Y-%m-%d").date()
-                for f in return_flights:
-                    orig_dep = f["departure_time"]
-                    orig_arr = f["arrival_time"]
-                    time_diff = orig_arr - orig_dep
-                    new_dep = datetime.datetime.combine(requested_ret_date, orig_dep.time())
-                    new_arr = new_dep + time_diff
-                    f["departure_time"] = new_dep
-                    f["arrival_time"] = new_arr
+        if airline_filter:
+            query_conditions.append("airline LIKE %s")
+            params.append(f"%{airline_filter}%")
+            
+        query = f"SELECT * FROM flights WHERE " + " AND ".join(query_conditions) + " ORDER BY price ASC"
+        return_flights = query_db(query, tuple(params))
+        
+        # Adjust the departure date of the return flights to match the requested return date
+        if return_date_str:
+            requested_ret_date = datetime.datetime.strptime(return_date_str, "%Y-%m-%d").date()
+            for f in return_flights:
+                orig_dep = f["departure_time"]
+                orig_arr = f["arrival_time"]
+                time_diff = orig_arr - orig_dep
+                new_dep = datetime.datetime.combine(requested_ret_date, orig_dep.time())
+                new_arr = new_dep + time_diff
+                f["departure_time"] = new_dep
+                f["arrival_time"] = new_arr
             
         # Fallback clone return flights if no return flights found but outbound flights exist
         if not return_flights and flights:
@@ -1105,10 +1262,10 @@ def api_flights_book():
             """, (booking_status, full_ticket_value, invoice_number))
             booking_id = cursor.lastrowid
             
-            outbound_gds_type = (flight.get("gds_source") or "Amadeus") if flight.get("flight_type") == "GDS" else flight.get("flight_type")
+            outbound_gds_type = "GDS" if flight.get("flight_type") == "GDS" else flight.get("flight_type")
             return_gds_type = None
             if return_flight:
-                return_gds_type = (return_flight.get("gds_source") or "Amadeus") if return_flight.get("flight_type") == "GDS" else return_flight.get("flight_type")
+                return_gds_type = "GDS" if return_flight.get("flight_type") == "GDS" else return_flight.get("flight_type")
             
             for idx, p in enumerate(passengers):
                 p_title = p.get("title", "")
@@ -1162,10 +1319,10 @@ def api_flights_book():
             
             booking_id = cursor.lastrowid
             
-            outbound_gds_type = (flight.get("gds_source") or "Amadeus") if flight.get("flight_type") == "GDS" else flight.get("flight_type")
+            outbound_gds_type = "GDS" if flight.get("flight_type") == "GDS" else flight.get("flight_type")
             return_gds_type = None
             if return_flight:
-                return_gds_type = (return_flight.get("gds_source") or "Amadeus") if return_flight.get("flight_type") == "GDS" else return_flight.get("flight_type")
+                return_gds_type = "GDS" if return_flight.get("flight_type") == "GDS" else return_flight.get("flight_type")
             
             for idx, p in enumerate(passengers):
                 p_title = p.get("title", "")
@@ -1228,6 +1385,10 @@ def api_flights_book():
         conn.commit()
         cursor.close()
         conn.close()
+        
+        if is_b2c:
+            session['b2c_search_email'] = email
+            session['b2c_search_mobile'] = mobile
         
         status_message = "Ticketed successfully! Invoice generated." if booking_status == "ticketed" else "Reservation saved as Non-Ticketed (Credit not deducted)."
         return jsonify({
@@ -1293,7 +1454,7 @@ def api_hotels_search():
                         
                         if not existing:
                             # Insert hotel
-                            desc = f"A premium hotel in {hotel_loc} sourced via Amadeus GDS. Offers comfortable lodging and premium amenities."
+                            desc = f"A premium hotel in {hotel_loc} sourced via GDS. Offers comfortable lodging and premium amenities."
                             # Random rating from 3 to 5
                             rating = random.randint(3, 5)
                             # Pick a random placeholder image or generic name
@@ -1429,6 +1590,86 @@ def api_hotels_book():
             "message": "Hotel booked successfully! Invoice raised.",
             "invoice_number": invoice_number,
             "total_price": float(total_price)
+        })
+        
+    except Exception as e:
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+# API: Book B2C Hotel
+@app.route("/api/b2c/hotels/book", methods=["POST"])
+def api_b2c_hotels_book():
+    data = request.json
+    room_id = data.get("room_id")
+    guest_name = data.get("guest_name")
+    email = data.get("email")
+    mobile = data.get("mobile")
+    check_in_str = data.get("check_in")
+    check_out_str = data.get("check_out")
+    
+    if not room_id or not guest_name or not email or not mobile or not check_in_str or not check_out_str:
+        return jsonify({"success": False, "error": "All fields are required"}), 400
+        
+    try:
+        check_in = datetime.datetime.strptime(check_in_str, "%Y-%m-%d").date()
+        check_out = datetime.datetime.strptime(check_out_str, "%Y-%m-%d").date()
+        nights = (check_out - check_in).days
+        if nights <= 0:
+            return jsonify({"success": False, "error": "Check-out date must be after Check-in"}), 400
+    except ValueError:
+        return jsonify({"success": False, "error": "Invalid date format. Use YYYY-MM-DD"}), 400
+        
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        # Check room details
+        cursor.execute("SELECT * FROM rooms WHERE id = %s AND availability = 1", (room_id,))
+        room = cursor.fetchone()
+        if not room:
+            return jsonify({"success": False, "error": "Room not available or not found"}), 404
+            
+        # Get hotel name
+        cursor.execute("SELECT name FROM hotels WHERE id = %s", (room["hotel_id"],))
+        hotel_name = cursor.fetchone()["name"]
+        
+        # Calculate pricing: convert to LKR (1 USD = 300 LKR for hotel pricing)
+        orig_price_usd = room["price_per_night"] * nights
+        markup_usd = Decimal("25.00")
+        total_price_usd = orig_price_usd + markup_usd
+        total_price_lkr = total_price_usd * Decimal("300.00")
+        
+        invoice_number = f"INV-BH{random.randint(100000, 999999)}"
+        
+        # Insert B2C Booking
+        cursor.execute("""
+            INSERT INTO b2c_bookings (booking_type, status, total_price, invoice_number, created_at)
+            VALUES ('hotel', 'ticketed', %s, %s, NOW())
+        """, (total_price_lkr, invoice_number))
+        
+        booking_id = cursor.lastrowid
+        
+        # Insert B2C Hotel Booking Details
+        cursor.execute("""
+            INSERT INTO b2c_hotel_bookings (booking_id, room_id, check_in, check_out, guest_name, email, mobile, original_price, service_fee)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (booking_id, room_id, check_in, check_out, guest_name, email, mobile, orig_price_usd * Decimal("300.00"), markup_usd * Decimal("300.00")))
+        
+        # Store in session to view immediately
+        session['b2c_search_email'] = email
+        session['b2c_search_mobile'] = mobile
+            
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            "success": True, 
+            "message": "Hotel booked successfully!",
+            "invoice_number": invoice_number,
+            "total_price": float(total_price_lkr)
         })
         
     except Exception as e:

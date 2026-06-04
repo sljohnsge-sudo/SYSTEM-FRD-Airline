@@ -196,8 +196,8 @@
             <i class="fa-solid fa-plane-departure"></i> Aeronexa
         </a>
         <nav class="b2c-nav">
-            <a href="/b2c"><i class="fa-solid fa-plane"></i> Flights</a>
-            <a href="#"><i class="fa-solid fa-hotel"></i> Hotels</a>
+            <a href="/b2c?tab=flights"><i class="fa-solid fa-plane"></i> Flights</a>
+            <a href="/b2c?tab=hotels"><i class="fa-solid fa-hotel"></i> Hotels</a>
             <a href="#"><i class="fa-solid fa-umbrella-beach"></i> Holidays</a>
             <a href="#"><i class="fa-solid fa-tags"></i> Offers</a>
             <a href="/b2c/my-bookings" style="color: #d11242;"><i class="fa-solid fa-briefcase"></i> My Bookings</a>
@@ -233,31 +233,19 @@
                         <h3 style="margin-top: 0; color: #1e293b;">Welcome back, {{ session.b2c_user.name }}!</h3>
                         <p style="color: #64748b;">Your booking history is automatically synced to <strong>{{ session.b2c_user.email }}</strong></p>
                     </div>
-                    
-                    {% if history_data and history_data|length > 0 %}
-                    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
-                        <h4 style="margin-top: 0; margin-bottom: 20px; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px;"><i class="fa-solid fa-address-card" style="color: #d11242; margin-right: 8px;"></i> Verified Traveler Profile</h4>
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
-                            <div>
-                                <label style="display: block; font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Full Name</label>
-                                <div style="font-size: 15px; font-weight: 700; color: #1e293b;">{{ history_data[0].passenger_name or session.b2c_user.name }}</div>
-                            </div>
-                            <div>
-                                <label style="display: block; font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Email Address</label>
-                                <div style="font-size: 15px; font-weight: 700; color: #1e293b;">{{ session.b2c_user.email }} <i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 13px; margin-left: 5px;" title="Verified by Google"></i></div>
-                            </div>
-                            <div>
-                                <label style="display: block; font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Mobile Number</label>
-                                <div style="font-size: 15px; font-weight: 700; color: #1e293b;">{{ history_data[0].mobile or 'Not Provided' }}</div>
-                            </div>
-                            <div>
-                                <label style="display: block; font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Passport Number</label>
-                                <div style="font-size: 15px; font-weight: 700; color: #1e293b;">{{ history_data[0].passport_number or 'Not Provided' }}</div>
-                            </div>
-                        </div>
+                {% elif session.get('b2c_search_email') or session.get('b2c_search_mobile') %}
+                    <div style="text-align: center; padding: 20px 0; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 25px;">
+                        <i class="fa-solid fa-arrows-spin" style="font-size: 36px; color: #10b981; margin-bottom: 15px;"></i>
+                        <h3 style="margin-top: 0; color: #1e293b;">Traveler History Synced</h3>
+                        <p style="color: #64748b; font-size: 14px; margin-bottom: 15px;">
+                            Synced with {% if session.get('b2c_search_email') %}Email: <strong>{{ session.b2c_search_email }}</strong>{% endif %}
+                            {% if session.get('b2c_search_email') and session.get('b2c_search_mobile') %} & {% endif %}
+                            {% if session.get('b2c_search_mobile') %}Phone: <strong>{{ session.get('b2c_search_mobile') }}</strong>{% endif %}
+                        </p>
+                        <a href="/b2c/my-bookings/clear" style="display: inline-flex; align-items: center; gap: 8px; color: #d11242; font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid #cbd5e1; padding: 8px 18px; border-radius: 20px; background: #fff; transition: all 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                            <i class="fa-solid fa-arrows-rotate"></i> Sync Different Contact
+                        </a>
                     </div>
-                    {% endif %}
-                    
                 {% else %}
                     <div style="text-align: center; margin-bottom: 30px; padding-bottom: 25px; border-bottom: 1px dashed #e2e8f0;">
                         <h3 style="margin-top: 0;">The fastest way to view your trips</h3>
@@ -281,20 +269,62 @@
                         <button type="submit" class="btn-primary" style="background: #1e293b;">Search History Manually</button>
                     </form>
                 {% endif %}
+                
+                {% set ns = namespace(profile_name='Not Provided', profile_mobile='Not Provided', profile_passport='Not Provided', has_profile=false) %}
+                {% if session.get('b2c_user') %}
+                    {% set ns.profile_name = session.b2c_user.name %}
+                    {% set ns.has_profile = true %}
+                {% endif %}
+                {% if history_data and history_data|length > 0 %}
+                    {% set ns.profile_name = history_data[0].passenger_name or ns.profile_name %}
+                    {% set ns.profile_mobile = history_data[0].mobile or ns.profile_mobile %}
+                    {% set ns.profile_passport = history_data[0].passport_number or ns.profile_passport %}
+                    {% set ns.has_profile = true %}
+                {% elif hotel_history_data and hotel_history_data|length > 0 %}
+                    {% set ns.profile_name = hotel_history_data[0].guest_name or ns.profile_name %}
+                    {% set ns.profile_mobile = hotel_history_data[0].mobile or ns.profile_mobile %}
+                    {% set ns.has_profile = true %}
+                {% endif %}
+                
+                {% if ns.has_profile %}
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; margin-top: 30px; margin-bottom: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                    <h4 style="margin-top: 0; margin-bottom: 20px; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px;"><i class="fa-solid fa-address-card" style="color: #d11242; margin-right: 8px;"></i> Verified Traveler Profile</h4>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Full Name</label>
+                            <div style="font-size: 15px; font-weight: 700; color: #1e293b;">{{ ns.profile_name }}</div>
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Email Address</label>
+                            <div style="font-size: 15px; font-weight: 700; color: #1e293b;">{{ session.b2c_user.email if session.get('b2c_user') else (session.get('b2c_search_email') or (history_data[0].email if history_data else (hotel_history_data[0].email if hotel_history_data else 'Not Provided'))) }} {% if session.get('b2c_user') %}<i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 13px; margin-left: 5px;" title="Verified by Google"></i>{% endif %}</div>
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Mobile Number</label>
+                            <div style="font-size: 15px; font-weight: 700; color: #1e293b;">{{ ns.profile_mobile }}</div>
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Passport Number</label>
+                            <div style="font-size: 15px; font-weight: 700; color: #1e293b;">{{ ns.profile_passport }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
             
         </div>
         
-        {% if booking_data or history_data %}
+        {% if booking_data or history_data or hotel_history_data %}
             {% set results = booking_data if booking_data else history_data %}
             {% set ns = namespace(has_active=false, has_cancelled=false) %}
-            {% for booking in results %}
-                {% if booking.booking_status|lower in ['cancelled', 'refunded'] %}
-                    {% set ns.has_cancelled = true %}
-                {% else %}
-                    {% set ns.has_active = true %}
-                {% endif %}
-            {% endfor %}
+            {% if results %}
+                {% for booking in results %}
+                    {% if booking.booking_status|lower in ['cancelled', 'refunded'] %}
+                        {% set ns.has_cancelled = true %}
+                    {% else %}
+                        {% set ns.has_active = true %}
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
 
             <!-- Booking Options Tabs -->
             <div style="display: flex; gap: 15px; margin: 30px 0 25px 0; border-bottom: 1px solid #cbd5e1; padding-bottom: 0;">
@@ -303,6 +333,9 @@
                 </button>
                 <button onclick="switchBookingTab('cancelled')" id="tab-cancelled" style="background: transparent; border: none; font-size: 16px; font-weight: 600; color: #64748b; padding: 12px 20px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s;">
                     <i class="fa-solid fa-ban"></i> Cancelled Bookings
+                </button>
+                <button onclick="switchBookingTab('hotels')" id="tab-hotels" style="background: transparent; border: none; font-size: 16px; font-weight: 600; color: #64748b; padding: 12px 20px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s;">
+                    <i class="fa-solid fa-hotel"></i> Hotel Bookings
                 </button>
             </div>
 
@@ -471,6 +504,90 @@
                 </div>
             </div>
 
+            <!-- Hotel Bookings Section -->
+            <div id="section-hotels" style="display: none;">
+                <div style="margin-bottom: 20px;">
+                    <input type="text" id="search-hotels" onkeyup="filterBookings('hotels')" placeholder="Search hotel stays by Hotel, Room, Guest Name..." class="form-control" style="width: 100%; max-width: 500px; padding-left: 35px; background: white url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 512 512\' width=\'16\' height=\'16\'><path fill=\'%2364748b\' d=\'M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z\'/></svg>') no-repeat 12px center;">
+                </div>
+                
+                <div id="list-hotels">
+                {% if hotel_history_data and hotel_history_data|length > 0 %}
+                    {% for booking in hotel_history_data %}
+                        <div class="booking-card" data-search="{{ booking.hotel_name | lower }} {{ booking.room_type | lower }} {{ booking.guest_name | lower }} {{ booking.invoice_number | lower }}">
+                            <div class="booking-header" style="border-bottom: 1px solid #e2e8f0;">
+                                <h3>Hotel Stay Ref: <span style="color: #006ce4;">{{ booking.invoice_number }}</span></h3>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <span style="font-size: 13px; color: #64748b; margin-right: 10px;">Booked on: {{ booking.created_at.strftime('%Y-%m-%d') if booking.created_at else '' }}</span>
+                                    <span class="status-badge status-{{ booking.booking_status | lower | replace(' ', '-') }}">{{ booking.booking_status }}</span>
+                                </div>
+                            </div>
+                            <div class="booking-body">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; padding-bottom: 25px; border-bottom: 1px dashed #cbd5e1; flex-wrap: wrap; gap: 15px;">
+                                    <div>
+                                        <div style="font-size: 20px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                            <i class="fa-solid fa-hotel" style="color: #006ce4; font-size: 18px;"></i> {{ booking.hotel_name }}
+                                        </div>
+                                        <div style="color: #64748b; font-size: 13px; display: flex; align-items: center; gap: 4px;">
+                                            <i class="fa-solid fa-location-dot" style="color: #cbd5e1;"></i> {{ booking.hotel_location }}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Stay Dates display -->
+                                    <div style="display: flex; gap: 30px; align-items: center;">
+                                        <div style="text-align: center;">
+                                            <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 4px;">Check-In</div>
+                                            <div style="font-size: 15px; font-weight: 700; color: #1e293b;">{{ booking.check_in.strftime('%d %b %Y') if booking.check_in else '' }}</div>
+                                        </div>
+                                        <div style="color: #cbd5e1; font-size: 18px;"><i class="fa-solid fa-arrow-right"></i></div>
+                                        <div style="text-align: center;">
+                                            <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 4px;">Check-Out</div>
+                                            <div style="font-size: 15px; font-weight: 700; color: #1e293b;">{{ booking.check_out.strftime('%d %b %Y') if booking.check_out else '' }}</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="text-align: right;">
+                                        <div style="font-weight: 800; font-size: 24px; color: #d11242;">LKR {{ "{:,.2f}".format(booking.total_price) }}</div>
+                                        <div style="color: #64748b; font-size: 12px; font-weight: 600;">Total stays cost</div>
+                                    </div>
+                                </div>
+                                
+                                <h4 style="margin-top: 0; margin-bottom: 15px; color: #1e293b;">Reservation Details</h4>
+                                <div class="passenger-details">
+                                    <div class="detail-item">
+                                        <label>Primary Guest</label>
+                                        <div style="font-weight: 700; color: #1e293b;">{{ booking.guest_name }}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <label>Room Category</label>
+                                        <div style="font-weight: 700; color: #1e293b;">{{ booking.room_type }}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <label>Email Address</label>
+                                        <div>{{ booking.email }}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <label>Mobile Number</label>
+                                        <div>{{ booking.mobile }}</div>
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0; display: flex; gap: 15px; justify-content: flex-end;">
+                                    <button type="button" class="btn-primary" style="width: auto; padding: 10px 20px; background: #006ce4; border: none; font-weight: 700;" onclick="window.print()"><i class="fa-solid fa-receipt" style="margin-right: 8px;"></i> Hotel Invoice</button>
+                                    <button type="button" class="btn-primary" style="width: auto; padding: 10px 20px; background: white; color: #1e293b; border: 1px solid #cbd5e1;"><i class="fa-solid fa-headset" style="margin-right: 8px;"></i> Support</button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="background: white; border-radius: 12px; padding: 40px; text-align: center; border: 1px dashed #cbd5e1; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+                        <i class="fa-solid fa-hotel" style="font-size: 48px; color: #cbd5e1; margin-bottom: 15px;"></i>
+                        <h4 style="margin: 0 0 10px 0; color: #64748b; font-size: 16px; font-weight: 600;">No Hotel Reservations</h4>
+                        <p style="color: #94a3b8; margin: 0; font-size: 13px;">Your booked hotel accommodations will be shown here.</p>
+                    </div>
+                {% endif %}
+                </div>
+            </div>
+
             <script>
                 function filterBookings(type) {
                     const input = document.getElementById('search-' + type);
@@ -491,31 +608,44 @@
                 function switchBookingTab(tab) {
                     const tabActive = document.getElementById('tab-active');
                     const tabCancelled = document.getElementById('tab-cancelled');
+                    const tabHotels = document.getElementById('tab-hotels');
+                    
                     const secActive = document.getElementById('section-active');
                     const secCancelled = document.getElementById('section-cancelled');
+                    const secHotels = document.getElementById('section-hotels');
+
+                    [tabActive, tabCancelled, tabHotels].forEach(t => {
+                        if (t) {
+                            t.style.color = '#64748b';
+                            t.style.borderBottomColor = 'transparent';
+                            t.style.fontWeight = '600';
+                        }
+                    });
+                    [secActive, secCancelled, secHotels].forEach(s => {
+                        if (s) s.style.display = 'none';
+                    });
 
                     if (tab === 'active') {
-                        tabActive.style.color = '#d11242';
-                        tabActive.style.borderBottomColor = '#d11242';
-                        tabActive.style.fontWeight = '700';
-                        
-                        tabCancelled.style.color = '#64748b';
-                        tabCancelled.style.borderBottomColor = 'transparent';
-                        tabCancelled.style.fontWeight = '600';
-                        
-                        secActive.style.display = 'block';
-                        secCancelled.style.display = 'none';
-                    } else {
-                        tabCancelled.style.color = '#d11242';
-                        tabCancelled.style.borderBottomColor = '#d11242';
-                        tabCancelled.style.fontWeight = '700';
-                        
-                        tabActive.style.color = '#64748b';
-                        tabActive.style.borderBottomColor = 'transparent';
-                        tabActive.style.fontWeight = '600';
-                        
-                        secActive.style.display = 'none';
-                        secCancelled.style.display = 'block';
+                        if (tabActive) {
+                            tabActive.style.color = '#d11242';
+                            tabActive.style.borderBottomColor = '#d11242';
+                            tabActive.style.fontWeight = '700';
+                        }
+                        if (secActive) secActive.style.display = 'block';
+                    } else if (tab === 'cancelled') {
+                        if (tabCancelled) {
+                            tabCancelled.style.color = '#d11242';
+                            tabCancelled.style.borderBottomColor = '#d11242';
+                            tabCancelled.style.fontWeight = '700';
+                        }
+                        if (secCancelled) secCancelled.style.display = 'block';
+                    } else if (tab === 'hotels') {
+                        if (tabHotels) {
+                            tabHotels.style.color = '#d11242';
+                            tabHotels.style.borderBottomColor = '#d11242';
+                            tabHotels.style.fontWeight = '700';
+                        }
+                        if (secHotels) secHotels.style.display = 'block';
                     }
                 }
             </script>

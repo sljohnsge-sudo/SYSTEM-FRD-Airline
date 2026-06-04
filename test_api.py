@@ -1,4 +1,4 @@
-from amadeus import Client
+from mock_gds import MockGDSClient as Client
 import traceback
 amadeus = Client(client_id='3ZBEyT1bTUzMUPkcEPBUOEKIAkEjgu5o', client_secret='2K9Xh5GC2UF9rVo3', hostname='test')
 try:

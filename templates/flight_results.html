@@ -867,7 +867,7 @@
                 <div style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: 6px; padding: 12px 15px; display: flex; gap: 10px; align-items: flex-start;">
                     <i class="fa-solid fa-triangle-exclamation" style="color: #d97706; margin-top: 2px;"></i>
                     <div style="font-size: 12px; color: #b45309; line-height: 1.4;">
-                        <strong>Important Security Advisory:</strong> This ticketing request is submitted directly to GDS Amadeus GDS. Once proceed is clicked, it cannot be aborted, and standard cancellation/reissue penalties will apply.
+                        <strong>Important Security Advisory:</strong> This ticketing request is submitted directly to GDS. Once proceed is clicked, it cannot be aborted, and standard cancellation/reissue penalties will apply.
                     </div>
                 </div>
             </div>
@@ -1717,6 +1717,33 @@
             return dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
         }
 
+        function getSourceBadge(f) {
+            let source = (f.gds_source || f.flight_type || '').toUpperCase();
+            if (source === 'AMADEUS' || source === 'SABRE') {
+                source = 'GDS';
+            }
+            
+            let bg = '#f1f5f9';
+            let text = '#475569';
+            let border = '#e2e8f0';
+            
+            if (source === 'GDS') {
+                bg = '#e0f2fe';
+                text = '#0369a1';
+                border = '#bae6fd';
+            } else if (source === 'LCC') {
+                bg = '#fef3c7';
+                text = '#b45309';
+                border = '#fde68a';
+            } else if (source === 'NDC') {
+                bg = '#dcfce7';
+                text = '#15803d';
+                border = '#bbf7d0';
+            }
+            
+            return `<span class="badge-source" style="margin-left: 8px; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; background: ${bg}; color: ${text}; border: 1px solid ${border}; display: inline-block; vertical-align: middle;">${source}</span>`;
+        }
+
         function renderResults(flights) {
             const container = document.getElementById('flight-list-container');
             container.innerHTML = '';
@@ -1759,6 +1786,7 @@
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <i class="fa-solid fa-plane" style="color: #ff8c00;"></i>
                                 <span style="font-weight: bold; font-size: 14px;">${f.airline}</span>
+                                ${getSourceBadge(f)}
                                 <span style="color: #ccc; margin: 0 5px;">|</span>
                                 <span style="color: var(--primary-blue); font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 4px; cursor: pointer;">
                                     <i class="fa-solid fa-tags"></i> BEST OFFERS <i class="fa-solid fa-angle-down"></i>
@@ -1867,7 +1895,10 @@
                             <!-- Price column -->
                             <div style="width: 210px; text-align: right; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 6px; border-left: 1px solid var(--border-color); padding-left: 20px; margin-left: 20px;">
                                 <div style="font-size: 13px; text-decoration: line-through; color: var(--text-muted);">${originalPriceFormatted}</div>
-                                <div class="fc-price" style="font-size: 24px; font-weight: 800; color: var(--success-green); line-height: 1.1;">${priceFormatted}</div>
+                                <div style="display: flex; align-items: center; gap: 6px; justify-content: flex-end; width: 100%;">
+                                    <div class="fc-price" style="font-size: 24px; font-weight: 800; color: var(--success-green); line-height: 1.1; margin: 0;">${priceFormatted}</div>
+                                    ${getSourceBadge(f)}
+                                </div>
                                 <div style="font-size: 11px; color: var(--text-muted); margin-top: -3px; margin-bottom: 5px;">Total for ${window.totalTravelers || 1} Traveler(s)</div>
                                 
                                 <button class="btn-book" onclick="openBookingModal(${f.id}, ${isRoundTrip ? f.return_flight.id : 'null'}, ${priceLkr}, true)" style="background: var(--success-green); color: white; border: none; padding: 10px 24px; border-radius: 4px; font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; transition: background 0.2s;">Book Now</button>
