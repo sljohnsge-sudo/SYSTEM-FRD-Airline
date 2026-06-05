@@ -18,7 +18,7 @@
         }
         /* ── TOP PROMO TICKER ── */
         .promo-ticker {
-            background: linear-gradient(90deg, #d11242, #a80c33);
+            background: linear-gradient(90deg, #c3122e, #ac031c);
             color: white; font-size: 13px; font-weight: 600;
             text-align: center; padding: 9px 0; letter-spacing: 0.5px;
         }
@@ -33,7 +33,7 @@
             position: sticky; top: 0; z-index: 200;
         }
         .b2c-brand {
-            font-size: 26px; font-weight: 800; color: #d11242;
+            font-size: 26px; font-weight: 800; color: #c3122e;
             display: flex; align-items: center; gap: 10px; text-decoration: none;
         }
         .b2c-nav { display: flex; gap: 28px; align-items: center; }
@@ -41,17 +41,17 @@
             color: #334155; text-decoration: none; font-weight: 600;
             font-size: 14px; transition: color 0.25s;
         }
-        .b2c-nav a:hover { color: #d11242; }
+        .b2c-nav a:hover { color: #c3122e; }
         .btn-b2b-login {
-            background: #d11242; color: #fff !important;
+            background: #c3122e; color: #fff !important;
             padding: 9px 20px; border-radius: 25px; font-weight: 700;
-            transition: all 0.3s; box-shadow: 0 3px 12px rgba(209,18,66,0.3);
+            transition: all 0.3s; box-shadow: 0 3px 12px rgba(195, 18, 46,0.3);
         }
-        .btn-b2b-login:hover { background: #a80c33; transform: translateY(-1px); }
+        .btn-b2b-login:hover { background: #ac031c; transform: translateY(-1px); }
         /* ── HERO ── */
         .hero-banner {
             min-height: 500px;
-            background-image: linear-gradient(135deg, rgba(209,18,66,0.88) 0%, rgba(120,10,40,0.6) 40%, rgba(0,0,0,0.65) 100%),
+            background-image: linear-gradient(135deg, rgba(195, 18, 46,0.88) 0%, rgba(172,3,28,0.6) 40%, rgba(0,0,0,0.65) 100%),
                 url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&q=80&w=2000');
             background-size: cover; background-position: center;
             display: flex; flex-direction: column;
@@ -74,10 +74,15 @@
             animation: fadeInDown 0.8s ease-out 0.1s both;
         }
         .hero-banner p {
+            font-size: 20px;
+            opacity: 0.9;
+            margin: 0 0 30px 0;
+            animation: fadeInDown 0.8s ease-out 0.2s both;
+        }
         .form-control { background: #f9f9f9 !important; border: 1px solid #ddd !important; color: #333 !important; }
         .trip-type-selector { background: #f0f0f0 !important; border: none !important; }
         .trip-type-pill { color: #555 !important; }
-        .trip-type-pill.active { background: #d11242 !important; color: white !important; }
+        .trip-type-pill.active { background: #c3122e !important; color: white !important; }
         
         .footer {
             background-color: #1a1a1a;
@@ -120,7 +125,7 @@
             position: absolute;
             top: 15px;
             right: 15px;
-            background: #d11242;
+            background: #c3122e;
             color: white;
             font-size: 11px;
             font-weight: 700;
@@ -163,9 +168,7 @@
         .b2c-room-item {
             border-top: 1px solid #f1f5f9;
             padding: 15px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: block;
         }
         .b2c-room-item:last-child {
             border-bottom: none;
@@ -178,7 +181,7 @@
         .b2c-room-price {
             font-size: 18px;
             font-weight: 800;
-            color: #d11242;
+            color: #c3122e;
         }
         .b2c-room-price-sub {
             font-size: 11px;
@@ -218,8 +221,8 @@
         <nav class="b2c-nav">
             <a href="/b2c?tab=flights" id="nav-flights-btn" onclick="switchB2CTab('flights', event)"><i class="fa-solid fa-plane"></i> Flights</a>
             <a href="/b2c?tab=hotels" id="nav-hotels-btn" onclick="switchB2CTab('hotels', event)"><i class="fa-solid fa-hotel"></i> Hotels</a>
-            <a href="#"><i class="fa-solid fa-umbrella-beach"></i> Holidays</a>
-            <a href="#"><i class="fa-solid fa-tags" style="color:#d11242;"></i> <span style="color:#d11242;">Offers</span></a>
+            <a href="/b2c/holidays" id="nav-holidays-btn"><i class="fa-solid fa-umbrella-beach"></i> Holidays</a>
+            <a href="/b2c/offers"><i class="fa-solid fa-tags"></i> Offers</a>
             <a href="/b2c/my-bookings"><i class="fa-solid fa-briefcase"></i> My Bookings</a>
             
             {% if session.get('b2c_user') %}
@@ -256,10 +259,10 @@
                 <div class="content-card" style="background: white; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.12); padding: 35px; border: 1px solid rgba(255,255,255,0.8);">
                     <!-- Tab Selector at top of search card -->
                     <div style="display: flex; gap: 15px; border-bottom: 2px solid #f1f5f9; margin-bottom: 25px; padding-bottom: 10px;">
-                        <button class="b2c-tab-btn active" id="b2c-tab-btn-flights" onclick="switchB2CTab('flights', event)" style="padding: 10px 20px; font-size: 15px; font-weight: 700; border: none; background: none; border-bottom: 3px solid #d11242; color: #d11242; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: 'Outfit', sans-serif;">
+                        <button class="b2c-tab-btn active" id="b2c-tab-btn-flights" onclick="switchB2CTab('flights', event)" style="padding: 10px 20px; font-size: 15px; font-weight: 700; border: none; background: none; border-bottom: 3px solid #c3122e; color: #c3122e; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: 'Outfit', sans-serif;">
                             <i class="fa-solid fa-plane"></i> Flights
                         </button>
-                        <button class="b2c-tab-btn" id="b2c-tab-btn-hotels" onclick="switchB2CTab('hotels', event)" style="padding: 10px 20px; font-size: 15px; font-weight: 700; border: none; background: none; border-bottom: 3px solid transparent; color: #64748b; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: 'Outfit', sans-serif;">
+                        <button class="b2c-tab-btn" id="b2c-tab-btn-hotels" onclick="switchB2CTab('hotels', event)" style="padding: 10px 20px; font-size: 15px; font-weight: 600; border: none; background: none; border-bottom: 3px solid transparent; color: #64748b; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: 'Outfit', sans-serif;">
                             <i class="fa-solid fa-hotel"></i> Hotels
                         </button>
                     </div>
@@ -462,7 +465,7 @@
                         </div>
                         
                         <div style="width: 100%; display: flex; justify-content: flex-end; margin-top: 25px;">
-                            <button class="btn-search" onclick="searchFlights()" style="min-width: 180px; font-size: 16px; padding: 14px 24px; border-radius: 30px; background: #d11242; color: white; border: none; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(209, 18, 66, 0.4); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(209, 18, 66, 0.5)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(209, 18, 66, 0.4)';">
+                            <button class="btn-search" onclick="searchFlights()" style="min-width: 180px; font-size: 16px; padding: 14px 24px; border-radius: 30px; background: #c3122e; color: white; border: none; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(195, 18, 46, 0.4); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(195, 18, 46, 0.5)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(195, 18, 46, 0.4)';">
                                 <i class="fa-solid fa-magnifying-glass"></i>
                                 <span>Search</span>
                             </button>
@@ -498,118 +501,94 @@
 
                 <!-- Hotels Panel -->
                 <div id="b2c-hotels-panel" style="display: none;">
-                    <div class="hero-content">
+                    <div class="hero-content" style="text-align: left; margin-bottom: 25px;">
                         <h1 style="color: #1e293b; font-size: 32px; font-weight: 800; margin: 0 0 10px 0;">Find Wholesale Hotel Rates</h1>
                         <p style="color: #64748b; font-size: 16px; margin: 0 0 25px 0;">Discover hand-picked hotels with exclusive, consolidated rates.</p>
                     </div> <!-- End of hero-content -->
-                        
-                        <!-- Hotel search bar wrapper (booking.com yellow styling) -->
-                        <div class="hotels-search-bar-wrapper" style="border: 4px solid #febb02; background: #febb02; padding: 4px; border-radius: 8px; display: flex; align-items: stretch; gap: 4px; flex-wrap: wrap;">
-                            <!-- Destination input -->
-                            <div style="flex: 2 1 300px; background: white; border-radius: 4px; padding: 10px 16px; display: flex; align-items: center; gap: 12px; position: relative;">
-                                <i class="fa-solid fa-bed" style="color: #64748b; font-size: 20px;"></i>
-                                <div style="flex: 1; display: flex; flex-direction: column; text-align: left;">
-                                    <label style="font-size: 10px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 2px;">Where are you going?</label>
-                                    <input type="text" id="hotel-location" placeholder="Type city or hotel location..." value="Maldives" style="border: none; outline: none; font-size: 15px; font-weight: 600; color: #1e293b; width: 100%; font-family: 'Outfit', sans-serif;" list="b2c-hotel-locations-list" autocomplete="off">
-                                    <datalist id="b2c-hotel-locations-list">
-                                        <option value="Maldives">Maldives</option>
-                                        <option value="Colombo">Colombo, Sri Lanka</option>
-                                        <option value="Singapore">Singapore</option>
-                                        <option value="Dubai">Dubai, UAE</option>
-                                        <option value="London">London, UK</option>
-                                        <option value="Paris">Paris, France</option>
-                                        <option value="New York">New York, USA</option>
-                                        <option value="Bangkok">Bangkok, Thailand</option>
-                                    </datalist>
-                                </div>
-                            </div>
-                            
-                            <!-- Dates input -->
-                            <div style="flex: 1.5 1 250px; background: white; border-radius: 4px; padding: 10px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer;" id="hotel-dates-trigger">
-                                <i class="fa-regular fa-calendar-days" style="color: #64748b; font-size: 20px;"></i>
-                                <div style="flex: 1; display: flex; flex-direction: column; text-align: left;">
-                                    <label style="font-size: 10px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 2px;">Check-in — Check-out</label>
-                                    <input type="text" id="hotel-dates" placeholder="Select dates" style="border: none; outline: none; font-size: 15px; font-weight: 600; color: #1e293b; width: 100%; cursor: pointer; font-family: 'Outfit', sans-serif;" readonly>
-                                </div>
-                            </div>
-                            
-                            <!-- Guests & Rooms input -->
-                            <div style="flex: 1.5 1 250px; background: white; border-radius: 4px; padding: 10px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; position: relative;" id="hotel-guests-trigger" onclick="toggleHotelGuestsPopover(event)">
-                                <i class="fa-regular fa-user" style="color: #64748b; font-size: 20px;"></i>
-                                <div style="flex: 1; display: flex; flex-direction: column; text-align: left;">
-                                    <label style="font-size: 10px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 2px;">Guests & Rooms</label>
-                                    <div id="hotel-guests-summary" style="font-size: 15px; font-weight: 600; color: #1e293b; display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                                        <span>2 adults &middot; 0 children &middot; 1 room</span>
-                                        <i class="fa-solid fa-chevron-down" style="font-size: 11px; color: #64748b;"></i>
-                                    </div>
-                                </div>
-                                
-                                <!-- Popover for rooms & guests selection -->
-                                <div id="hotel-guests-popover" style="display: none; position: absolute; top: 100%; right: 0; left: 0; margin-top: 8px; background: #fff; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid #e2e8f0; z-index: 150; padding: 20px;" onclick="event.stopPropagation()">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
-                                        <div>
-                                            <div style="font-weight: 700; color: #1e293b; font-size: 14px; text-align: left;">Rooms</div>
-                                        </div>
-                                        <div style="display: flex; align-items: center; gap: 15px;">
-                                            <button class="pax-btn" onclick="updateHotelRoomGuest('rooms', -1)" style="width:30px; height:30px; border-radius:50%; border:1px solid #cbd5e1; background:white; cursor:pointer; display:flex; align-items:center; justify-content:center; font-family:'Outfit'; font-weight:bold;"><i class="fa-solid fa-minus" style="font-size:10px; color:#64748b;"></i></button>
-                                            <span id="hotel-room-count-display" style="color: #1e293b; font-weight: 700; font-size: 16px; min-width: 15px; text-align: center;">1</span>
-                                            <button class="pax-btn" onclick="updateHotelRoomGuest('rooms', 1)" style="width:30px; height:30px; border-radius:50%; border:1px solid #cbd5e1; background:white; cursor:pointer; display:flex; align-items:center; justify-content:center; font-family:'Outfit'; font-weight:bold;"><i class="fa-solid fa-plus" style="font-size:10px; color:#64748b;"></i></button>
-                                        </div>
-                                    </div>
-                                    
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
-                                        <div>
-                                            <div style="font-weight: 700; color: #1e293b; font-size: 14px; text-align: left;">Adults</div>
-                                        </div>
-                                        <div style="display: flex; align-items: center; gap: 15px;">
-                                            <button class="pax-btn" onclick="updateHotelRoomGuest('adults', -1)" style="width:30px; height:30px; border-radius:50%; border:1px solid #cbd5e1; background:white; cursor:pointer; display:flex; align-items:center; justify-content:center; font-family:'Outfit'; font-weight:bold;"><i class="fa-solid fa-minus" style="font-size:10px; color:#64748b;"></i></button>
-                                            <span id="hotel-adult-count-display" style="color: #1e293b; font-weight: 700; font-size: 16px; min-width: 15px; text-align: center;">2</span>
-                                            <button class="pax-btn" onclick="updateHotelRoomGuest('adults', 1)" style="width:30px; height:30px; border-radius:50%; border:1px solid #cbd5e1; background:white; cursor:pointer; display:flex; align-items:center; justify-content:center; font-family:'Outfit'; font-weight:bold;"><i class="fa-solid fa-plus" style="font-size:10px; color:#64748b;"></i></button>
-                                        </div>
-                                    </div>
-                                    
-                                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                                        <div>
-                                            <div style="font-weight: 700; color: #1e293b; font-size: 14px; text-align: left;">Children</div>
-                                        </div>
-                                        <div style="display: flex; align-items: center; gap: 15px;">
-                                            <button class="pax-btn" onclick="updateHotelRoomGuest('children', -1)" style="width:30px; height:30px; border-radius:50%; border:1px solid #cbd5e1; background:white; cursor:pointer; display:flex; align-items:center; justify-content:center; font-family:'Outfit'; font-weight:bold;"><i class="fa-solid fa-minus" style="font-size:10px; color:#64748b;"></i></button>
-                                            <span id="hotel-child-count-display" style="color: #1e293b; font-weight: 700; font-size: 16px; min-width: 15px; text-align: center;">0</span>
-                                            <button class="pax-btn" onclick="updateHotelRoomGuest('children', 1)" style="width:30px; height:30px; border-radius:50%; border:1px solid #cbd5e1; background:white; cursor:pointer; display:flex; align-items:center; justify-content:center; font-family:'Outfit'; font-weight:bold;"><i class="fa-solid fa-plus" style="font-size:10px; color:#64748b;"></i></button>
-                                        </div>
-                                    </div>
-                                    
-                                    <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
-                                        <button onclick="toggleHotelGuestsPopover(event)" style="background: #006ce4; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-weight: 700; cursor: pointer; font-size: 13px; font-family: 'Outfit', sans-serif;">Done</button>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <input type="hidden" id="hotel-rooms-input" value="1">
-                            <input type="hidden" id="hotel-adults-input" value="2">
-                            <input type="hidden" id="hotel-children-input" value="0">
-                            
-                            <!-- Search button -->
-                            <button onclick="searchB2CHotels()" style="flex: 1 1 auto; background: #006ce4; color: white; border: none; padding: 14px 28px; border-radius: 4px; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s; font-family: 'Outfit', sans-serif;" onmouseover="this.style.background='#0053b3'" onmouseout="this.style.background='#006ce4'">
-                                <i class="fa-solid fa-magnifying-glass"></i>
-                                <span>Search</span>
-                            </button>
-                        </div>
                     
-                    <!-- Hotel Search Results container (Grid) -->
+                    <!-- Hotel search bar wrapper (booking.com yellow styling) -->
+                    <div class="hotels-search-bar-wrapper" style="border: 4px solid #febb02; background: #febb02; padding: 4px; border-radius: 8px; display: flex; align-items: stretch; gap: 4px; flex-wrap: wrap;">
+                        <!-- Destination input -->
+                        <div style="flex: 2 1 300px; background: white; border-radius: 4px; padding: 10px 16px; display: flex; align-items: center; gap: 12px; position: relative;">
+                            <i class="fa-solid fa-bed" style="color: #64748b; font-size: 20px;"></i>
+                            <div style="flex: 1; display: flex; flex-direction: column; text-align: left;">
+                                <label style="font-size: 10px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 4px;">Where are you going?</label>
+                                <input type="text" id="b2c-hotel-location" class="form-control" placeholder="Maldives, London, Dubai..." style="border: none !important; padding: 0 !important; font-size: 15px; font-weight: 600; color: #1e293b; width: 100%; outline: none;" value="Maldives">
+                            </div>
+                        </div>
+                        <!-- Dates input -->
+                        <div style="flex: 1.5 1 220px; background: white; border-radius: 4px; padding: 10px 16px; display: flex; align-items: center; gap: 12px; position: relative;">
+                            <i class="fa-solid fa-calendar-days" style="color: #64748b; font-size: 20px;"></i>
+                            <div style="flex: 1; display: flex; flex-direction: column; text-align: left;">
+                                <label style="font-size: 10px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 4px;">Check-in — Check-out</label>
+                                <input type="text" id="b2c-hotel-dates" class="form-control" placeholder="Select dates" style="border: none !important; padding: 0 !important; font-size: 15px; font-weight: 600; color: #1e293b; width: 100%; outline: none; background: transparent;">
+                            </div>
+                        </div>
+                        <!-- Guests & Rooms input -->
+                        <div id="b2c-hotel-guests-btn" onclick="toggleHotelGuestsPopover()" style="flex: 1.5 1 200px; background: white; border-radius: 4px; padding: 10px 16px; display: flex; align-items: center; gap: 12px; position: relative; cursor: pointer;">
+                            <i class="fa-solid fa-user-group" style="color: #64748b; font-size: 18px;"></i>
+                            <div style="flex: 1; display: flex; flex-direction: column; text-align: left;">
+                                <label style="font-size: 10px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 4px;">Guests & Rooms</label>
+                                <span id="b2c-hotel-guests-summary" style="font-size: 14px; font-weight: 600; color: #1e293b;">2 adults &middot; 0 children &middot; 1 room</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down" style="font-size: 10px; color: #94a3b8; margin-left: auto;"></i>
+                            
+                            <!-- Guest Selector Popover -->
+                            <div id="b2c-hotel-guests-popover" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 5px; background: #fff; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); width: 260px; z-index: 100; padding: 15px; border: 1px solid #e2e8f0;" onclick="event.stopPropagation()">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                                    <div style="color: #333; font-weight: 600; font-size: 14px;">Rooms</div>
+                                    <div style="display: flex; align-items: center; gap: 15px;">
+                                        <button class="pax-btn" type="button" onclick="updateHotelGuests('rooms', -1)" style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid #cbd5e1; background: white; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b;"><i class="fa-solid fa-minus"></i></button>
+                                        <span id="b2c-hotel-rooms-display" style="color: #333; font-weight: 600; font-size: 16px; width: 12px; text-align: center;">1</span>
+                                        <button class="pax-btn" type="button" onclick="updateHotelGuests('rooms', 1)" style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid #cbd5e1; background: white; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b;"><i class="fa-solid fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                                    <div style="color: #333; font-weight: 600; font-size: 14px;">Adults</div>
+                                    <div style="display: flex; align-items: center; gap: 15px;">
+                                        <button class="pax-btn" type="button" onclick="updateHotelGuests('adults', -1)" style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid #cbd5e1; background: white; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b;"><i class="fa-solid fa-minus"></i></button>
+                                        <span id="b2c-hotel-adults-display" style="color: #333; font-weight: 600; font-size: 16px; width: 12px; text-align: center;">2</span>
+                                        <button class="pax-btn" type="button" onclick="updateHotelGuests('adults', 1)" style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid #cbd5e1; background: white; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b;"><i class="fa-solid fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div style="color: #333; font-weight: 600; font-size: 14px;">Children</div>
+                                    <div style="display: flex; align-items: center; gap: 15px;">
+                                        <button class="pax-btn" type="button" onclick="updateHotelGuests('children', -1)" style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid #cbd5e1; background: white; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b;"><i class="fa-solid fa-minus"></i></button>
+                                        <span id="b2c-hotel-children-display" style="color: #333; font-weight: 600; font-size: 16px; width: 12px; text-align: center;">0</span>
+                                        <button class="pax-btn" type="button" onclick="updateHotelGuests('children', 1)" style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid #cbd5e1; background: white; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b;"><i class="fa-solid fa-plus"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Search Button -->
+                        <button onclick="searchB2CHotels()" style="flex: 1 1 120px; background: #c3122e; color: white; border: none; padding: 14px 24px; border-radius: 4px; font-weight: 700; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: background 0.2s;" onmouseover="this.style.background='#ac031c';" onmouseout="this.style.background='#c3122e';">
+                            <i class="fa-solid fa-magnifying-glass"></i> Search
+                        </button>
+                    </div>
+                    
+                    <!-- Hotels Results Grid -->
                     <div class="b2c-hotels-grid" id="b2c-hotel-results-container" style="display: none; margin-top: 35px; text-align: left;">
-                        <div style="text-align: center; color: var(--text-muted); padding: 40px 0; grid-column: span 3;">
+                        <div style="text-align: center; color: #64748b; padding: 40px 0; grid-column: span 3;">
                             <i class="fa-solid fa-hotel" style="font-size: 40px; margin-bottom: 15px; color: rgba(0,0,0,0.1);"></i>
                             <p>Enter a destination and dates to search for wholesale hotel rates.</p>
                         </div>
                     </div>
+                    
+                    <!-- Hotel details view container -->
+                    <div id="b2c-hotel-details-view" style="display: none; margin-top: 35px; text-align: left; background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 30px; border: 1px solid #e2e8f0; font-family: 'Outfit', sans-serif;">
+                        <!-- Loaded dynamically -->
+                    </div>
                 </div>
+
+
                 </div>
             </section>
 
 
     <!-- ===== STATS BAR ===== -->
-    <div style="background: #d11242; padding: 28px 0; margin-top: 10px;">
+    <div style="background: #c3122e; padding: 28px 0; margin-top: 10px;">
         <div style="max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 20px; padding: 0 20px;">
             <div style="text-align: center; color: white;">
                 <div style="font-size: 36px; font-weight: 800; letter-spacing: -1px;">500+</div>
@@ -650,7 +629,7 @@
 
     <!-- ===== TRENDING DESTINATIONS ===== -->
     <div style="max-width: 1100px; margin: 60px auto 20px auto; padding: 0 20px;">
-        <h2 style="color: #1e293b; font-size: 32px; font-weight: 800; margin-bottom: 30px; letter-spacing: -0.5px;"><i class="fa-solid fa-fire" style="color: #d11242; margin-right: 8px;"></i> Trending Destinations</h2>
+        <h2 style="color: #1e293b; font-size: 32px; font-weight: 800; margin-bottom: 30px; letter-spacing: -0.5px;"><i class="fa-solid fa-fire" style="color: #c3122e; margin-right: 8px;"></i> Trending Destinations</h2>
         <div style="display: flex; gap: 25px; overflow-x: auto; padding-bottom: 25px; margin-left: -5px; padding-left: 5px;">
             
             <div style="min-width: 260px; flex: 1; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; background: white; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.08)';">
@@ -658,7 +637,7 @@
                 <div style="padding: 20px;">
                     <h3 style="margin: 0 0 5px 0; font-size: 20px; color: #333;">Melbourne</h3>
                     <p style="margin: 0; color: #666; font-size: 14px;">Flights starting from</p>
-                    <div style="font-size: 24px; font-weight: 800; color: #d11242; margin-top: 5px;">$504</div>
+                    <div style="font-size: 24px; font-weight: 800; color: #c3122e; margin-top: 5px;">$504</div>
                 </div>
             </div>
             
@@ -667,7 +646,7 @@
                 <div style="padding: 20px;">
                     <h3 style="margin: 0 0 5px 0; font-size: 20px; color: #333;">Singapore</h3>
                     <p style="margin: 0; color: #666; font-size: 14px;">Flights starting from</p>
-                    <div style="font-size: 24px; font-weight: 800; color: #d11242; margin-top: 5px;">$620</div>
+                    <div style="font-size: 24px; font-weight: 800; color: #c3122e; margin-top: 5px;">$620</div>
                 </div>
             </div>
             
@@ -676,7 +655,7 @@
                 <div style="padding: 20px;">
                     <h3 style="margin: 0 0 5px 0; font-size: 20px; color: #333;">Dubai</h3>
                     <p style="margin: 0; color: #666; font-size: 14px;">Flights starting from</p>
-                    <div style="font-size: 24px; font-weight: 800; color: #d11242; margin-top: 5px;">$450</div>
+                    <div style="font-size: 24px; font-weight: 800; color: #c3122e; margin-top: 5px;">$450</div>
                 </div>
             </div>
             
@@ -685,7 +664,7 @@
                 <div style="padding: 20px;">
                     <h3 style="margin: 0 0 5px 0; font-size: 20px; color: #333;">London</h3>
                     <p style="margin: 0; color: #666; font-size: 14px;">Flights starting from</p>
-                    <div style="font-size: 24px; font-weight: 800; color: #d11242; margin-top: 5px;">$550</div>
+                    <div style="font-size: 24px; font-weight: 800; color: #c3122e; margin-top: 5px;">$550</div>
                 </div>
             </div>
 
@@ -693,13 +672,13 @@
             <div style="min-width: 260px; flex: 1; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; background: white; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.08)';">
                 <div style="position: relative;">
                     <img src="https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&q=80&w=800" alt="Bangkok" style="width: 100%; height: 180px; object-fit: cover;">
-                    <div style="position: absolute; top: 12px; right: 12px; background: #d11242; color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px;">HOT DEAL</div>
+                    <div style="position: absolute; top: 12px; right: 12px; background: #c3122e; color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px;">HOT DEAL</div>
                 </div>
                 <div style="padding: 20px;">
                     <h3 style="margin: 0 0 4px 0; font-size: 18px; color: #1e293b; font-weight: 700;">Bangkok</h3>
                     <p style="margin: 0 0 8px; color: #94a3b8; font-size: 13px;">Thailand &bull; 4h 30m</p>
                     <div style="display: flex; align-items: baseline; gap: 8px;">
-                        <span style="font-size: 22px; font-weight: 800; color: #d11242;">$320</span>
+                        <span style="font-size: 22px; font-weight: 800; color: #c3122e;">$320</span>
                         <span style="font-size: 12px; color: #94a3b8; text-decoration: line-through;">$410</span>
                     </div>
                 </div>
@@ -712,7 +691,7 @@
                     <h3 style="margin: 0 0 4px 0; font-size: 18px; color: #1e293b; font-weight: 700;">Rome</h3>
                     <p style="margin: 0 0 8px; color: #94a3b8; font-size: 13px;">Italy &bull; 10h 15m</p>
                     <div style="display: flex; align-items: baseline; gap: 8px;">
-                        <span style="font-size: 22px; font-weight: 800; color: #d11242;">$680</span>
+                        <span style="font-size: 22px; font-weight: 800; color: #c3122e;">$680</span>
                     </div>
                 </div>
             </div>
@@ -723,15 +702,15 @@
     <div style="max-width: 1100px; margin: 50px auto; padding: 0 20px;">
         <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 20px; padding: 50px 60px; display: flex; justify-content: space-between; align-items: center; position: relative; overflow: hidden;">
             <!-- Decorative circles -->
-            <div style="position: absolute; right: -60px; top: -60px; width: 250px; height: 250px; background: rgba(209,18,66,0.15); border-radius: 50%;"></div>
-            <div style="position: absolute; right: 80px; bottom: -80px; width: 200px; height: 200px; background: rgba(209,18,66,0.10); border-radius: 50%;"></div>
+            <div style="position: absolute; right: -60px; top: -60px; width: 250px; height: 250px; background: rgba(195, 18, 46,0.15); border-radius: 50%;"></div>
+            <div style="position: absolute; right: 80px; bottom: -80px; width: 200px; height: 200px; background: rgba(195, 18, 46,0.10); border-radius: 50%;"></div>
             <div style="position: relative; z-index: 1;">
-                <div style="background: #d11242; color: white; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 20px; display: inline-block; margin-bottom: 16px; letter-spacing: 1px;">LIMITED TIME OFFER</div>
+                <div style="background: #c3122e; color: white; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 20px; display: inline-block; margin-bottom: 16px; letter-spacing: 1px;">LIMITED TIME OFFER</div>
                 <h2 style="color: white; font-size: 34px; font-weight: 800; margin: 0 0 12px 0; letter-spacing: -0.5px;">Up to 40% Off on Selected Routes</h2>
                 <p style="color: #94a3b8; font-size: 16px; margin: 0;">Book before June 30 and save big on international flights. No promo code needed.</p>
             </div>
             <div style="position: relative; z-index: 1; flex-shrink: 0;">
-                <button onclick="document.getElementById('tab-flights').scrollIntoView({behavior:'smooth'})" style="background: #d11242; color: white; border: none; padding: 16px 36px; border-radius: 30px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 20px rgba(209,18,66,0.4); transition: all 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">Book Now &rarr;</button>
+                <button onclick="document.getElementById('tab-flights').scrollIntoView({behavior:'smooth'})" style="background: #c3122e; color: white; border: none; padding: 16px 36px; border-radius: 30px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 20px rgba(195, 18, 46,0.4); transition: all 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">Book Now &rarr;</button>
             </div>
         </div>
     </div>
@@ -743,27 +722,27 @@
         <div style="display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 200px; text-align: center;">
                 <div style="width: 80px; height: 80px; background: #fff0f3; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; border: 3px solid #ffd6e0; position: relative;">
-                    <span style="font-size: 28px; font-weight: 800; color: #d11242;">1</span>
+                    <span style="font-size: 28px; font-weight: 800; color: #c3122e;">1</span>
                 </div>
-                <i class="fa-solid fa-magnifying-glass" style="font-size: 24px; color: #d11242; margin-bottom: 12px;"></i>
+                <i class="fa-solid fa-magnifying-glass" style="font-size: 24px; color: #c3122e; margin-bottom: 12px;"></i>
                 <h3 style="color: #1e293b; font-weight: 700; margin-bottom: 8px;">Search Flights</h3>
                 <p style="color: #64748b; font-size: 14px; line-height: 1.6;">Enter your origin, destination, and travel dates to find the best available fares.</p>
             </div>
             <div style="flex: 0 0 40px; display: flex; align-items: center; justify-content: center; margin-top: 40px;"><i class="fa-solid fa-arrow-right" style="color: #e2e8f0; font-size: 24px;"></i></div>
             <div style="flex: 1; min-width: 200px; text-align: center;">
                 <div style="width: 80px; height: 80px; background: #fff0f3; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; border: 3px solid #ffd6e0;">
-                    <span style="font-size: 28px; font-weight: 800; color: #d11242;">2</span>
+                    <span style="font-size: 28px; font-weight: 800; color: #c3122e;">2</span>
                 </div>
-                <i class="fa-solid fa-plane-departure" style="font-size: 24px; color: #d11242; margin-bottom: 12px;"></i>
+                <i class="fa-solid fa-plane-departure" style="font-size: 24px; color: #c3122e; margin-bottom: 12px;"></i>
                 <h3 style="color: #1e293b; font-weight: 700; margin-bottom: 8px;">Choose Your Flight</h3>
                 <p style="color: #64748b; font-size: 14px; line-height: 1.6;">Compare prices, airlines, and schedules. Pick the option that suits you best.</p>
             </div>
             <div style="flex: 0 0 40px; display: flex; align-items: center; justify-content: center; margin-top: 40px;"><i class="fa-solid fa-arrow-right" style="color: #e2e8f0; font-size: 24px;"></i></div>
             <div style="flex: 1; min-width: 200px; text-align: center;">
                 <div style="width: 80px; height: 80px; background: #fff0f3; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; border: 3px solid #ffd6e0;">
-                    <span style="font-size: 28px; font-weight: 800; color: #d11242;">3</span>
+                    <span style="font-size: 28px; font-weight: 800; color: #c3122e;">3</span>
                 </div>
-                <i class="fa-solid fa-ticket" style="font-size: 24px; color: #d11242; margin-bottom: 12px;"></i>
+                <i class="fa-solid fa-ticket" style="font-size: 24px; color: #c3122e; margin-bottom: 12px;"></i>
                 <h3 style="color: #1e293b; font-weight: 700; margin-bottom: 8px;">Confirm & Fly</h3>
                 <p style="color: #64748b; font-size: 14px; line-height: 1.6;">Enter passenger details, pay securely, and receive your e-ticket instantly.</p>
             </div>
@@ -775,21 +754,21 @@
     <div style="max-width: 1100px; margin: 20px auto 60px auto; display: flex; gap: 30px; justify-content: space-between; padding: 20px;">
         <div style="flex: 1; text-align: center; padding: 40px 30px; background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
             <div style="width: 80px; height: 80px; background: #fff0f3; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
-                <i class="fa-solid fa-tags" style="font-size: 32px; color: #d11242;"></i>
+                <i class="fa-solid fa-tags" style="font-size: 32px; color: #c3122e;"></i>
             </div>
             <h3 style="margin-bottom: 12px; color: #1e293b; font-weight: 700; font-size: 20px;">Best Price Guarantee</h3>
             <p style="color: #64748b; font-size: 15px; line-height: 1.6; margin: 0;">We offer the lowest fares on flights across the globe. No hidden fees.</p>
         </div>
         <div style="flex: 1; text-align: center; padding: 40px 30px; background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
             <div style="width: 80px; height: 80px; background: #fff0f3; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
-                <i class="fa-solid fa-headset" style="font-size: 32px; color: #d11242;"></i>
+                <i class="fa-solid fa-headset" style="font-size: 32px; color: #c3122e;"></i>
             </div>
             <h3 style="margin-bottom: 12px; color: #1e293b; font-weight: 700; font-size: 20px;">24/7 Customer Support</h3>
             <p style="color: #64748b; font-size: 15px; line-height: 1.6; margin: 0;">Our dedicated travel experts are always here to help you via chat, email, or phone.</p>
         </div>
         <div style="flex: 1; text-align: center; padding: 40px 30px; background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
             <div style="width: 80px; height: 80px; background: #fff0f3; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
-                <i class="fa-solid fa-shield-halved" style="font-size: 32px; color: #d11242;"></i>
+                <i class="fa-solid fa-shield-halved" style="font-size: 32px; color: #c3122e;"></i>
             </div>
             <h3 style="margin-bottom: 12px; color: #1e293b; font-weight: 700; font-size: 20px;">Secure Payments</h3>
             <p style="color: #64748b; font-size: 15px; line-height: 1.6; margin: 0;">Your payment and personal information is fully encrypted and highly secure.</p>
@@ -799,12 +778,12 @@
     <!-- ===== NEWSLETTER BANNER ===== -->
     <div style="background: linear-gradient(135deg, #fef3f6 0%, #fff 100%); border-top: 1px solid #fce7ef; border-bottom: 1px solid #fce7ef; padding: 50px 0; margin-top: 60px;">
         <div style="max-width: 600px; margin: 0 auto; text-align: center; padding: 0 20px;">
-            <i class="fa-solid fa-envelope-open-text" style="font-size: 36px; color: #d11242; margin-bottom: 15px;"></i>
+            <i class="fa-solid fa-envelope-open-text" style="font-size: 36px; color: #c3122e; margin-bottom: 15px;"></i>
             <h2 style="color: #1e293b; font-size: 28px; font-weight: 800; margin-bottom: 10px;">Get Exclusive Deals in Your Inbox</h2>
             <p style="color: #64748b; margin-bottom: 25px;">Subscribe to receive the best flight deals, travel tips, and special promotions.</p>
             <div style="display: flex; gap: 12px; max-width: 480px; margin: 0 auto;">
-                <input type="email" placeholder="Enter your email address" style="flex: 1; padding: 14px 18px; border: 2px solid #e2e8f0; border-radius: 30px; font-size: 14px; font-family: 'Outfit', sans-serif; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#d11242'" onblur="this.style.borderColor='#e2e8f0'">
-                <button style="background: #d11242; color: white; border: none; padding: 14px 24px; border-radius: 30px; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; font-family: 'Outfit', sans-serif;">Subscribe</button>
+                <input type="email" placeholder="Enter your email address" style="flex: 1; padding: 14px 18px; border: 2px solid #e2e8f0; border-radius: 30px; font-size: 14px; font-family: 'Outfit', sans-serif; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#c3122e'" onblur="this.style.borderColor='#e2e8f0'">
+                <button style="background: #c3122e; color: white; border: none; padding: 14px 24px; border-radius: 30px; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; font-family: 'Outfit', sans-serif;">Subscribe</button>
             </div>
         </div>
     </div>
@@ -814,40 +793,40 @@
         <div style="max-width: 1100px; margin: 0 auto; padding: 0 20px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 50px;">
             <div>
                 <a href="/b2c" style="font-size: 26px; font-weight: 800; color: white; text-decoration: none; display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
-                    <i class="fa-solid fa-plane-departure" style="color: #d11242;"></i> Aeronexa
+                    <i class="fa-solid fa-plane-departure" style="color: #c3122e;"></i> Aeronexa
                 </a>
                 <p style="font-size: 14px; line-height: 1.8; color: #64748b; margin-bottom: 24px;">Your ultimate travel companion. Making travel simple, affordable, and accessible for everyone around the world.</p>
                 <div style="display: flex; gap: 12px;">
-                    <a href="#" style="width: 38px; height: 38px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #94a3b8; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='#d11242'; this.style.color='white'" onmouseout="this.style.background='#1e293b'; this.style.color='#94a3b8'"><i class="fa-brands fa-facebook-f"></i></a>
-                    <a href="#" style="width: 38px; height: 38px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #94a3b8; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='#d11242'; this.style.color='white'" onmouseout="this.style.background='#1e293b'; this.style.color='#94a3b8'"><i class="fa-brands fa-instagram"></i></a>
-                    <a href="#" style="width: 38px; height: 38px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #94a3b8; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='#d11242'; this.style.color='white'" onmouseout="this.style.background='#1e293b'; this.style.color='#94a3b8'"><i class="fa-brands fa-x-twitter"></i></a>
+                    <a href="#" style="width: 38px; height: 38px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #94a3b8; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='#c3122e'; this.style.color='white'" onmouseout="this.style.background='#1e293b'; this.style.color='#94a3b8'"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#" style="width: 38px; height: 38px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #94a3b8; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='#c3122e'; this.style.color='white'" onmouseout="this.style.background='#1e293b'; this.style.color='#94a3b8'"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#" style="width: 38px; height: 38px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #94a3b8; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='#c3122e'; this.style.color='white'" onmouseout="this.style.background='#1e293b'; this.style.color='#94a3b8'"><i class="fa-brands fa-x-twitter"></i></a>
                 </div>
             </div>
             <div>
                 <h4 style="color: white; font-size: 15px; margin-bottom: 20px; font-weight: 700;">Company</h4>
                 <ul style="list-style: none; padding: 0; line-height: 2.2;">
-                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px; transition: color 0.2s;" onmouseover="this.style.color='#d11242'" onmouseout="this.style.color='#64748b'">About Us</a></li>
-                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#d11242'" onmouseout="this.style.color='#64748b'">Careers</a></li>
-                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#d11242'" onmouseout="this.style.color='#64748b'">Press & Media</a></li>
-                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#d11242'" onmouseout="this.style.color='#64748b'">Blog</a></li>
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px; transition: color 0.2s;" onmouseover="this.style.color='#c3122e'" onmouseout="this.style.color='#64748b'">About Us</a></li>
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#c3122e'" onmouseout="this.style.color='#64748b'">Careers</a></li>
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#c3122e'" onmouseout="this.style.color='#64748b'">Press & Media</a></li>
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#c3122e'" onmouseout="this.style.color='#64748b'">Blog</a></li>
                 </ul>
             </div>
             <div>
                 <h4 style="color: white; font-size: 15px; margin-bottom: 20px; font-weight: 700;">Support</h4>
                 <ul style="list-style: none; padding: 0; line-height: 2.2;">
-                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#d11242'" onmouseout="this.style.color='#64748b'">Help Center</a></li>
-                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#d11242'" onmouseout="this.style.color='#64748b'">Contact Us</a></li>
-                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#d11242'" onmouseout="this.style.color='#64748b'">Manage Booking</a></li>
-                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#d11242'" onmouseout="this.style.color='#64748b'">Refund Policy</a></li>
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#c3122e'" onmouseout="this.style.color='#64748b'">Help Center</a></li>
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#c3122e'" onmouseout="this.style.color='#64748b'">Contact Us</a></li>
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#c3122e'" onmouseout="this.style.color='#64748b'">Manage Booking</a></li>
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#c3122e'" onmouseout="this.style.color='#64748b'">Refund Policy</a></li>
                 </ul>
             </div>
             <div>
                 <h4 style="color: white; font-size: 15px; margin-bottom: 20px; font-weight: 700;">Legal</h4>
                 <ul style="list-style: none; padding: 0; line-height: 2.2;">
-                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#d11242'" onmouseout="this.style.color='#64748b'">Terms of Service</a></li>
-                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#d11242'" onmouseout="this.style.color='#64748b'">Privacy Policy</a></li>
-                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#d11242'" onmouseout="this.style.color='#64748b'">Cookie Policy</a></li>
-                    <li><a href="{{ url_for('login') }}" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#d11242'" onmouseout="this.style.color='#64748b'">Agent Login</a></li>
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#c3122e'" onmouseout="this.style.color='#64748b'">Terms of Service</a></li>
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#c3122e'" onmouseout="this.style.color='#64748b'">Privacy Policy</a></li>
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#c3122e'" onmouseout="this.style.color='#64748b'">Cookie Policy</a></li>
+                    <li><a href="{{ url_for('login') }}" style="color: #64748b; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#c3122e'" onmouseout="this.style.color='#64748b'">Agent Login</a></li>
                 </ul>
             </div>
         </div>
@@ -908,151 +887,139 @@
                 });
             }
 
-            // Automatically switch tab on page load based on query parameter
+            // Initialize Hotel Date Range Picker
+            hotelDatePicker = flatpickr("#b2c-hotel-dates", {
+                mode: "range",
+                dateFormat: "Y-m-d",
+                minDate: "today",
+                altInput: true,
+                altFormat: "M j, Y",
+                defaultDate: [new Date(), new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)] // 3 nights default
+            });
+
+            // Handle URL tab parameter on load
             const urlParams = new URLSearchParams(window.location.search);
             const tabParam = urlParams.get('tab');
             if (tabParam === 'hotels') {
                 switchB2CTab('hotels');
-            } else if (tabParam === 'flights') {
-                switchB2CTab('flights');
             }
         });
 
-        // B2C Hotel Search and Booking Javascript
+        // B2C Hotels Tab Switching
         function switchB2CTab(tabName, event) {
             if (event) event.preventDefault();
             
-            const flightPanel = document.getElementById("b2c-flights-panel");
-            const hotelPanel = document.getElementById("b2c-hotels-panel");
-            const flightBtn = document.getElementById("b2c-tab-btn-flights");
-            const hotelBtn = document.getElementById("b2c-tab-btn-hotels");
-            const flightNavBtn = document.getElementById("nav-flights-btn");
-            const hotelNavBtn = document.getElementById("nav-hotels-btn");
+            const btnFlights = document.getElementById("b2c-tab-btn-flights");
+            const btnHotels = document.getElementById("b2c-tab-btn-hotels");
+            const panelFlights = document.getElementById("b2c-flights-panel");
+            const panelHotels = document.getElementById("b2c-hotels-panel");
             
             if (tabName === 'flights') {
-                flightPanel.style.display = "block";
-                hotelPanel.style.display = "none";
+                btnFlights.classList.add("active");
+                btnHotels.classList.remove("active");
+                btnFlights.style.borderBottomColor = "#c3122e";
+                btnFlights.style.color = "#c3122e";
+                btnFlights.style.fontWeight = "700";
                 
-                flightBtn.classList.add("active");
-                flightBtn.style.borderBottomColor = "#d11242";
-                flightBtn.style.color = "#d11242";
-                flightBtn.style.display = "flex";
+                btnHotels.style.borderBottomColor = "transparent";
+                btnHotels.style.color = "#64748b";
+                btnHotels.style.fontWeight = "600";
                 
-                hotelBtn.classList.remove("active");
-                hotelBtn.style.borderBottomColor = "transparent";
-                hotelBtn.style.color = "#64748b";
+                panelFlights.style.display = "block";
+                panelHotels.style.display = "none";
             } else {
-                flightPanel.style.display = "none";
-                hotelPanel.style.display = "block";
+                btnHotels.classList.add("active");
+                btnFlights.classList.remove("active");
+                btnHotels.style.borderBottomColor = "#c3122e";
+                btnHotels.style.color = "#c3122e";
+                btnHotels.style.fontWeight = "700";
                 
-                hotelBtn.classList.add("active");
-                hotelBtn.style.borderBottomColor = "#d11242";
-                hotelBtn.style.color = "#d11242";
+                btnFlights.style.borderBottomColor = "transparent";
+                btnFlights.style.color = "#64748b";
+                btnFlights.style.fontWeight = "600";
                 
-                flightBtn.classList.remove("active");
-                flightBtn.style.borderBottomColor = "transparent";
-                flightBtn.style.color = "#64748b";
-                flightBtn.style.display = "none"; // Remove flight option from tab selector in Hotels view
-                
-                // Initialize hotel dates flatpickr
-                if (!window.hotelDatesPicker) {
-                    window.hotelDatesPicker = flatpickr("#hotel-dates", {
-                        mode: "range",
-                        dateFormat: "Y-m-d",
-                        minDate: "today",
-                        altInput: true,
-                        altFormat: "F j, Y",
-                        defaultDate: [
-                            new Date(new Date().setDate(new Date().getDate() + 3)),
-                            new Date(new Date().setDate(new Date().getDate() + 6))
-                        ]
-                    });
-                }
-            }
-
-            // Push active tab state to query params without reloading the page
-            try {
-                const url = new URL(window.location.href);
-                url.searchParams.set('tab', tabName);
-                window.history.pushState({}, '', url);
-            } catch (e) {
-                console.error("Failed to update history state", e);
+                panelFlights.style.display = "none";
+                panelHotels.style.display = "block";
             }
         }
 
-        function toggleHotelGuestsPopover(event) {
-            if (event) event.stopPropagation();
-            const popover = document.getElementById("hotel-guests-popover");
-            const isVisible = popover.style.display === "block";
-            popover.style.display = isVisible ? "none" : "block";
+        // B2C Hotels Guest Dropdown popover controls
+        let hotelRooms = 1;
+        let hotelAdults = 2;
+        let hotelChildren = 0;
+        
+        function toggleHotelGuestsPopover() {
+            const popover = document.getElementById("b2c-hotel-guests-popover");
+            popover.style.display = popover.style.display === "none" ? "block" : "none";
+        }
+        
+        function updateHotelGuests(type, change) {
+            if (type === 'rooms') {
+                hotelRooms += change;
+                if (hotelRooms < 1) hotelRooms = 1;
+                if (hotelRooms > 4) hotelRooms = 4;
+                document.getElementById("b2c-hotel-rooms-display").innerText = hotelRooms;
+            } else if (type === 'adults') {
+                hotelAdults += change;
+                if (hotelAdults < 1) hotelAdults = 1;
+                if (hotelAdults > 10) hotelAdults = 10;
+                document.getElementById("b2c-hotel-adults-display").innerText = hotelAdults;
+            } else if (type === 'children') {
+                hotelChildren += change;
+                if (hotelChildren < 0) hotelChildren = 0;
+                if (hotelChildren > 6) hotelChildren = 6;
+                document.getElementById("b2c-hotel-children-display").innerText = hotelChildren;
+            }
+            
+            // Update summary
+            document.getElementById("b2c-hotel-guests-summary").innerHTML = 
+                `${hotelAdults} adult${hotelAdults > 1 ? 's' : ''} &middot; ${hotelChildren} child${hotelChildren !== 1 ? 'ren' : ''} &middot; ${hotelRooms} room${hotelRooms > 1 ? 's' : ''}`;
         }
 
         document.addEventListener("click", function(event) {
-            const popover = document.getElementById("hotel-guests-popover");
-            const trigger = document.getElementById("hotel-guests-trigger");
-            if (popover && trigger && !popover.contains(event.target) && !trigger.contains(event.target)) {
+            const popover = document.getElementById("b2c-hotel-guests-popover");
+            const btn = document.getElementById("b2c-hotel-guests-btn");
+            if (popover && btn && !btn.contains(event.target) && !popover.contains(event.target)) {
                 popover.style.display = "none";
             }
         });
 
-        function updateHotelRoomGuest(type, change) {
-            let rooms = parseInt(document.getElementById("hotel-rooms-input").value);
-            let adults = parseInt(document.getElementById("hotel-adults-input").value);
-            let children = parseInt(document.getElementById("hotel-children-input").value);
-
-            if (type === 'rooms') {
-                rooms = Math.max(1, rooms + change);
-            } else if (type === 'adults') {
-                adults = Math.max(1, adults + change);
-            } else if (type === 'children') {
-                children = Math.max(0, children + change);
-            }
-
-            document.getElementById("hotel-rooms-input").value = rooms;
-            document.getElementById("hotel-adults-input").value = adults;
-            document.getElementById("hotel-children-input").value = children;
-
-            document.getElementById("hotel-room-count-display").innerText = rooms;
-            document.getElementById("hotel-adult-count-display").innerText = adults;
-            document.getElementById("hotel-child-count-display").innerText = children;
-
-            document.querySelector("#hotel-guests-summary span").innerHTML = 
-                `${adults} adult${adults > 1 ? 's' : ''} &middot; ${children} child${children !== 1 ? 'ren' : ''} &middot; ${rooms} room${rooms > 1 ? 's' : ''}`;
-        }
+        // Search B2C Hotels calling GDS
+        let hotelDatePicker = null;
+        let lastB2CSearchedHotels = [];
 
         function searchB2CHotels() {
-            const location = document.getElementById("hotel-location").value.trim();
-            const datesVal = document.getElementById("hotel-dates").value;
+            const location = document.getElementById("b2c-hotel-location").value.trim();
             const container = document.getElementById("b2c-hotel-results-container");
-
+            
             if (!location) {
-                alert("Please enter a destination.");
+                alert("Please enter a destination to search.");
                 return;
             }
-            if (!datesVal || !datesVal.includes(" to ")) {
-                alert("Please select check-in and check-out dates.");
-                return;
-            }
-
-            container.style.display = "grid";
+            
             container.innerHTML = `
-                <div style="text-align: center; color: #64748b; padding: 60px 0; grid-column: 1 / -1;">
-                    <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 40px; color: #006ce4; margin-bottom: 15px;"></i>
-                    <p style="font-size: 16px; font-weight: 600;">Searching for best wholesale hotel rates...</p>
+                <div style="text-align: center; color: #64748b; padding: 60px 0; grid-column: span 3;">
+                    <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 32px; color: #c3122e; margin-bottom: 15px;"></i>
+                    <p style="font-size: 16px; font-weight: 600;">Interrogating GDS hotel channels...</p>
                 </div>
             `;
-
-            fetch(`/api/hotels/search?location=${encodeURIComponent(location)}`)
+            container.style.display = "grid";
+            
+            // Scroll to results
+            container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            
+            fetch(`/api/hotels/search?location=${location}`)
                 .then(res => res.json())
                 .then(data => {
-                    if (data.success && data.hotels && data.hotels.length > 0) {
+                    if (data.success && data.hotels.length > 0) {
+                        lastB2CSearchedHotels = data.hotels;
                         renderB2CHotelResults(data.hotels);
                     } else {
                         container.innerHTML = `
-                            <div style="text-align: center; color: #64748b; padding: 60px 0; grid-column: 1 / -1;">
-                                <i class="fa-solid fa-circle-exclamation" style="font-size: 40px; color: #ef4444; margin-bottom: 15px;"></i>
-                                <p style="font-size: 16px; font-weight: 600;">No hotels found matching "${location}".</p>
-                                <p style="font-size: 14px; margin-top: 5px; color: #94a3b8;">Try searching for 'London', 'Dubai', or 'Maldives'.</p>
+                            <div style="text-align: center; color: #64748b; padding: 60px 0; grid-column: span 3;">
+                                <i class="fa-solid fa-triangle-exclamation" style="font-size: 32px; color: #c3122e; margin-bottom: 15px;"></i>
+                                <p style="font-size: 16px; font-weight: 600;">No hotels found in "${location}".</p>
+                                <p style="font-size: 14px; margin-top: 5px; color: #94a3b8;">Try searching for 'London', 'Dubai' or 'Maldives'.</p>
                             </div>
                         `;
                     }
@@ -1060,154 +1027,145 @@
                 .catch(err => {
                     console.error("Hotel search error:", err);
                     container.innerHTML = `
-                        <div style="text-align: center; color: #64748b; padding: 60px 0; grid-column: 1 / -1;">
-                            <i class="fa-solid fa-triangle-exclamation" style="font-size: 40px; color: #ef4444; margin-bottom: 15px;"></i>
-                            <p style="font-size: 16px; font-weight: 600;">An error occurred while searching for hotels.</p>
+                        <div style="text-align: center; color: #64748b; padding: 60px 0; grid-column: span 3;">
+                            <i class="fa-solid fa-triangle-exclamation" style="font-size: 32px; color: #ef4444; margin-bottom: 15px;"></i>
+                            <p style="font-size: 16px; font-weight: 600;">An error occurred while connecting to GDS channels.</p>
                         </div>
                     `;
                 });
         }
 
         function renderB2CHotelResults(hotels) {
+            window.b2cHotelResults = hotels; // Save globally to avoid string escaping issues
             const container = document.getElementById("b2c-hotel-results-container");
             container.innerHTML = "";
             
+            if (!hotels || hotels.length === 0) {
+                container.innerHTML = "<div style='background: white; padding: 40px; text-align: center; border-radius: 12px;'><i class='fa-solid fa-hotel' style='font-size: 40px; color: #cbd5e1; margin-bottom: 15px;'></i><h3 style='margin:0; color:#475569;'>No hotels found</h3><p style='color:#94a3b8;'>Try a different destination or dates.</p></div>";
+                return;
+            }
+            
             hotels.forEach(h => {
-                let starsHTML = "";
+                let starIcons = "";
                 for (let i = 0; i < h.rating; i++) {
-                    starsHTML += '<i class="fa-solid fa-star"></i> ';
+                    starIcons += `<i class="fa-solid fa-star"></i>`;
                 }
                 
-                // Pick a beautiful image based on hotel location or use default fallback
-                let imgUrl = h.image_url;
-                if (!imgUrl || imgUrl.startsWith("hotel_")) {
-                    if (h.location.toLowerCase().includes("maldives")) {
-                        imgUrl = "https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&q=80&w=800";
-                    } else if (h.location.toLowerCase().includes("dubai")) {
-                        imgUrl = "https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&q=80&w=800";
-                    } else if (h.location.toLowerCase().includes("london")) {
-                        imgUrl = "https://images.unsplash.com/photo-1517840901100-8179e982acb7?auto=format&fit=crop&q=80&w=800";
-                    } else if (h.location.toLowerCase().includes("singapore")) {
-                        imgUrl = "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=800";
-                    } else {
-                        imgUrl = "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=800";
-                    }
+                let checkin = "2026-06-15";
+                let checkout = "2026-06-18";
+                let nights = 3;
+                
+                if (typeof hotelDatePicker !== 'undefined' && hotelDatePicker && hotelDatePicker.selectedDates && hotelDatePicker.selectedDates.length === 2) {
+                    const pad = (num) => num.toString().padStart(2, '0');
+                    const formatDate = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+                    checkin = formatDate(hotelDatePicker.selectedDates[0]);
+                    checkout = formatDate(hotelDatePicker.selectedDates[1]);
+                    const timeDiff = Math.abs(hotelDatePicker.selectedDates[1].getTime() - hotelDatePicker.selectedDates[0].getTime());
+                    nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                    if (nights === 0) nights = 1;
                 }
                 
-                const hotelCard = document.createElement("div");
-                hotelCard.className = "b2c-hotel-card";
-                
-                let roomsHTML = "";
+                let lowestPrice = Infinity;
                 if (h.rooms && h.rooms.length > 0) {
-                    h.rooms.forEach(room => {
-                        const priceLKR = room.price_per_night * 300;
-                        const priceFormatted = "LKR " + Math.round(priceLKR).toLocaleString('en-US');
-                        roomsHTML += `
-                            <div class="b2c-room-item">
-                                <div>
-                                    <div class="b2c-room-name">${room.room_type}</div>
-                                    <div style="font-size: 11px; color: #1e3a8a; background: #eff6ff; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px; font-weight: 600;"><i class="fa-solid fa-percent"></i> Wholesale Rate</div>
-                                </div>
-                                <div style="text-align: right; display: flex; flex-direction: column; gap: 6px; align-items: flex-end;">
-                                    <div class="b2c-room-price">
-                                        ${priceFormatted}
-                                        <span class="b2c-room-price-sub">/night</span>
-                                    </div>
-                                    <button class="btn-book-room" onclick="openB2CHotelModal(${room.id}, '${room.room_type}', '${h.name.replace(/'/g, "\\'")}', ${room.price_per_night})">Book Room</button>
-                                </div>
-                            </div>
-                        `;
-                    });
-                } else {
-                    roomsHTML = `<p style="font-size: 13px; color: #64748b; margin-top: 10px;">No available rooms for this hotel.</p>`;
+                    h.rooms.forEach(r => { if(r.price_per_night < lowestPrice) lowestPrice = r.price_per_night; });
+                }
+                if (lowestPrice === Infinity) lowestPrice = 0;
+                
+                let hotelImage = `/static/img/${h.image_url}`;
+                const localImages = ['hotel_london.jpg', 'hotel_dubai.jpg', 'hotel_maldives.jpg', 'hotel_singapore.jpg'];
+                if (!h.image_url || !localImages.includes(h.image_url)) {
+                    const loc = (h.location || "").toLowerCase();
+                    if (loc.includes('maldives') || loc.includes('mle')) hotelImage = 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=800';
+                    else if (loc.includes('london') || loc.includes('uk')) hotelImage = 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800';
+                    else if (loc.includes('dubai') || loc.includes('uae')) hotelImage = 'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=800';
+                    else if (loc.includes('singapore')) hotelImage = 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=800';
+                    else if (loc.includes('colombo') || loc.includes('sri lanka') || loc.includes('cmb')) hotelImage = 'https://images.unsplash.com/photo-1546548970-71785318a17b?auto=format&fit=crop&w=800';
+                    else hotelImage = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800';
                 }
                 
-                hotelCard.innerHTML = `
-                    <div style="position: relative;">
-                        <img src="${imgUrl}" class="b2c-hotel-img" alt="${h.name}">
-                        <div class="b2c-hotel-badge">EXCLUSIVE RATE</div>
-                    </div>
-                    <div class="b2c-hotel-info">
-                        <div class="b2c-hotel-rating">${starsHTML}</div>
-                        <h3 class="b2c-hotel-name">${h.name}</h3>
-                        <div class="b2c-hotel-loc"><i class="fa-solid fa-location-dot" style="color: #d11242;"></i> ${h.location}</div>
-                        <p class="b2c-hotel-description">${h.description}</p>
-                        
-                        <div style="margin-top: auto;">
-                            <div style="font-size: 12px; font-weight: 700; color: #1e293b; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Select Room Option</div>
-                            ${roomsHTML}
+                h.resolved_image = hotelImage; // save for later
+                
+                container.innerHTML += `
+                    <div class="b2c-hotel-card">
+                        <img src="${hotelImage}" class="b2c-hotel-img" alt="${h.name}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800';">
+                        <div class="b2c-hotel-badge">CONSOLIDATED RATE</div>
+                        <div class="b2c-hotel-info" style="display:flex; flex-direction:column;">
+                            <div style="flex-grow:1;">
+                                <div class="b2c-hotel-rating">${starIcons}</div>
+                                <h3 class="b2c-hotel-name">${h.name}</h3>
+                                <div class="b2c-hotel-loc"><i class="fa-solid fa-location-dot" style="color:#c3122e;"></i> ${h.location}</div>
+                                <p class="b2c-hotel-description">${h.description}</p>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px; border-top: 1px solid #f1f5f9; padding-top: 15px;">
+                                <div>
+                                    <div style="font-size: 12px; color: #64748b; font-weight: 600;">Starting from</div>
+                                    <div style="font-size: 22px; font-weight: 800; color: #0f172a;">LKR ${lowestPrice.toLocaleString()}<span style="font-size: 12px; color: #64748b; font-weight: normal;">/night</span></div>
+                                </div>
+                                <button class="btn-book-room" style="background: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#1d4ed8';" onmouseout="this.style.background='#2563eb';" onclick="viewHotelDetails(${h.id}, '${checkin}', '${checkout}', ${nights})">See Availability <i class="fa-solid fa-chevron-right" style="font-size: 12px; margin-left: 5px;"></i></button>
+                            </div>
                         </div>
                     </div>
                 `;
-                
-                container.appendChild(hotelCard);
             });
         }
-
-        function openB2CHotelModal(roomId, roomType, hotelName, pricePerNight) {
-            const datesVal = document.getElementById("hotel-dates").value;
-            if (!datesVal || !datesVal.includes(" to ")) {
-                alert("Please select check-in and check-out dates first.");
-                return;
-            }
-            const parts = datesVal.split(" to ");
-            const checkIn = parts[0];
-            const checkOut = parts[1];
-            const date1 = new Date(checkIn);
-            const date2 = new Date(checkOut);
-            const nights = Math.max(1, Math.round((date2 - date1) / (1000 * 60 * 60 * 24)));
+        
+        function viewHotelDetails(hotelId, checkin, checkout, nights) {
+            if (!window.b2cHotelResults) return;
+            const h = window.b2cHotelResults.find(x => x.id === hotelId);
+            if (!h) return;
             
-            const markupUSD = 25.00;
-            const totalUSD = (pricePerNight * nights) + markupUSD;
-            const totalLKR = totalUSD * 300;
-            
-            document.getElementById("modal-room-id").value = roomId;
-            document.getElementById("modal-hotel-name").innerText = hotelName;
-            document.getElementById("modal-room-type").innerText = roomType;
-            document.getElementById("modal-checkin").innerText = checkIn;
-            document.getElementById("modal-checkout").innerText = checkOut;
-            document.getElementById("modal-nights").innerText = nights;
-            document.getElementById("modal-total-price").innerText = "LKR " + Math.round(totalLKR).toLocaleString('en-US');
-            
-            // Auto populate details from session if available
-            {% if session.get('b2c_user') %}
-            document.getElementById("b2c-hotel-guest-name").value = "{{ session.b2c_user.name }}";
-            document.getElementById("b2c-hotel-email").value = "{{ session.b2c_user.email }}";
-            {% else %}
-            if (sessionStorage.getItem("b2c_last_email")) {
-                document.getElementById("b2c-hotel-email").value = sessionStorage.getItem("b2c_last_email");
-            }
-            if (sessionStorage.getItem("b2c_last_mobile")) {
-                document.getElementById("b2c-hotel-mobile").value = sessionStorage.getItem("b2c_last_mobile");
-            }
-            {% endif %}
-            
-            document.getElementById("b2c-hotel-modal").style.display = "flex";
+            const roomsDataRaw = JSON.stringify(h.rooms || []);
+            const params = new URLSearchParams({
+                hotel_name: h.name || 'Hotel',
+                hotel_loc: h.location || 'Location',
+                hotel_desc: h.description || '',
+                room_img: h.resolved_image || '',
+                rooms_data: roomsDataRaw,
+                checkin: checkin,
+                checkout: checkout,
+                nights: nights
+            });
+            window.open(`/b2c/hotel-details?${params.toString()}`, '_blank');
         }
 
-        function closeB2CHotelModal() {
-            document.getElementById("b2c-hotel-modal").style.display = "none";
+function bookB2CHotelRoom(roomId, roomType, hotelName, pricePerNight, nights, roomImg) {
+            let checkin = "2026-06-15";
+            let checkout = "2026-06-18";
+            
+            if (typeof hotelDatePicker !== 'undefined' && hotelDatePicker && hotelDatePicker.selectedDates.length === 2) {
+                const pad = (num) => num.toString().padStart(2, '0');
+                const formatDate = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+                checkin = formatDate(hotelDatePicker.selectedDates[0]);
+                checkout = formatDate(hotelDatePicker.selectedDates[1]);
+            }
+            
+            const params = new URLSearchParams({
+                room_id: roomId,
+                room_type: roomType,
+                hotel_name: hotelName,
+                price_per_night: pricePerNight,
+                nights: nights,
+                checkin: checkin,
+                checkout: checkout,
+                room_img: roomImg
+            });
+            // Open in a new tab/window as requested
+            window.open(`/b2c/hotel-booking?${params.toString()}`, '_blank');
         }
+        
 
+        
         function submitB2CHotelBooking(event) {
             event.preventDefault();
             
-            const roomId = document.getElementById("modal-room-id").value;
-            const guestName = document.getElementById("b2c-hotel-guest-name").value.trim();
-            const email = document.getElementById("b2c-hotel-email").value.trim();
-            const mobile = document.getElementById("b2c-hotel-mobile").value.trim();
-            const checkIn = document.getElementById("modal-checkin").innerText;
-            const checkOut = document.getElementById("modal-checkout").innerText;
+            const roomId = document.getElementById("b2c-modal-room-id").value;
+            const guestName = document.getElementById("b2c-modal-guest-name").value.trim();
+            const email = document.getElementById("b2c-modal-email").value.trim();
+            const mobile = document.getElementById("b2c-modal-mobile").value.trim();
+            const checkIn = document.getElementById("b2c-modal-checkin").innerText;
+            const checkOut = document.getElementById("b2c-modal-checkout").innerText;
             
-            if (!roomId || !guestName || !email || !mobile || !checkIn || !checkOut) {
-                alert("All fields are required.");
-                return;
-            }
-            
-            sessionStorage.setItem("b2c_last_email", email);
-            sessionStorage.setItem("b2c_last_mobile", mobile);
-            
-            const requestData = {
+            const payload = {
                 room_id: parseInt(roomId),
                 guest_name: guestName,
                 email: email,
@@ -1218,91 +1176,27 @@
             
             fetch("/api/b2c/hotels/book", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(requestData)
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
             })
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    alert("Booking confirmed successfully! Invoice: " + data.invoice_number);
-                    closeB2CHotelModal();
+                    alert("Hotel booked successfully!\nInvoice: " + data.invoice_number);
                     window.location.href = "/b2c/my-bookings";
                 } else {
-                    alert("Booking failed: " + (data.error || "Unknown error"));
+                    alert("Booking failed: " + data.error);
                 }
             })
             .catch(err => {
-                console.error(err);
-                alert("An error occurred while confirming booking.");
+                console.error("Hotel book error:", err);
+                alert("An error occurred. Please try again.");
             });
         }
     </script>
-    
-    <!-- B2C Hotel Booking Modal -->
-    <div id="b2c-hotel-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-        <div style="background: white; border-radius: 16px; width: 100%; max-width: 500px; padding: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); position: relative; max-height: 90vh; overflow-y: auto; font-family: 'Outfit', sans-serif;">
-            
-            <button onclick="closeB2CHotelModal()" style="position: absolute; top: 20px; right: 20px; border: none; background: none; font-size: 20px; color: #64748b; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
-            
-            <h3 style="margin: 0 0 20px 0; font-size: 22px; font-weight: 800; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; display: flex; align-items: center; gap: 10px;">
-                <i class="fa-solid fa-hotel" style="color: #006ce4;"></i> Confirm Hotel Booking
-            </h3>
-            
-            <!-- Summary Card -->
-            <div style="background: #f8fafc; border-radius: 10px; padding: 15px; border: 1px solid #e2e8f0; margin-bottom: 20px; text-align: left;">
-                <h4 id="modal-hotel-name" style="margin: 0 0 5px 0; font-size: 16px; font-weight: 700; color: #1e293b;">Hotel Name</h4>
-                <div id="modal-room-type" style="font-size: 14px; color: #64748b; margin-bottom: 10px;">Room Type</div>
-                
-                <div style="display: flex; justify-content: space-between; border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-top: 5px;">
-                    <div>
-                        <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700;">Check-in</div>
-                        <div id="modal-checkin" style="font-size: 13px; font-weight: 600; color: #334155;">YYYY-MM-DD</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700;">Check-out</div>
-                        <div id="modal-checkout" style="font-size: 13px; font-weight: 600; color: #334155;">YYYY-MM-DD</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700;">Nights</div>
-                        <div id="modal-nights" style="font-size: 13px; font-weight: 600; color: #334155; text-align: right;">1</div>
-                    </div>
-                </div>
-            </div>
-            
-            <form id="b2c-hotel-booking-form" onsubmit="submitB2CHotelBooking(event)">
-                <input type="hidden" id="modal-room-id">
-                
-                <div style="margin-bottom: 16px; text-align: left;">
-                    <label style="display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px;">Guest Full Name</label>
-                    <input type="text" id="b2c-hotel-guest-name" required placeholder="Enter guest full name" style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-family: 'Outfit', sans-serif;">
-                </div>
-                
-                <div style="margin-bottom: 16px; text-align: left;">
-                    <label style="display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px;">Email Address</label>
-                    <input type="email" id="b2c-hotel-email" required placeholder="Enter your email" style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-family: 'Outfit', sans-serif;">
-                </div>
-                
-                <div style="margin-bottom: 24px; text-align: left;">
-                    <label style="display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px;">Mobile Number</label>
-                    <input type="tel" id="b2c-hotel-mobile" required placeholder="Enter your mobile number" style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-family: 'Outfit', sans-serif;">
-                </div>
-                
-                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 20px; margin-top: 10px;">
-                    <div>
-                        <div style="font-size: 12px; color: #64748b;">Total Price (inclusive of tax)</div>
-                        <div id="modal-total-price" style="font-size: 22px; font-weight: 800; color: #d11242;">LKR 0.00</div>
-                    </div>
-                    
-                    <button type="submit" style="background: #006ce4; color: white; border: none; padding: 14px 28px; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#0053b3'" onmouseout="this.style.background='#006ce4'">
-                        Book Stay
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
 
+    </div>
+    
     {% include 'b2c_chatbot.html' %}
 </body>
 </html>

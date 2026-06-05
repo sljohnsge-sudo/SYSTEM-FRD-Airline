@@ -1,0 +1,69 @@
+Created At: 2026-06-04T06:55:15Z
+Completed At: 2026-06-04T06:55:15Z
+File Path: `file:///d:/GS/SYSTEM-FRD-Airline/templates/b2c_home.html`
+Total Lines: 1603
+Total Bytes: 122505
+Showing lines 200 to 260
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+200:             font-size: 13px;
+201:             cursor: pointer;
+202:             transition: background 0.2s;
+203:             font-family: 'Outfit', sans-serif;
+204:         }
+205:         .btn-book-room:hover {
+206:             background: #0053b3;
+207:         }
+208:     </style>
+209: </head>
+210: <body>
+211: 
+212:     <!-- B2C Header -->
+213:     <!-- Promo Ticker -->
+214:     <div class="promo-ticker">
+215:         ✈️ &nbsp;FLASH SALE: Up to 40% off on selected routes this week only! &nbsp;<a href="#tab-flights">Book Now &rarr;</a>
+216:     </div>
+217: 
+218:     <!-- B2C Header -->
+219:     <header class="b2c-header">
+220:         <a href="/b2c" class="b2c-brand">
+221:             <i class="fa-solid fa-plane-departure"></i> Aeronexa
+222:         </a>
+223:         <nav class="b2c-nav">
+224:             <a href="/b2c?tab=flights" id="nav-flights-btn" onclick="switchB2CTab('flights', event)"><i class="fa-solid fa-plane"></i> Flights</a>
+225:             <a href="/b2c?tab=hotels" id="nav-hotels-btn" onclick="switchB2CTab('hotels', event)"><i class="fa-solid fa-hotel"></i> Hotels</a>
+226:             <a href="#"><i class="fa-solid fa-umbrella-beach"></i> Holidays</a>
+227:             <a href="#"><i class="fa-solid fa-tags" style="color:#c3122e;"></i> <span style="color:#c3122e;">Offers</span></a>
+228:             <a href="/b2c/my-bookings"><i class="fa-solid fa-briefcase"></i> My Bookings</a>
+229:             
+230:             {% if session.get('b2c_user') %}
+231:                 <div style="display: flex; align-items: center; gap: 15px; ma
+<truncated 178 bytes>
+              <i class="fa-solid fa-user-circle" style="color: #64748b; margin-right: 5px;"></i> {{ session.b2c_user.name }}
+234:                     </div>
+235:                     <a href="/b2c/logout" style="color: #ef4444; font-size: 13px; font-weight: 600;"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+236:                 </div>
+237:             {% else %}
+238:                 <a href="{{ url_for('login') }}" class="btn-b2b-login"><i class="fa-solid fa-user"></i> Agent Login</a>
+239:             {% endif %}
+240:         </nav>
+241:     </header>
+242: 
+243:     <!-- Hero Banner -->
+244:     <div class="hero-banner">
+245:         <div class="hero-badge">🌍 &nbsp; #1 Travel Booking Platform in Sri Lanka</div>
+246:         <h1>Discover the World<br>with Aeronexa</h1>
+247:         <p>Compare 500+ airlines. Best fares, no hidden fees. Instant booking.</p>
+248:         <div class="hero-trust">
+249:             <div class="hero-trust-item"><i class="fa-solid fa-shield-halved"></i> Secure Payments</div>
+250:             <div style="width:1px; height:20px; background:rgba(255,255,255,0.3);"></div>
+251:             <div class="hero-trust-item"><i class="fa-solid fa-star"></i> 4.9/5 Rating</div>
+252:             <div style="width:1px; height:20px; background:rgba(255,255,255,0.3);"></div>
+253:             <div class="hero-trust-item"><i class="fa-solid fa-headset"></i> 24/7 Support</div>
+254:             <div style="width:1px; height:20px; background:rgba(255,255,255,0.3);"></div>
+255:             <div class="hero-trust-item"><i class="fa-solid fa-bolt"></i> Instant E-Ticket</div>
+256:         </div>
+257:     </div>
+258: 
+259:     <!-- Search Form -->
+260:     <section id="tab-flights" style="width: 100%; max-width: 1100px; margin: -100px auto 40px auto; position: relative; z-index: 10;">
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

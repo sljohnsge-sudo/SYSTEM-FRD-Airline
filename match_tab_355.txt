@@ -1,0 +1,1 @@
+I will search for `switchB2CTab` in `b2c_home.html` to see how tabs are switched.

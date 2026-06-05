@@ -1,0 +1,1 @@
+I will search `static/js/main.js` for the `switchB2CTab` function to see if it is defined there.

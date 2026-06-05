@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exclusive Offers | Aeronexa</title>
+    <!-- Stylesheets & Fonts -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=1.0.6">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            margin: 0; padding: 0;
+            background-color: #f0f4f8;
+            color: #1e293b;
+        }
+        /* ── TOP PROMO TICKER ── */
+        .promo-ticker {
+            background: linear-gradient(90deg, #c3122e, #ac031c);
+            color: white; font-size: 13px; font-weight: 600;
+            text-align: center; padding: 9px 0; letter-spacing: 0.5px;
+        }
+        .promo-ticker a { color: #ffd6e0; text-decoration: underline; margin-left: 8px; }
+        /* ── HEADER ── */
+        .b2c-header {
+            background-color: rgba(255,255,255,0.97);
+            backdrop-filter: blur(12px);
+            padding: 14px 50px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.07);
+            position: sticky; top: 0; z-index: 200;
+        }
+        .b2c-brand {
+            font-size: 26px; font-weight: 800; color: #c3122e;
+            display: flex; align-items: center; gap: 10px; text-decoration: none;
+        }
+        .b2c-nav { display: flex; gap: 28px; align-items: center; }
+        .b2c-nav a {
+            color: #334155; text-decoration: none; font-weight: 600;
+            font-size: 14px; transition: color 0.25s;
+        }
+        .b2c-nav a:hover { color: #c3122e; }
+        .btn-b2b-login {
+            background: #c3122e; color: #fff !important;
+            padding: 9px 20px; border-radius: 25px; font-weight: 700;
+            transition: all 0.3s; box-shadow: 0 3px 12px rgba(195, 18, 46,0.3);
+        }
+        .btn-b2b-login:hover { background: #ac031c; transform: translateY(-1px); }
+        
+        /* ── HERO ── */
+        .hero-banner {
+            min-height: 280px;
+            background-image: linear-gradient(135deg, rgba(195, 18, 46, 0.9) 0%, rgba(172, 3, 28, 0.8) 40%, rgba(15, 23, 42, 0.9) 100%),
+                url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=2000');
+            background-size: cover; background-position: center;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            color: white; text-align: center;
+            border-bottom-left-radius: 32px; border-bottom-right-radius: 32px;
+            margin-bottom: 40px; padding: 40px 20px;
+        }
+        .hero-badge {
+            background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35);
+            backdrop-filter: blur(6px); color: white;
+            padding: 7px 20px; border-radius: 30px;
+            font-size: 13px; font-weight: 600; letter-spacing: 1px;
+            margin-bottom: 20px; display: inline-block;
+        }
+        .hero-banner h1 {
+            font-size: 42px; font-weight: 800; margin: 0 0 15px;
+            letter-spacing: -1px; text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .hero-banner p {
+            font-size: 18px; opacity: 0.9; margin: 0;
+        }
+
+        /* ── OFFERS TABS ── */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto 60px auto;
+            padding: 0 20px;
+            min-height: 60vh;
+        }
+        .offers-tabs {
+            display: flex; gap: 15px; margin-bottom: 40px; border-bottom: 1px solid #cbd5e1;
+            justify-content: center;
+        }
+        .tab-btn {
+            background: transparent; border: none;
+            font-size: 16px; font-weight: 600; color: #64748b;
+            padding: 15px 30px; cursor: pointer;
+            border-bottom: 3px solid transparent; transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .tab-btn:hover { color: #1e293b; }
+        .tab-btn.active {
+            color: #c3122e; border-bottom-color: #c3122e; font-weight: 700;
+        }
+
+        /* ── OFFERS GRID ── */
+        .offers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+        }
+        .offer-section { display: none; animation: fadeIn 0.4s ease forwards; }
+        .offer-section.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .offer-card {
+            background: white; border-radius: 16px; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transition: all 0.3s ease; border: 1px solid #e2e8f0;
+            display: flex; flex-direction: column;
+            position: relative;
+        }
+        .offer-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+        }
+        .offer-img {
+            width: 100%; height: 200px; object-fit: cover;
+            background: #e2e8f0;
+        }
+        .offer-badge {
+            position: absolute; top: 15px; right: 15px;
+            background: #10b981; color: white;
+            font-size: 12px; font-weight: 700;
+            padding: 6px 14px; border-radius: 20px; z-index: 5;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+        }
+        .offer-badge.hotel { background: #3b82f6; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); }
+        .offer-badge.bank { background: #f59e0b; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3); }
+        
+        .offer-info { padding: 25px; flex-grow: 1; display: flex; flex-direction: column; }
+        .offer-title { font-size: 22px; font-weight: 800; color: #0f172a; margin: 0 0 10px 0; line-height: 1.3; }
+        .offer-desc { font-size: 14px; color: #475569; margin: 0 0 20px 0; line-height: 1.5; flex-grow: 1; }
+        .offer-validity {
+            font-size: 12px; color: #94a3b8; font-weight: 600;
+            display: flex; align-items: center; gap: 6px; margin-bottom: 15px;
+        }
+        
+        .btn-claim {
+            background: #c3122e; color: white; border: none;
+            padding: 12px; border-radius: 8px; font-size: 15px; font-weight: 700;
+            cursor: pointer; transition: all 0.2s; width: 100%; font-family: 'Outfit', sans-serif;
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+        }
+        .btn-claim:hover { background: #ac031c; }
+        
+        .coupon-code {
+            border: 2px dashed #cbd5e1; background: #f8fafc;
+            padding: 8px 15px; border-radius: 8px; text-align: center;
+            font-family: monospace; font-size: 16px; font-weight: bold; color: #1e293b;
+            margin-bottom: 15px; letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Promo Ticker -->
+    <div class="promo-ticker">
+        <i class="fa-solid fa-gift"></i> Aeronexa Festive Offers Live! Get up to 25% off on selected flights. <a href="#">Claim Now</a>
+    </div>
+
+    <!-- B2C Header -->
+    <header class="b2c-header">
+        <a href="/b2c" class="b2c-brand">
+            <i class="fa-solid fa-plane-departure"></i> Aeronexa
+        </a>
+        <nav class="b2c-nav">
+            <a href="/b2c?tab=flights" id="nav-flights-btn"><i class="fa-solid fa-plane"></i> Flights</a>
+            <a href="/b2c?tab=hotels" id="nav-hotels-btn"><i class="fa-solid fa-hotel"></i> Hotels</a>
+            <a href="/b2c/holidays" id="nav-holidays-btn"><i class="fa-solid fa-umbrella-beach"></i> Holidays</a>
+            <a href="/b2c/offers" style="color:#c3122e;"><i class="fa-solid fa-tags" style="color:#c3122e;"></i> Offers</a>
+            <a href="/b2c/my-bookings"><i class="fa-solid fa-briefcase"></i> My Bookings</a>
+            
+            {% if session.get('b2c_user') %}
+                <div style="display: flex; align-items: center; gap: 15px; margin-left: 15px; border-left: 1px solid #e2e8f0; padding-left: 20px;">
+                    <div style="font-weight: 600; color: #1e293b; font-size: 14px;">
+                        <i class="fa-solid fa-user-circle" style="color: #64748b; margin-right: 5px;"></i> {{ session.b2c_user.name }}
+                    </div>
+                    <a href="/b2c/logout" style="color: #ef4444; font-size: 13px; font-weight: 600;"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+                </div>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="btn-b2b-login"><i class="fa-solid fa-user"></i> Agent Login</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <div class="hero-banner">
+        <div class="hero-badge"><i class="fa-solid fa-tags" style="color: #ffd6e0; margin-right: 5px;"></i> EXCLUSIVE DEALS</div>
+        <h1>Unbeatable Offers & Discounts</h1>
+        <p>Save big on your next journey with our partner bank discounts, hotel deals, and flight promos.</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Tabs -->
+        <div class="offers-tabs">
+            <button class="tab-btn active" onclick="switchOfferTab('bank', this)">
+                <i class="fa-solid fa-credit-card"></i> Bank Offers
+            </button>
+            <button class="tab-btn" onclick="switchOfferTab('hotel', this)">
+                <i class="fa-solid fa-hotel"></i> Hotel Offers
+            </button>
+            <button class="tab-btn" onclick="switchOfferTab('other', this)">
+                <i class="fa-solid fa-ticket"></i> Other Offers
+            </button>
+        </div>
+
+        <!-- Bank Offers Section -->
+        <div id="bank-offers" class="offer-section active">
+            <div class="offers-grid">
+                <!-- Offer 1 -->
+                <div class="offer-card">
+                    <div class="offer-badge bank">Bank Partner</div>
+                    <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=800" alt="Credit Card" class="offer-img">
+                    <div class="offer-info">
+                        <h3 class="offer-title">15% Off with Standard Chartered Cards</h3>
+                        <p class="offer-desc">Enjoy a flat 15% discount on all international flight bookings when you pay with a Standard Chartered Visa Signature or Infinite credit card.</p>
+                        <div class="offer-validity"><i class="fa-regular fa-clock"></i> Valid till: 31st December 2026</div>
+                        <div class="coupon-code">SCB15FLY</div>
+                        <button class="btn-claim" onclick="copyCode('SCB15FLY', this)"><i class="fa-regular fa-copy"></i> Copy Code & Book</button>
+                    </div>
+                </div>
+                
+                <!-- Offer 2 -->
+                <div class="offer-card">
+                    <div class="offer-badge bank">Bank Partner</div>
+                    <img src="https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&q=80&w=800" alt="Payment terminal" class="offer-img">
+                    <div class="offer-info">
+                        <h3 class="offer-title">HSBC 0% Installment Plans</h3>
+                        <p class="offer-desc">Book your dream holiday package and convert the payment into a 12-month 0% interest installment plan with any HSBC Credit Card.</p>
+                        <div class="offer-validity"><i class="fa-regular fa-clock"></i> Valid till: 30th November 2026</div>
+                        <div class="coupon-code">HSBCEASY12</div>
+                        <button class="btn-claim" onclick="copyCode('HSBCEASY12', this)"><i class="fa-regular fa-copy"></i> Copy Code & Book</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hotel Offers Section -->
+        <div id="hotel-offers" class="offer-section">
+            <div class="offers-grid">
+                <!-- Offer 3 -->
+                <div class="offer-card">
+                    <div class="offer-badge hotel">Hotel Deal</div>
+                    <img src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&q=80&w=800" alt="Luxury Hotel Resort" class="offer-img">
+                    <div class="offer-info">
+                        <h3 class="offer-title">Stay 3 Nights, Pay for 2</h3>
+                        <p class="offer-desc">Experience ultimate luxury in the Maldives. Book a 3-night stay at any participating overwater resort and only pay for 2 nights!</p>
+                        <div class="offer-validity"><i class="fa-regular fa-clock"></i> Valid till: 15th October 2026</div>
+                        <div class="coupon-code">MALDIVES3FOR2</div>
+                        <button class="btn-claim" onclick="copyCode('MALDIVES3FOR2', this)"><i class="fa-regular fa-copy"></i> Copy Code & Book</button>
+                    </div>
+                </div>
+                
+                <!-- Offer 4 -->
+                <div class="offer-card">
+                    <div class="offer-badge hotel">Hotel Deal</div>
+                    <img src="https://images.unsplash.com/photo-1542314831-c6a4d14d2382?auto=format&fit=crop&q=80&w=800" alt="City Hotel Pool" class="offer-img">
+                    <div class="offer-info">
+                        <h3 class="offer-title">Free Room Upgrade in Dubai</h3>
+                        <p class="offer-desc">Book a standard room in participating Downtown Dubai hotels and get a complimentary upgrade to a Deluxe Suite with skyline views.</p>
+                        <div class="offer-validity"><i class="fa-regular fa-clock"></i> Valid till: 30th September 2026</div>
+                        <div class="coupon-code">DXBUPGRADE</div>
+                        <button class="btn-claim" onclick="copyCode('DXBUPGRADE', this)"><i class="fa-regular fa-copy"></i> Copy Code & Book</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Other Offers Section -->
+        <div id="other-offers" class="offer-section">
+            <div class="offers-grid">
+                <!-- Offer 5 -->
+                <div class="offer-card">
+                    <div class="offer-badge">Seasonal Promo</div>
+                    <img src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&q=80&w=800" alt="Airplane Wing" class="offer-img">
+                    <div class="offer-info">
+                        <h3 class="offer-title">Early Bird: 20% Off Flights to Europe</h3>
+                        <p class="offer-desc">Planning your winter getaway? Book your flights to London, Paris, or Frankfurt 90 days in advance and get 20% off base fares.</p>
+                        <div class="offer-validity"><i class="fa-regular fa-clock"></i> Valid till: 31st August 2026</div>
+                        <div class="coupon-code">EURO20EARLY</div>
+                        <button class="btn-claim" onclick="copyCode('EURO20EARLY', this)"><i class="fa-regular fa-copy"></i> Copy Code & Book</button>
+                    </div>
+                </div>
+                
+                <!-- Offer 6 -->
+                <div class="offer-card">
+                    <div class="offer-badge">App Exclusive</div>
+                    <img src="https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&q=80&w=800" alt="Smartphone" class="offer-img">
+                    <div class="offer-info">
+                        <h3 class="offer-title">$50 Cashback on Mobile App</h3>
+                        <p class="offer-desc">Download the Aeronexa mobile app and make your first flight or hotel booking to receive an instant $50 cashback into your wallet.</p>
+                        <div class="offer-validity"><i class="fa-regular fa-clock"></i> Valid for First Booking Only</div>
+                        <div class="coupon-code">APP50CASH</div>
+                        <button class="btn-claim" onclick="copyCode('APP50CASH', this)"><i class="fa-regular fa-copy"></i> Copy Code & Book</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer style="background: #0f172a; color: white; padding: 60px 50px 30px; margin-top: auto;">
+        <div style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 50px;">
+            <div>
+                <h3 style="color: white; font-size: 24px; margin-top: 0;"><i class="fa-solid fa-plane-departure" style="color: #c3122e;"></i> Aeronexa</h3>
+                <p style="color: #94a3b8; line-height: 1.6; margin-bottom: 20px;">Your premium travel partner. We make booking flights, hotels, and holiday packages seamless and secure.</p>
+                <div style="display: flex; gap: 15px;">
+                    <a href="#" style="color: white; background: rgba(255,255,255,0.1); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%;"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#" style="color: white; background: rgba(255,255,255,0.1); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%;"><i class="fa-brands fa-twitter"></i></a>
+                    <a href="#" style="color: white; background: rgba(255,255,255,0.1); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%;"><i class="fa-brands fa-instagram"></i></a>
+                </div>
+            </div>
+            <div>
+                <h4 style="color: white; margin-top: 0; margin-bottom: 20px;">Quick Links</h4>
+                <ul style="list-style: none; padding: 0; margin: 0; line-height: 2.2;">
+                    <li><a href="/b2c?tab=flights" style="color: #94a3b8; text-decoration: none;">Book Flights</a></li>
+                    <li><a href="/b2c?tab=hotels" style="color: #94a3b8; text-decoration: none;">Book Hotels</a></li>
+                    <li><a href="/b2c/holidays" style="color: #94a3b8; text-decoration: none;">Holiday Packages</a></li>
+                    <li><a href="/b2c/offers" style="color: #94a3b8; text-decoration: none;">Special Offers</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 style="color: white; margin-top: 0; margin-bottom: 20px;">Support</h4>
+                <ul style="list-style: none; padding: 0; margin: 0; line-height: 2.2;">
+                    <li><a href="/b2c/my-bookings" style="color: #94a3b8; text-decoration: none;">Manage Booking</a></li>
+                    <li><a href="#" style="color: #94a3b8; text-decoration: none;">Cancellation Policy</a></li>
+                    <li><a href="#" style="color: #94a3b8; text-decoration: none;">FAQs</a></li>
+                    <li><a href="#" style="color: #94a3b8; text-decoration: none;">Contact Us</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 style="color: white; margin-top: 0; margin-bottom: 20px;">Newsletter</h4>
+                <p style="color: #94a3b8; font-size: 14px;">Subscribe to get the latest offers directly in your inbox.</p>
+                <div style="display: flex; margin-top: 15px;">
+                    <input type="email" placeholder="Your Email" style="padding: 10px 15px; border: none; border-radius: 4px 0 0 4px; outline: none; width: 100%;">
+                    <button style="background: #c3122e; color: white; border: none; padding: 0 15px; border-radius: 0 4px 4px 0; cursor: pointer;"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+        <div style="text-align: center; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 50px; padding-top: 25px; color: #64748b; font-size: 14px;">
+            &copy; 2026 Aeronexa Travel. All rights reserved.
+        </div>
+    </footer>
+
+    {% include 'b2c_chatbot.html' %}
+
+    <script>
+        function switchOfferTab(tabId, btnElement) {
+            // Remove active from all tabs
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.offer-section').forEach(sec => sec.classList.remove('active'));
+            
+            // Add active to selected
+            btnElement.classList.add('active');
+            document.getElementById(tabId + '-offers').classList.add('active');
+        }
+
+        function copyCode(code, btnElement) {
+            navigator.clipboard.writeText(code).then(() => {
+                const originalHtml = btnElement.innerHTML;
+                btnElement.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+                btnElement.style.background = '#10b981';
+                setTimeout(() => {
+                    btnElement.innerHTML = originalHtml;
+                    btnElement.style.background = '';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

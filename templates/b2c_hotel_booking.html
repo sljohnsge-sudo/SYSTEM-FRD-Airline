@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Your Hotel Booking | Aeronexa</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=1.0.6">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #f8fafc;
+            margin: 0; padding: 0;
+            color: #1e293b;
+        }
+        .b2c-header {
+            background-color: rgba(255,255,255,0.97);
+            backdrop-filter: blur(12px);
+            padding: 14px 50px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.07);
+            position: sticky; top: 0; z-index: 200;
+        }
+        .b2c-brand {
+            font-size: 26px; font-weight: 800; color: #c3122e;
+            display: flex; align-items: center; gap: 10px; text-decoration: none;
+        }
+        .b2c-nav { display: flex; gap: 28px; align-items: center; }
+        .b2c-nav a {
+            color: #334155; text-decoration: none; font-weight: 600;
+            font-size: 14px; transition: color 0.25s;
+        }
+        .b2c-nav a:hover { color: #c3122e; }
+        
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .checkout-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .card-header {
+            padding: 18px 25px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+        .card-body {
+            padding: 25px;
+        }
+        .form-control {
+            width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-family: 'Outfit', sans-serif; outline: none; transition: all 0.2s;
+        }
+        .form-control:focus {
+            border-color: #c3122e; box-shadow: 0 0 0 3px rgba(195,18,46,0.1);
+        }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px; }
+    </style>
+</head>
+<body>
+    <header class="b2c-header">
+        <a href="/b2c" class="b2c-brand">
+            <i class="fa-solid fa-plane-departure" style="color: #c3122e;"></i> Aeronexa
+        </a>
+        <nav class="b2c-nav">
+            <a href="/b2c?tab=flights">Flights</a>
+            <a href="/b2c?tab=hotels">Hotels</a>
+            <a href="/b2c/holidays">Holidays</a>
+            <a href="/b2c/offers"><i class="fa-solid fa-tags"></i> Offers</a>
+            {% if session.get('b2c_user') %}
+                <div style="position: relative; display: inline-block;">
+                    <a href="/b2c/my-bookings" style="display: flex; align-items: center; gap: 8px; font-weight: 700;">
+                        <i class="fa-solid fa-circle-user" style="font-size: 20px; color: #c3122e;"></i>
+                        {{ session.b2c_user.name }}
+                    </a>
+                </div>
+            {% else %}
+                <a href="/b2c/login/google" style="display: flex; align-items: center; gap: 8px; font-weight: 700;">
+                    <i class="fa-brands fa-google" style="color: #c3122e;"></i> Sign In
+                </a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1 style="font-size: 28px; font-weight: 800; color: #0f172a; margin-bottom: 25px;"><i class="fa-solid fa-lock" style="color: #10b981; margin-right: 10px;"></i> Secure Checkout</h1>
+        
+        <form id="b2c-hotel-book-form" onsubmit="submitB2CHotelBooking(event)">
+            <input type="hidden" id="b2c-modal-room-id" value="">
+            <input type="hidden" id="b2c-modal-checkin" value="">
+            <input type="hidden" id="b2c-modal-checkout" value="">
+            
+            <div class="checkout-grid">
+                <!-- Left Column -->
+                <div>
+                    <!-- Hotel Details Card -->
+                    <div class="card">
+                        <div class="card-body">
+                            <div style="display: flex; gap: 20px; align-items: flex-start;">
+                                <img id="b2c-modal-room-img" src="" style="width: 140px; height: 105px; object-fit: cover; border-radius: 8px; border: 1px solid #cbd5e1;" alt="Room image">
+                                <div style="flex-grow: 1;">
+                                    <h4 id="b2c-modal-hotel-name" style="margin: 0 0 6px 0; color: #0f172a; font-size: 20px; font-weight: 800;">Hotel Name</h4>
+                                    <p id="b2c-modal-room-type" style="margin: 0 0 10px 0; color: #475569; font-size: 15px; font-weight: 600;">Room Type</p>
+                                    <div id="b2c-modal-room-icons" style="display: flex; align-items: center; gap: 10px; color: #64748b;">
+                                        <i class="fa-solid fa-wifi" title="Free Wi-Fi"></i>
+                                        <i class="fa-solid fa-bed" title="Comfortable Bed"></i>
+                                        <i class="fa-solid fa-snowflake" title="Air Conditioning"></i>
+                                        <i class="fa-solid fa-tv" title="Cable TV"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Guest Details Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 style="margin: 0; color: #0f172a; font-size: 16px; font-weight: 700;"><i class="fa-solid fa-user-pen" style="color: #c3122e; margin-right: 8px;"></i> Guest Details</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>Guest Full Name</label>
+                                <input type="text" id="b2c-modal-guest-name" class="form-control" required placeholder="Enter guest full name" value="{{ session.b2c_user.name if session.get('b2c_user') else '' }}">
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                <div class="form-group">
+                                    <label>Email Address</label>
+                                    <input type="email" id="b2c-modal-email" class="form-control" required placeholder="Enter email" value="{{ session.b2c_user.email if session.get('b2c_user') else '' }}">
+                                </div>
+                                <div class="form-group">
+                                    <label>Mobile Number</label>
+                                    <input type="text" id="b2c-modal-mobile" class="form-control" required placeholder="Enter mobile" value="{{ session.get('b2c_search_mobile', '') }}">
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-top: 10px;">
+                                <label>Special Requests (Optional)</label>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 14px; color: #475569; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 500;"><input type="checkbox" value="extra_bed" style="accent-color: #c3122e;"> Extra Bed</label>
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 500;"><input type="checkbox" value="high_floor" style="accent-color: #c3122e;"> High Floor</label>
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 500;"><input type="checkbox" value="non_smoking" style="accent-color: #c3122e;"> Non-Smoking Room</label>
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 500;"><input type="checkbox" value="late_checkin" style="accent-color: #c3122e;"> Late Check-in</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 style="margin: 0; color: #0f172a; font-size: 16px; font-weight: 700;"><i class="fa-solid fa-credit-card" style="color: #c3122e; margin-right: 8px;"></i> Payment Details</h4>
+                        </div>
+                        <div class="card-body">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <div style="font-size: 14px; font-weight: 600; color: #64748b;">Pay Securely via Credit Card</div>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <i class="fa-brands fa-cc-visa" style="font-size: 28px; color: #475569;"></i>
+                                    <i class="fa-brands fa-cc-mastercard" style="font-size: 28px; color: #475569;"></i>
+                                    <i class="fa-brands fa-cc-amex" style="font-size: 28px; color: #475569;"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Card Number</label>
+                                <input type="text" placeholder="1234 5678 9101 1121" maxlength="19" class="form-control" required>
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px;">
+                                <div class="form-group">
+                                    <label>Cardholder Name</label>
+                                    <input type="text" placeholder="John Doe" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Expiry Date</label>
+                                    <input type="text" placeholder="MM/YY" maxlength="5" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>CVV</label>
+                                    <input type="text" placeholder="123" maxlength="3" class="form-control" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column (Summary) -->
+                <div>
+                    <div class="card" style="position: sticky; top: 90px;">
+                        <div class="card-header">
+                            <h4 style="margin: 0; color: #0f172a; font-size: 16px; font-weight: 700;"><i class="fa-solid fa-list-check" style="color:#c3122e; margin-right:8px;"></i> Booking Summary</h4>
+                        </div>
+                        <div class="card-body">
+                            <div style="display: flex; flex-direction: column; gap: 15px; font-size: 14px; color: #475569;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Check-in:</span>
+                                    <strong id="b2c-modal-checkin-left" style="color: #0f172a;">-</strong>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Check-out:</span>
+                                    <strong id="b2c-modal-checkout-left" style="color: #0f172a;">-</strong>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Stay Duration:</span>
+                                    <strong style="color: #0f172a;"><span id="b2c-modal-nights-left">0</span> Nights</strong>
+                                </div>
+                                
+                                <hr style="border: 0; border-top: 1px dashed #cbd5e1; margin: 5px 0;">
+                                
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Room Rate per Night:</span>
+                                    <strong id="b2c-modal-room-rate-val" style="color: #0f172a;">LKR 0.00</strong>
+                                </div>
+                                
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Taxes & Fees (10%):</span>
+                                    <strong id="b2c-modal-tax-val" style="color: #0f172a;">LKR 0.00</strong>
+                                </div>
+                            </div>
+                            
+                            <div style="background: #f8fafc; margin: 20px -25px -25px; padding: 20px 25px; border-top: 2px solid #e2e8f0;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                    <span style="font-weight: 700; color: #0f172a; font-size: 15px;">Total Price</span>
+                                    <div id="b2c-modal-total-price" style="font-size: 28px; font-weight: 800; color: #c3122e;">LKR 0.00</div>
+                                </div>
+                                
+                                <button type="submit" style="width: 100%; background: #c3122e; color: white; border: none; padding: 16px; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(195,18,46,0.2);" onmouseover="this.style.background='#ac031c';" onmouseout="this.style.background='#c3122e';">
+                                    <i class="fa-solid fa-lock" style="margin-right: 6px;"></i> Complete Booking
+                                </button>
+                                
+                                <div style="text-align: center; margin-top: 15px; font-size: 12px; color: #64748b; font-weight: 500;">
+                                    <i class="fa-solid fa-shield-halved" style="color: #10b981;"></i> 128-bit SSL Secure Checkout
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Footer -->
+    <footer style="background: #0f172a; color: #94a3b8; padding: 60px 0 0 0; margin-top: 60px;">
+        <div style="max-width: 1100px; margin: 0 auto; padding: 0 20px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 50px;">
+            <div>
+                <a href="/b2c" style="font-size: 26px; font-weight: 800; color: white; text-decoration: none; display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                    <i class="fa-solid fa-plane-departure" style="color: #c3122e;"></i> Aeronexa
+                </a>
+                <p style="font-size: 14px; line-height: 1.8; color: #64748b; margin-bottom: 24px;">Your ultimate travel companion. Powered by Flight Hub GDS & George Steuart Travel.</p>
+            </div>
+            <div>
+                <h4 style="color: white; font-size: 15px; margin-bottom: 20px; font-weight: 700;">Company</h4>
+                <ul style="list-style: none; padding: 0; line-height: 2.2;">
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;">About Us</a></li>
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;">Careers</a></li>
+                </ul>
+            </div>
+        </div>
+        <div style="max-width: 1100px; margin: 40px auto 0; padding: 24px 20px; border-top: 1px solid #1e293b; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <p style="margin: 0; font-size: 13px; color: #475569;">&copy; 2026 Aeronexa &mdash; All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomId = urlParams.get('room_id');
+            const roomType = urlParams.get('room_type') || 'Standard Room';
+            const hotelName = urlParams.get('hotel_name') || 'Hotel';
+            const pricePerNight = parseFloat(urlParams.get('price_per_night') || 0);
+            const nights = parseInt(urlParams.get('nights') || 1);
+            const checkin = urlParams.get('checkin') || '2026-06-15';
+            const checkout = urlParams.get('checkout') || '2026-06-18';
+            let roomImg = urlParams.get('room_img');
+            if (roomImg) {
+                roomImg = roomImg.replace(/\'/g, ""); // Clean up escaped quotes if any
+            } else {
+                roomImg = "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=300";
+            }
+            
+            const baseTotal = pricePerNight * nights;
+            const taxTotal = baseTotal * 0.10;
+            const totalPrice = baseTotal + taxTotal;
+            
+            document.getElementById("b2c-modal-room-id").value = roomId;
+            document.getElementById("b2c-modal-hotel-name").innerText = hotelName;
+            document.getElementById("b2c-modal-room-type").innerText = roomType;
+            document.getElementById("b2c-modal-room-img").src = roomImg;
+            
+            document.getElementById("b2c-modal-checkin-left").innerText = checkin;
+            document.getElementById("b2c-modal-checkout-left").innerText = checkout;
+            document.getElementById("b2c-modal-nights-left").innerText = nights;
+            
+            document.getElementById("b2c-modal-checkin").value = checkin;
+            document.getElementById("b2c-modal-checkout").value = checkout;
+            
+            document.getElementById("b2c-modal-room-rate-val").innerText = "LKR " + pricePerNight.toLocaleString();
+            document.getElementById("b2c-modal-tax-val").innerText = "LKR " + taxTotal.toLocaleString();
+            document.getElementById("b2c-modal-total-price").innerText = "LKR " + totalPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        });
+        
+        function submitB2CHotelBooking(event) {
+            event.preventDefault();
+            
+            const roomId = document.getElementById("b2c-modal-room-id").value;
+            const guestName = document.getElementById("b2c-modal-guest-name").value.trim();
+            const email = document.getElementById("b2c-modal-email").value.trim();
+            const mobile = document.getElementById("b2c-modal-mobile").value.trim();
+            const checkIn = document.getElementById("b2c-modal-checkin").value;
+            const checkOut = document.getElementById("b2c-modal-checkout").value;
+            
+            const payload = {
+                room_id: parseInt(roomId),
+                guest_name: guestName,
+                email: email,
+                mobile: mobile,
+                check_in: checkIn,
+                check_out: checkOut
+            };
+            
+            const btn = event.target.querySelector('button[type="submit"]');
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
+            btn.disabled = true;
+            
+            fetch("/api/b2c/hotels/book", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Hotel booked successfully!\nInvoice: " + data.invoice_number);
+                    window.location.href = "/b2c/my-bookings";
+                } else {
+                    alert("Booking failed: " + data.error);
+                    btn.innerHTML = '<i class="fa-solid fa-lock" style="margin-right: 6px;"></i> Complete Booking';
+                    btn.disabled = false;
+                }
+            })
+            .catch(err => {
+                console.error("Hotel book error:", err);
+                alert("An error occurred. Please try again.");
+                btn.innerHTML = '<i class="fa-solid fa-lock" style="margin-right: 6px;"></i> Complete Booking';
+                btn.disabled = false;
+            });
+        }
+    </script>
+    
+    {% include 'b2c_chatbot.html' %}
+</body>
+</html>

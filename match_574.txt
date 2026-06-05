@@ -1,0 +1,43 @@
+Created At: 2026-06-04T08:24:09Z
+Completed At: 2026-06-04T08:24:09Z
+The following changes were made by the replace_file_content tool to: C:\Users\Sanka\.gemini\antigravity-ide\brain\057c4a5c-5fd8-493d-af23-6d99d9e202fd\task.md. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -1,22 +1,24 @@
+ # Task Checklist: Standalone B2C Holidays Page Integration & Hotels Removal
+ 
+-- `[ ]` Remove Hotels option from B2C Home Page
+-  - `[ ]` Remove Hotels navigation link from header in `b2c_home.html`
+-  - `[ ]` Remove Tab Selector buttons (Flights/Hotels) in `b2c_home.html`
+-  - `[ ]` Remove `#b2c-hotels-panel` (the yellow-bordered Hotels search bar widget) in `b2c_home.html`
+-  - `[ ]` Remove Hotels JS search, rendering, and booking modal logic from `b2c_home.html`
+-- `[ ]` Remove Hotels option from B2C My Bookings Page
+-  - `[ ]` Remove Hotels navigation link from header in `b2c_my_bookings.html`
+-  - `[ ]` Remove "Hotel Bookings" tab button and its section (`#section-hotels`) from `b2c_my_bookings.html`
+-- `[ ]` Create stand-alone Holidays page (`b2c_holidays.html`)
++- `[x]` Remove Hotels option from B2C Home Page
++  - `[x]` Remove Hotels navigation link from header in `b2c_home.html`
++  - `[x]` Remove Tab Selector buttons (Flights/Hotels) in `b2c_home.html`
++  - `[x]` Remove `#b2c-hotels-panel` (the yellow-bordered Hotels search bar widget) in `b2c_home.html`
++  - `[x]` Remove Hotels JS search, rendering, and booking modal logic from `b2c_home.html`
++- `[x]` Remove Hotels option from B2C My Bookings Page
++  - `[x]` Remove Hotels navigation link from header in `b2c_my_bookings.html`
++  - `[x]` Remove "Hotel Bookings" tab button and its section (`#section-hotels`) from `b2c_my_bookings.html`
++- `[/]` Create stand-alone Holidays page (`b2c_holidays.html`)
+   - `[ ]` Design page layout matching George Steuart branding (crimson `#c3122e` / `#ac031c`)
+   - `[ ]` Implement Group Tour packages grid (showing destination and country, gold star hotel details, transport, separate including/excluding flight prices)
+   - `[ ]` Implement Holiday Booking / Inquiry modal with dynamic price calculations based on passengers and flight choice
+-- `[ ]` Implement routes and database actions in `app.py`
++  - `[ ]` Ensure NO general hotel booking or search widget is present on this page
++- `[/]` Implement routes and database actions in `app.py`
+   - `[ ]` Define `/b2c/holidays` route to render `b2c_holidays.html`
+   - `[ ]` Implement `/api/b2c/holidays/book` API endpoint to handle booking submissions
+-  - `[ ]` Update `/b2c/my-bookings` route to query holiday bookings and render "Holiday Bookings" tab
++  - `[x]` Update `/b2c/my-bookings` route to query holiday bookings and render "Holiday Bookings" tab
+ - `[ ]` Verify Changes
+   - `[ ]` Run local Flask app and manually verify all pages
+   - `[ ]` Test booking flow and verify bookings appear under "Holiday Bookings" in My Bookings page
++
+ 
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.

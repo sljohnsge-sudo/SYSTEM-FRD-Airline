@@ -1,0 +1,54 @@
+Created At: 2026-06-04T07:11:21Z
+Completed At: 2026-06-04T07:11:21Z
+File Path: `file:///d:/GS/SYSTEM-FRD-Airline/templates/b2c_home.html`
+Total Lines: 1603
+Total Bytes: 122505
+Showing lines 500 to 625
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+500:                         </div>
+501:                     </div>
+502:                 </div> <!-- End of b2c-flights-panel -->
+503: 
+504:                 <!-- Hotels Panel -->
+505:                 <div id="b2c-hotels-panel" style="display: none;">
+506:                     <div class="hero-content">
+507:                         <h1 style="color: #1e293b; font-size: 32px; font-weight: 800; margin: 0 0 10px 0;">Find Wholesale Hotel Rates</h1>
+508:                         <p style="color: #64748b; font-size: 16px; margin: 0 0 25px 0;">Discover hand-picked hotels with exclusive, consolidated rates.</p>
+509:                     </div> <!-- End of hero-content -->
+510:                         
+511:                         <!-- Hotel search bar wrapper (booking.com yellow styling) -->
+512:                         <div class="hotels-search-bar-wrapper" style="border: 4px solid #febb02; background: #febb02; padding: 4px; border-radius: 8px; display: flex; align-items: stretch; gap: 4px; flex-wrap: wrap;">
+513:                             <!-- Destination input -->
+514:                             <div style="flex: 2 1 300px; background: white; border-radius: 4px; padding: 10px 16px; display: flex; align-items: center; gap: 12px; position: relative;">
+515:                                 <i class="fa-solid fa-bed" style="color: #64748b; font-size: 20px;"></i>
+516:                                 <div style="flex: 1; display: flex; flex-direction: column; text-align: left;">
+517:                                     <label style="font-size: 10px; text-transform: uppercase
+<truncated 10794 bytes>
+></i>
+600:                                 <span>Search</span>
+601:                             </button>
+602:                         </div>
+603:                     
+604:                     <!-- Hotel Search Results container (Grid) -->
+605:                     <div class="b2c-hotels-grid" id="b2c-hotel-results-container" style="display: none; margin-top: 35px; text-align: left;">
+606:                         <div style="text-align: center; color: var(--text-muted); padding: 40px 0; grid-column: span 3;">
+607:                             <i class="fa-solid fa-hotel" style="font-size: 40px; margin-bottom: 15px; color: rgba(0,0,0,0.1);"></i>
+608:                             <p>Enter a destination and dates to search for wholesale hotel rates.</p>
+609:                         </div>
+610:                     </div>
+611: 
+612:                     <!-- Hotel Details view container (Initially Hidden) -->
+613:                     <div id="b2c-hotel-details-view" style="display: none; margin-top: 35px; text-align: left; background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 30px; border: 1px solid #e2e8f0; font-family: 'Outfit', sans-serif;">
+614:                         <!-- Loaded dynamically -->
+615:                     </div>
+616:                 </div>
+617:                 </div>
+618:             </section>
+619: 
+620: 
+621:     <!-- ===== STATS BAR ===== -->
+622:     <div style="background: #c3122e; padding: 28px 0; margin-top: 10px;">
+623:         <div style="max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 20px; padding: 0 20px;">
+624:             <div style="text-align: center; color: white;">
+625:                 <div style="font-size: 36px; font-weight: 800; letter-spacing: -1px;">500+</div>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

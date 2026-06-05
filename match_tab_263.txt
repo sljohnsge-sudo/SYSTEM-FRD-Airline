@@ -1,0 +1,66 @@
+Created At: 2026-06-04T06:47:35Z
+Completed At: 2026-06-04T06:47:36Z
+File Path: `file:///d:/GS/SYSTEM-FRD-Airline/templates/b2c_home.html`
+Total Lines: 1603
+Total Bytes: 122496
+Showing lines 201 to 300
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+201:             cursor: pointer;
+202:             transition: background 0.2s;
+203:             font-family: 'Outfit', sans-serif;
+204:         }
+205:         .btn-book-room:hover {
+206:             background: #0053b3;
+207:         }
+208:     </style>
+209: </head>
+210: <body>
+211: 
+212:     <!-- B2C Header -->
+213:     <!-- Promo Ticker -->
+214:     <div class="promo-ticker">
+215:         ✈️ &nbsp;FLASH SALE: Up to 40% off on selected routes this week only! &nbsp;<a href="#tab-flights">Book Now &rarr;</a>
+216:     </div>
+217: 
+218:     <!-- B2C Header -->
+219:     <header class="b2c-header">
+220:         <a href="/b2c" class="b2c-brand">
+221:             <i class="fa-solid fa-plane-departure"></i> Aeronexa
+222:         </a>
+223:         <nav class="b2c-nav">
+224:             <a href="/b2c?tab=flights" id="nav-flights-btn" onclick="switchB2CTab('flights', event)"><i class="fa-solid fa-plane"></i> Flights</a>
+225:             <a href="/b2c?tab=hotels" id="nav-hotels-btn" onclick="switchB2CTab('hotels', event)"><i class="fa-solid fa-hotel"></i> Hotels</a>
+226:             <a href="#"><i class="fa-solid fa-umbrella-beach"></i> Holidays</a>
+227:             <a href="#"><i class="fa-solid fa-tags" style="color:#d11242;"></i> <span style="color:#d11242;">Offers</span></a>
+228:             <a href="/b2c/my-bookings"><i class="fa-solid fa-briefcase"></i> My Bookings</a>
+229:             
+230:             {% if session.get('b2c_user') %}
+231:                 <div style="display: flex; align-items: center; gap: 15px; margin-left: 15px; border-left: 1px s
+<truncated 3780 bytes>
+lay: flex; align-items: center; justify-content: space-between; gap: 15px;">
+276:                 <div style="display: flex; align-items: center; gap: 15px;">
+277:                     <i class="fa-solid fa-calendar-check" style="font-size: 24px; color: #3b82f6;"></i>
+278:                     <div>
+279:                         <h4 style="margin: 0 0 5px 0; font-size: 16px;">You are modifying your flight date</h4>
+280:                         <p style="margin: 0; font-size: 14px;">Select your new travel dates below. The original ticket value of <strong>LKR {{ "{:,.2f}".format(session.get('modifying_old_price', 0)) }}</strong> will be automatically credited.</p>
+281:                     </div>
+282:                 </div>
+283:                 <a href="/b2c/booking/cancel-change" style="background: white; border: 1px solid #cbd5e1; color: #ef4444; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; white-space: nowrap;"><i class="fa-solid fa-xmark"></i> Cancel Change</a>
+284:             </div>
+285:             {% else %}
+286:             <h1>Book Your Journey with Confidence</h1>
+287:             <p>Discover the world's most premium destinations with Aeronexa.</p>
+288:             {% endif %}
+289:                         </div> <!-- End of hero-content -->
+290:             
+291:             <div class="search-box">
+292:                     <div class="card-header">
+293:                         <div class="card-title">
+294:                             <i class="fa-solid fa-plane"></i>
+295:                             <span>Search for Cheap Flights & Best Deals</span>
+296:                         </div>
+297:                     </div>
+298:                     
+299:                     <!-- Search widget -->
+300:                     <div class="unified-search-panel">
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

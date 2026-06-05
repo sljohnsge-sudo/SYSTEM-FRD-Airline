@@ -1,0 +1,30 @@
+Created At: 2026-06-04T07:13:21Z
+Completed At: 2026-06-04T07:13:21Z
+File Path: `file:///C:/Users/Sanka/.gemini/antigravity-ide/brain/057c4a5c-5fd8-493d-af23-6d99d9e202fd/task.md`
+Total Lines: 22
+Total Bytes: 1644
+Showing lines 1 to 22
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: # Task Checklist: Standalone B2C Holidays Page Integration & Hotels Removal
+2: 
+3: - `[ ]` Remove Hotels option from B2C Home Page
+4:   - `[ ]` Remove Hotels navigation link from header in `b2c_home.html`
+5:   - `[ ]` Remove Tab Selector buttons (Flights/Hotels) in `b2c_home.html`
+6:   - `[ ]` Remove `#b2c-hotels-panel` (the yellow-bordered Hotels search bar widget) in `b2c_home.html`
+7:   - `[ ]` Remove Hotels JS search, rendering, and booking modal logic from `b2c_home.html`
+8: - `[ ]` Remove Hotels option from B2C My Bookings Page
+9:   - `[ ]` Remove Hotels navigation link from header in `b2c_my_bookings.html`
+10:   - `[ ]` Remove "Hotel Bookings" tab button and its section (`#section-hotels`) from `b2c_my_bookings.html`
+11: - `[ ]` Create stand-alone Holidays page (`b2c_holidays.html`)
+12:   - `[ ]` Design page layout matching George Steuart branding (crimson `#c3122e` / `#ac031c`)
+13:   - `[ ]` Implement Group Tour packages grid (showing destination and country, gold star hotel details, transport, separate including/excluding flight prices)
+14:   - `[ ]` Implement Holiday Booking / Inquiry modal with dynamic price calculations based on passengers and flight choice
+15: - `[ ]` Implement routes and database actions in `app.py`
+16:   - `[ ]` Define `/b2c/holidays` route to render `b2c_holidays.html`
+17:   - `[ ]` Implement `/api/b2c/holidays/book` API endpoint to handle booking submissions
+18:   - `[ ]` Update `/b2c/my-bookings` route to query holiday bookings and render "Holiday Bookings" tab
+19: - `[ ]` Verify Changes
+20:   - `[ ]` Run local Flask app and manually verify all pages
+21:   - `[ ]` Test booking flow and verify bookings appear under "Holiday Bookings" in My Bookings page
+22: 
+The above content shows the entire, complete file contents of the requested file.

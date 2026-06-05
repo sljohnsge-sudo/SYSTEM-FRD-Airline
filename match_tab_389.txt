@@ -1,0 +1,1 @@
+I will view `b2c_my_bookings.html` to see how B2C bookings are fetched and displayed.

@@ -1,0 +1,46 @@
+Created At: 2026-06-04T08:26:37Z
+Completed At: 2026-06-04T08:26:40Z
+
+				The command completed successfully.
+				Output:
+				<truncated 127 lines>
+                    <h1 style=\"color: #1e293b; font-size: 32px; font-weight: 800; margin: 0 0 10px 0;\">Find 
+Wholesale Hotel Rates</h1>\r\n508:                         <p style=\"color: #64748b; font-size: 16px; margin: 0 0 
+25px 0;\">Discover hand-picked hotels with exclusive, consolidated rates.</p>\r\n509:                     </div> <!-- 
+End of hero-content -->\r\n510:                         \r\n511:                         <!-- Hotel search bar wrapper 
+(booking.com yellow styling) -->\r\n512:                         <div class=\"hotels-search-bar-wrapper\" 
+style=\"border: 4px solid #febb02; background: #febb02; padding: 4px; border-radius: 8px; display: flex; align-items: 
+stretch; gap: 4px; flex-wrap: wrap;\">\r\n513:                             <!-- Destination input -->\r\n514:          
+                   <div style=\"flex: 2 1 300px; background: white; border-radius: 4px; padding: 10px 16px; display: 
+flex; align-items: center; gap: 12px; position: relative;\">\r\n515:                                 <i 
+class=\"fa-solid fa-bed\" style=\"color: #64748b; font-size: 20px;\"></i>\r\n516:                                 <div 
+style=\"flex: 1; display: flex; flex-direction: column; text-align: left;\">\r\n517:                                   
+  <label style=\"font-size: 10px; text-transform: uppercase\n<truncated 10794 bytes>\n></i>\r\n600:                    
+             <span>Search</span>\r\n601:                             </button>\r\n602:                         
+</div>\r\n603:                     \r\n604:                     <!-- Hotel Search Results container (Grid) -->\r\n605: 
+                    <div class=\"b2c-hotels-grid\" id=\"b2c-hotel-results-container\" style=\"display: none; 
+margin-top: 35px; text-align: left;\">\r\n606:                         <div style=\"text-align: center; color: 
+var(--text-muted); padding: 40px 0; 
+<truncated 4146 bytes>
+: - **Booking Modal**:\n88:   - Direct form to request/book a package. Toggles between 
+including/excluding air ticket and number of passengers to show updated price dynamically.\n89: - **Footer & 
+Chatbot**: Standard B2C footer and Chatbot widget.\n90: \n91: #### [MODIFY] 
+[b2c_home.html](file:///d:/GS/SYSTEM-FRD-Airline/templates/b2c_home.html)\n92: - **Header**: Remove \"Hotels\" link. 
+Change \"Holidays\" link to point directly to `/b2c/holidays` (no inline tab click).\n93: - **Search Panel**:\n94:   - 
+Remove the Tab Selector at the top (Flights / Hotels tab buttons).\n95:   - Make the Flight search panel the only 
+default view.\n96:   - Remove Hotels panel (`#b2c-hotels-panel`), details view, and hotels JS functions.\n97: \n98: 
+#### [MODIFY] [b2c_my_bookings.html](file:///d:/GS/SYSTEM-FRD-Airline/templates/b2c_my_bookings.html)\n99: - 
+**Header**: Remove \"Hotels\" link. Point \"Holidays\" link directly to `/b2c/holidays`.\n100: - **Booking 
+Tabs**:\n101:   - Remove \"Hotel Bookings\" tab button.\n102:   - Add \"Holiday Bookings\" tab button.\n103: - 
+**Sections**:\n104:   - Remove `#section-hotels` div.\n105:   - Implement container section `#section-holidays` to 
+display holiday booking history cards.\n106: \n107: ---\n108: \n109: ## Verification Plan\n110: \n111: ### Automated 
+Tests\n112: - None.\n113: \n114: ### Manual Verification\n115: 1. Open the local server.\n116: 2. Click the 
+\"Holidays\" tab in the navbar. Verify it redirects to `/b2c/holidays`.\n117: 3. Check the packages: verify they show 
+destination with country and only group tour packages.\n118: 4. Verify that the \"Hotels\" option is completely 
+removed from the navbar and card tabs.\n119: 5. Click \"Book Now\" on a package.\n120: 6. Submit the form. Verify that 
+it completes successfully and redirects to `/b2c/my-bookings`.\n121: 7. Verify the new booking appears under the 
+\"Holiday Bookings\" tab in \"My Bookings\".\n122: \nThe above content shows the entire, complete file contents of the 
+requested file.\n"}
+
+
+

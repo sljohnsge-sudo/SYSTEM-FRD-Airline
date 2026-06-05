@@ -1,0 +1,76 @@
+Created At: 2026-06-04T07:13:15Z
+Completed At: 2026-06-04T07:13:15Z
+File Path: `file:///C:/Users/Sanka/.gemini/antigravity-ide/brain/057c4a5c-5fd8-493d-af23-6d99d9e202fd/implementation_plan.md`
+Total Lines: 122
+Total Bytes: 6225
+Showing lines 1 to 122
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: # Standalone B2C Holidays Page Integration
+2: 
+3: This plan implements a separate, standalone Holidays page (`/b2c/holidays` rendering `b2c_holidays.html`) in the Aeronexa B2C portal. It lists only Group Tour packages with destinations and countries, including/excluding air tickets, hotels with star ratings, and transport details. The hotel booking option is removed from the portal entirely.
+4: 
+5: ## User Review Required
+6: 
+7: We are:
+8: 1. **Removing the separate Hotels search and booking option** from the B2C home page, navigation header, and booking history.
+9: 2. **Creating a new separate Holidays page** accessible at `/b2c/holidays` (template: [b2c_holidays.html](file:///d:/GS/SYSTEM-FRD-Airline/templates/b2c_holidays.html)).
+10: 3. **Updating the B2C navigation** across all pages to point to `/b2c/holidays`.
+11: 4. **Updating the booking history** to support "Holiday Bookings" instead of "Hotel Bookings".
+12: 
+13: ---
+14: 
+15: ## Proposed Changes
+16: 
+17: ### Database & Backend Integration
+18: 
+19: #### [MODIFY] [db_init.py](file:///d:/GS/SYSTEM-FRD-Airline/db_init.py) (Completed)
+20: - Modified `b2c_bookings` schema to expand `booking_type` to `ENUM('flight', 'hotel', 'holiday')`.
+21: - Added table schema for `b2c_holiday_bookings`.
+22: - Added `b2c_holiday_bookings` to the cleanup drop tables list.
+23: 
+24: #### [MODIFY] [app.py](file:///d:/GS/SYSTEM-FRD-Airline/app.py)
+25: - Define a static list of Group Tour packages:
+26:   1. **Maldives Group Tour Escape**
+27:      - Destination: Male, Maldives
+28:      - Duratio
+<truncated 3208 bytes>
+/speedboat icons).
+85:   - Separate pricing (with and without air ticket).
+86:   - "Book Now" button.
+87: - **Booking Modal**:
+88:   - Direct form to request/book a package. Toggles between including/excluding air ticket and number of passengers to show updated price dynamically.
+89: - **Footer & Chatbot**: Standard B2C footer and Chatbot widget.
+90: 
+91: #### [MODIFY] [b2c_home.html](file:///d:/GS/SYSTEM-FRD-Airline/templates/b2c_home.html)
+92: - **Header**: Remove "Hotels" link. Change "Holidays" link to point directly to `/b2c/holidays` (no inline tab click).
+93: - **Search Panel**:
+94:   - Remove the Tab Selector at the top (Flights / Hotels tab buttons).
+95:   - Make the Flight search panel the only default view.
+96:   - Remove Hotels panel (`#b2c-hotels-panel`), details view, and hotels JS functions.
+97: 
+98: #### [MODIFY] [b2c_my_bookings.html](file:///d:/GS/SYSTEM-FRD-Airline/templates/b2c_my_bookings.html)
+99: - **Header**: Remove "Hotels" link. Point "Holidays" link directly to `/b2c/holidays`.
+100: - **Booking Tabs**:
+101:   - Remove "Hotel Bookings" tab button.
+102:   - Add "Holiday Bookings" tab button.
+103: - **Sections**:
+104:   - Remove `#section-hotels` div.
+105:   - Implement container section `#section-holidays` to display holiday booking history cards.
+106: 
+107: ---
+108: 
+109: ## Verification Plan
+110: 
+111: ### Automated Tests
+112: - None.
+113: 
+114: ### Manual Verification
+115: 1. Open the local server.
+116: 2. Click the "Holidays" tab in the navbar. Verify it redirects to `/b2c/holidays`.
+117: 3. Check the packages: verify they show destination with country and only group tour packages.
+118: 4. Verify that the "Hotels" option is completely removed from the navbar and card tabs.
+119: 5. Click "Book Now" on a package.
+120: 6. Submit the form. Verify that it completes successfully and redirects to `/b2c/my-bookings`.
+121: 7. Verify the new booking appears under the "Holiday Bookings" tab in "My Bookings".
+122: 
+The above content shows the entire, complete file contents of the requested file.

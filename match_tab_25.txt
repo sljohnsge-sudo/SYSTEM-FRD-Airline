@@ -1,0 +1,28 @@
+Created At: 2026-06-04T05:37:36Z
+Completed At: 2026-06-04T05:37:37Z
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\patch_b2c_multi_pax.py","LineNumber":2,"LineContent":"with open('templates/b2c_flight_results.html', 'r', encoding='utf-8') as f:"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\patch_booking_forms.py","LineNumber":4,"LineContent":"    with open('templates/b2c_flight_results.html', 'r', encoding='utf-8') as f:"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\patch_booking_forms.py","LineNumber":98,"LineContent":"    with open('templates/b2c_flight_results.html', 'w', encoding='utf-8') as f:"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\static\\js\\main.js","LineNumber":485,"LineContent":"            if (window.location.pathname.includes('/b2c')) {"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\static\\js\\main.js","LineNumber":486,"LineContent":"                mcUrl = mcUrl.replace('/flight-results', '/b2c-flight-results');"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\static\\js\\main.js","LineNumber":527,"LineContent":"    if (window.location.pathname.includes('/b2c')) {"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\static\\js\\main.js","LineNumber":528,"LineContent":"        url = url.replace('/flight-results', '/b2c-flight-results');"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\test_syntax.py","LineNumber":2,"LineContent":"c=open('templates/b2c_flight_results.html', encoding='utf-8').read()"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":215,"LineContent":"        \u003ca href=\"/b2c\" class=\"b2c-brand\"\u003e"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":219,"LineContent":"            \u003ca href=\"/b2c?tab=flights\" id=\"nav-flights-btn\" onclick=\"switchB2CTab('flights', event)\"\u003e\u003ci class=\"fa-solid fa-plane\"\u003e\u003c/i\u003e Flights\u003c/a\u003e"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":220,"LineContent":"            \u003ca href=\"/b2c?tab=hotels\" id=\"nav-hotels-btn\" onclick=\"switchB2CTab('hotels', event)\"\u003e\u003ci class=\"fa-solid
+<truncated 4666 bytes>
+gin.html","LineNumber":97,"LineContent":"        \u003cform method=\"POST\" action=\"/b2c/auth/google/callback/mock\"\u003e"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\app.py","LineNumber":130,"LineContent":"@app.route(\"/b2c\")"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\app.py","LineNumber":138,"LineContent":"@app.route(\"/b2c-flight-results\")"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\app.py","LineNumber":147,"LineContent":"@app.route(\"/b2c/login/google\")"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\app.py","LineNumber":157,"LineContent":"@app.route(\"/b2c/auth/google/callback/mock\", methods=[\"POST\"])"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\app.py","LineNumber":177,"LineContent":"@app.route(\"/b2c/auth/google/callback\")"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\app.py","LineNumber":198,"LineContent":"@app.route(\"/b2c/logout\")"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\app.py","LineNumber":204,"LineContent":"@app.route(\"/b2c/my-bookings\", methods=[\"GET\", \"POST\"])"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\app.py","LineNumber":336,"LineContent":"@app.route(\"/b2c/my-bookings/clear\")"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\app.py","LineNumber":343,"LineContent":"@app.route(\"/b2c/booking/cancel\", methods=[\"POST\"])"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\app.py","LineNumber":362,"LineContent":"@app.route(\"/b2c/booking/change\", methods=[\"POST\"])"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\app.py","LineNumber":384,"LineContent":"@app.route(\"/b2c/booking/cancel-change\")"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\app.py","LineNumber":1602,"LineContent":"@app.route(\"/api/b2c/hotels/book\", methods=[\"POST\"])"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\app.py","LineNumber":2649,"LineContent":"            \u003ca href='/b2c-flight-results?origin={origin}\u0026dest={dest}\u0026date={date}\u0026adults=1' style='display: block; text-align: center; background: #d11242; color: white; padding: 10px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: bold; transition: background 0.3s;'\u003eBook This Flight Now\u003c/a\u003e"}

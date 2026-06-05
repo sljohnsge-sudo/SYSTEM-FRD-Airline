@@ -1,0 +1,1 @@
+I will write a python script to search `transcript.jsonl` for `"b2c-hotels-panel"` and write the full text of matching lines to a separate file so we can view the exact details.

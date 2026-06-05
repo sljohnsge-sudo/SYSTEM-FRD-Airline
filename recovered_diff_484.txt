@@ -1,0 +1,45 @@
+Created At: 2026-06-04T07:11:49Z
+Completed At: 2026-06-04T07:12:07Z
+The following changes were made by the multi_replace_file_content tool to: d:\GS\SYSTEM-FRD-Airline\templates\b2c_home.html. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -221,9 +221,8 @@
+             <i class="fa-solid fa-plane-departure"></i> Aeronexa
+         </a>
+         <nav class="b2c-nav">
+-            <a href="/b2c?tab=flights" id="nav-flights-btn" onclick="switchB2CTab('flights', event)"><i class="fa-solid fa-plane"></i> Flights</a>
+-            <a href="/b2c?tab=hotels" id="nav-hotels-btn" onclick="switchB2CTab('hotels', event)"><i class="fa-solid fa-hotel"></i> Hotels</a>
+-            <a href="#"><i class="fa-solid fa-umbrella-beach"></i> Holidays</a>
++            <a href="/b2c" id="nav-flights-btn"><i class="fa-solid fa-plane"></i> Flights</a>
++            <a href="/b2c/holidays" id="nav-holidays-btn"><i class="fa-solid fa-umbrella-beach"></i> Holidays</a>
+             <a href="#"><i class="fa-solid fa-tags" style="color:#c3122e;"></i> <span style="color:#c3122e;">Offers</span></a>
+             <a href="/b2c/my-bookings"><i class="fa-solid fa-briefcase"></i> My Bookings</a>
+             
+@@ -260,12 +260,9 @@
+                 <div class="content-card" style="background: white; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.12); padding: 35px; border: 1px solid rgba(255,255,255,0.8);">
+                     <!-- Tab Selector at top of search card -->
+                     <div style="display: flex; gap: 15px; border-bottom: 2px solid #f1f5f9; margin-bottom: 25px; padding-bottom: 10px;">
+-                        <button class="b2c-tab-btn active" id="b2c-tab-btn-flights" onclick="switchB2CTab('flights', event)" style="padding: 10px 20px; font-size: 15px; font-weight: 700; border: none; background: none; border-bottom: 3px solid #c3122e; color: #c3122e; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: 'Out
+<truncated 45283 bytes>
+ color: #1e293b; padding: 3px 8px; border-radius: 4px; font-weight: 700; text-transform: uppercase;">Hotel</span>
+-                            <div style="color: #febb02; font-size: 13px;">${starsHTML}</div>
+-                        </div>
+-                        <h1 style="font-size: 30px; font-weight: 800; color: #1e293b; margin: 8px 0 4px 0;">${h.name}</h1>
+-                        <div style="color: #64748b; font-size: 14px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-location-dot" style="color: #c3122e;"></i> ${h.location}</div>
+-                    </div>
+-                </div>
+-                
+-                <!-- Image Collage / Grid (Booking.com style) -->
+-                <div class="hotel-collage" style="display: grid; grid-template-columns: 2fr 1fr 1fr; grid-template-rows: 150px 150px; gap: 10px; margin-bottom: 30px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+-                    <div style="grid-column: 1; grid-row: 1 / span 2; position: relative;">
+-                        <img src="${gallery[0]}" style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;" onclick="openRoomImageModal('${gallery[0]}', '${h.name} - Exterior')">
+-                    </div>
+-                    <div style="grid-column: 2; grid-row: 1;">
+-                        <img src="${gallery[1]}" style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;" onclick="openRoomImageModal('${gallery[1]}', '${h.name} - Interior')">
+-                    </div>
+-                    <div style="grid-column: 3; grid-row: 1;">
+-                        <img src="${gallery[2]}" style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;" onclick="openRoomImageModal('${gallery[2]}', '${h.name} - Pool')">
+-                    </div>
+-                    <div style="grid-colu
+<truncated 15045 bytes>
+
+NOTE: The output was truncated because it was too long. Use a more targeted query or a smaller range to get the information you need.

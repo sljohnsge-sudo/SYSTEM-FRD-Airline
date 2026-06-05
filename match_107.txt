@@ -1,0 +1,70 @@
+Created At: 2026-06-04T06:16:46Z
+Completed At: 2026-06-04T06:16:47Z
+The following changes were made by the multi_replace_file_content tool to: d:\GS\SYSTEM-FRD-Airline\templates\b2c_home.html. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -608,6 +608,11 @@
+                             <p>Enter a destination and dates to search for wholesale hotel rates.</p>
+                         </div>
+                     </div>
++
++                    <!-- Hotel Details view container (Initially Hidden) -->
++                    <div id="b2c-hotel-details-view" style="display: none; margin-top: 35px; text-align: left; background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 30px; border: 1px solid #e2e8f0; font-family: 'Outfit', sans-serif;">
++                        <!-- Loaded dynamically -->
++                    </div>
+                 </div>
+                 </div>
+             </section>
+@@ -1050,6 +1050,19 @@
+                 .then(res => res.json())
+                 .then(data => {
+                     if (data.success && data.hotels && data.hotels.length > 0) {
++                        window.b2cHotelsCached = data.hotels; // Cache results for details viewing
++                        
++                        // Reset details view visibility on new search
++                        if (document.getElementById("b2c-hotel-details-view")) {
++                            document.getElementById("b2c-hotel-details-view").style.display = "none";
++                        }
++                        const searchHeader = document.querySelector("#b2c-hotels-panel h1");
++                        const searchSub = document.querySelector("#b2c-hotels-panel p");
++                        const searchWrapper = document.querySelector(".hotels-search-bar-wrapper");
++                        if (searchHeader) searchHeader.style.display = "block";
++                        if (searchSub) searchSub.style.dis
+<truncated 20725 bytes>
+x; border-radius: 10px;">
++                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
++                            <span style="font-weight: 700; color: #1e293b;">John Smith</span>
++                            <span style="color: #1e3a8a; font-weight: 800;">9.2 / 10</span>
++                        </div>
++                        <p style="font-size: 13.5px; color: #475569; line-height: 1.5; margin: 0;">"Exceptional dining options and friendly staff. Will definitely visit again!"</p>
++                    </div>
++                </div>
++            `;
++            
++            // Show details view & scroll to top of details
++            detailsView.style.display = "block";
++            detailsView.scrollIntoView({behavior: "smooth"});
++        }
++
++        function closeHotelDetailsView() {
++            const resultsContainer = document.getElementById("b2c-hotel-results-container");
++            const searchWrapper = document.querySelector(".hotels-search-bar-wrapper");
++            const searchHeader = document.querySelector("#b2c-hotels-panel h1");
++            const searchSub = document.querySelector("#b2c-hotels-panel p");
++            const detailsView = document.getElementById("b2c-hotel-details-view");
++            
++            // Hide details view
++            detailsView.style.display = "none";
++            
++            // Re-show search elements & results grid
++            resultsContainer.style.display = "grid";
++            if (searchWrapper) searchWrapper.style.display = "flex";
++            if (searchHeader) searchHeader.style.display = "block";
++            if (searchSub) searchSub.style.display = "block";
++        }
++
+     </script>
+     
+     <!-- B2C Hotel Booking Modal -->
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.

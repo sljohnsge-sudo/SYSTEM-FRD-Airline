@@ -1,0 +1,43 @@
+Created At: 2026-06-04T06:55:32Z
+Completed At: 2026-06-04T06:55:32Z
+File Path: `file:///d:/GS/SYSTEM-FRD-Airline/templates/b2c_home.html`
+Total Lines: 1603
+Total Bytes: 122505
+Showing lines 260 to 450
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+260:     <section id="tab-flights" style="width: 100%; max-width: 1100px; margin: -100px auto 40px auto; position: relative; z-index: 10;">
+261:                 <div class="content-card" style="background: white; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.12); padding: 35px; border: 1px solid rgba(255,255,255,0.8);">
+262:                     <!-- Tab Selector at top of search card -->
+263:                     <div style="display: flex; gap: 15px; border-bottom: 2px solid #f1f5f9; margin-bottom: 25px; padding-bottom: 10px;">
+264:                         <button class="b2c-tab-btn active" id="b2c-tab-btn-flights" onclick="switchB2CTab('flights', event)" style="padding: 10px 20px; font-size: 15px; font-weight: 700; border: none; background: none; border-bottom: 3px solid #c3122e; color: #c3122e; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: 'Outfit', sans-serif;">
+265:                             <i class="fa-solid fa-plane"></i> Flights
+266:                         </button>
+267:                         <button class="b2c-tab-btn" id="b2c-tab-btn-hotels" onclick="switchB2CTab('hotels', event)" style="padding: 10px 20px; font-size: 15px; font-weight: 700; border: none; background: none; border-bottom: 3px solid transparent; color: #64748b; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: 'Outfit', sans-serif;">
+268:                             <i class="fa-solid fa-hotel"></i> Hotels
+269:                         </button>
+270:                     </div>
+271: 
+272:                     <div id="b2c-fl
+<truncated 15819 bytes>
+                    <option value="ALL">All Consolidated Fares</option>
+431:                                         <option value="GDS">Flight Hub GDS Fares</option>
+432:                                         <option value="LCC">LCC Low Cost Fares</option>
+433:                                         <option value="NDC">NDC Direct Connect Fares</option>
+434:                                     </select>
+435:                                 </div>
+436:                                 <div class="search-input-group" style="flex: 1;">
+437:                                     <label>Airline (Optional)</label>
+438:                                     <select id="flight-airline" class="form-control">
+439:                                         <option value="">All Airlines</option>
+440:                                         <option value="Air India">Air India</option>
+441:                                         <option value="British Airways">British Airways</option>
+442:                                         <option value="Cathay Pacific">Cathay Pacific</option>
+443:                                         <option value="Emirates">Emirates</option>
+444:                                         <option value="Etihad Airways">Etihad Airways</option>
+445:                                         <option value="IndiGo">IndiGo</option>
+446:                                         <option value="Lufthansa">Lufthansa</option>
+447:                                         <option value="Malaysia Airlines">Malaysia Airlines</option>
+448:                                         <option value="Qatar Airways">Qatar Airways</option>
+449:                                         <option value="Qantas">Qantas</option>
+450:                                         <option value="Singapore Airlines">Singapore Airlines</option>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

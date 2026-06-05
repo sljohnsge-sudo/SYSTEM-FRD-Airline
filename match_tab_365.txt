@@ -1,0 +1,1 @@
+I will view lines 900 to 1100 of `b2c_home.html` to find `switchB2CTab` or how tabs are toggled.

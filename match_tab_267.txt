@@ -1,0 +1,21 @@
+Created At: 2026-06-04T06:47:44Z
+Completed At: 2026-06-04T06:47:44Z
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":21,"LineContent":"            background: linear-gradient(90deg, #d11242, #a80c33);"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":36,"LineContent":"            font-size: 26px; font-weight: 800; color: #d11242;"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":44,"LineContent":"        .b2c-nav a:hover { color: #d11242; }"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":46,"LineContent":"            background: #d11242; color: #fff !important;"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":85,"LineContent":"        .trip-type-pill.active { background: #d11242 !important; color: white !important; }"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":128,"LineContent":"            background: #d11242;"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":186,"LineContent":"            color: #d11242;"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":227,"LineContent":"            \u003ca href=\"#\"\u003e\u003ci class=\"fa-solid fa-tags\" style=\"color:#d11242;\"\u003e\u003c/i\u003e \u003cspan style=\"color:#d11242;\"\u003eOffers\u003c/span\u003e\u003c/a\u003e"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":264,"LineContent":"                        \u003cbutton class=\"b2c-tab-btn active\" id=\"b2c-tab-btn-flights\" onclick=\"switchB2CTab('flights', event)\" style=\"padding: 10px 20px; font-size: 15px; font-weight: 700; border: none; background: none; border-bottom: 3px solid #d11242; color: #d11242; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: 'Outfit', sans-serif;\"\u003e"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":470,"LineContent":"                            \u003cbutton class=\"bt
+<truncated 11018 bytes>
+useout=\"this.style.color='#64748b'\"\u003eManage Booking\u003c/a\u003e\u003c/li\u003e"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":851,"LineContent":"                    \u003cli\u003e\u003ca href=\"#\" style=\"color: #64748b; text-decoration: none; font-size: 14px;\" onmouseover=\"this.style.color='#d11242'\" onmouseout=\"this.style.color='#64748b'\"\u003eRefund Policy\u003c/a\u003e\u003c/li\u003e"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":857,"LineContent":"                    \u003cli\u003e\u003ca href=\"#\" style=\"color: #64748b; text-decoration: none; font-size: 14px;\" onmouseover=\"this.style.color='#d11242'\" onmouseout=\"this.style.color='#64748b'\"\u003eTerms of Service\u003c/a\u003e\u003c/li\u003e"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":858,"LineContent":"                    \u003cli\u003e\u003ca href=\"#\" style=\"color: #64748b; text-decoration: none; font-size: 14px;\" onmouseover=\"this.style.color='#d11242'\" onmouseout=\"this.style.color='#64748b'\"\u003ePrivacy Policy\u003c/a\u003e\u003c/li\u003e"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":859,"LineContent":"                    \u003cli\u003e\u003ca href=\"#\" style=\"color: #64748b; text-decoration: none; font-size: 14px;\" onmouseover=\"this.style.color='#d11242'\" onmouseout=\"this.style.color='#64748b'\"\u003eCookie Policy\u003c/a\u003e\u003c/li\u003e"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":860,"LineContent":"                    \u003cli\u003e\u003ca href=\"{{ url_for('login') }}\" style=\"color: #64748b; text-decoration: none; font-size: 14px;\" onmouseover=\"this.style.color='#d11242'\" onmouseout=\"this.style.color='#64748b'\"\u003eAgent Login\u003c/a\u003e\u003c/li\u003e"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":947,"LineContent":"                flightBtn.style.borderBottomColor = \"#d11242\";"}
+(...7 more results not shown)

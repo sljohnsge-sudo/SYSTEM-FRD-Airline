@@ -1,0 +1,37 @@
+Created At: 2026-06-04T08:27:06Z
+Completed At: 2026-06-04T08:27:08Z
+
+				The command completed successfully.
+				Output:
+				
+  recovered_home.txt:10:3: - `[ ]` Remove Hotels option from B2C Home Page
+  recovered_home.txt:11:4:   - `[ ]` Remove Hotels navigation link from header in `b2c_home.html`
+  recovered_home.txt:12:5:   - `[ ]` Remove Tab Selector buttons (Flights/Hotels) in `b2c_home.html`
+> recovered_home.txt:13:6:   - `[ ]` Remove `#b2c-hotels-panel` (the yellow-bordered Hotels search bar widget) in 
+`b2c_home.html`
+  recovered_home.txt:14:7:   - `[ ]` Remove Hotels JS search, rendering, and booking modal logic from `b2c_home.html`
+  recovered_home.txt:15:8: - `[ ]` Remove Hotels option from B2C My Bookings Page
+  recovered_home.txt:16:9:   - `[ ]` Remove Hotels navigation link from header in `b2c_my_bookings.html`
+  recovered_home.txt:17:10:   - `[ ]` Remove "Hotel Bookings" tab button and its section (`#section-hotels`) from 
+`b2c_my_bookings.html`
+  recovered_home.txt:18:11: - `[ ]` Create stand-alone Holidays page (`b2c_holidays.html`)
+  recovered_home.txt:19:12:   - `[ ]` Design page layout matching George Steuart branding (crimson `#c3122e` / 
+`#ac031c`)
+  recovered_home.txt:20:13:   - `[ ]` Implement Group Tour packages grid (showing destination and country, gold star 
+hotel details, transport, separate including/excluding flight prices)
+  recovered_home.txt:21:14:   - `[ ]` Implement Holiday Booking / Inquiry modal with dynamic price calculations based 
+on passengers and flight choice
+  recovered_home.txt:22:15: - `[ ]` Implement routes and database actions in `app.py`
+  recovered_home.txt:23:16:   - `[ ]` Define `/b2c/holidays` route to render `b2c_holidays.html`
+  recovered_home.txt:24:17:   - `[ ]` Implement `/api/b2c/holidays/book` API endpoint to handle booking submissions
+  recovered_home.txt:25:18:   - `[ ]` Update `/b2c/my-bookings` route to query holiday bookings and render "Holiday 
+Bookings" tab
+  recovered_home.txt:26:19: - `[ ]` Verify Changes
+  recovered_home.txt:27:20:   - `[ ]` Run local Flask app and manually verify all pages
+  recovered_home.txt:28:21:   - `[ ]` Test booking flow and verify bookings appear under "Holiday Bookings" in My 
+Bookings page
+  recovered_home.txt:29:22: 
+  recovered_home.txt:30:The above content shows the entire, complete file contents of the requested file.
+
+
+

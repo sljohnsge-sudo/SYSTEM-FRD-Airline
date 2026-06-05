@@ -1,0 +1,27 @@
+Created At: 2026-06-04T05:57:09Z
+Completed At: 2026-06-04T05:57:09Z
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":6,"LineContent":"    \u003ctitle\u003eAeronexa - Book Cheap Flights \u0026 Hotels\u003c/title\u003e"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":96,"LineContent":"        /* B2C Hotel Search Styling */"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":97,"LineContent":"        .b2c-hotels-grid {"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":103,"LineContent":"        .b2c-hotel-card {"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":114,"LineContent":"        .b2c-hotel-card:hover {"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":118,"LineContent":"        .b2c-hotel-img {"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":124,"LineContent":"        .b2c-hotel-badge {"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":136,"LineContent":"        .b2c-hotel-rating {"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":141,"LineContent":"        .b2c-hotel-info {"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":147,"LineContent":"        .b2c-hotel-name {"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":153,"LineContent":"        .b2c-hotel-loc {"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":161,"LineContent":"        .b2c-hotel-description {"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":225,"LineContent":"            \u003ca href=\"/b2c?tab=hotels\" id=\"nav-hotels-btn\" onclick=\"switchB2CTab('hotels', event)\"\u003e\u003ci class=\"fa-solid fa-hotel\"\u003e\u003c/i\u003e Hotels\u003c/a\u003e"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":267,"LineContent":"                        \u003cbutton cla
+<truncated 9662 bytes>
+ome.html","LineNumber":598,"LineContent":"                            \u003cbutton onclick=\"searchB2CHotels()\" style=\"flex: 1 1 auto; background: #006ce4; color: white; border: none; padding: 14px 28px; border-radius: 4px; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s; font-family: 'Outfit', sans-serif;\" onmouseover=\"this.style.background='#0053b3'\" onmouseout=\"this.style.background='#006ce4'\"\u003e"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":604,"LineContent":"                    \u003c!-- Hotel Search Results container (Grid) --\u003e"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":605,"LineContent":"                    \u003cdiv class=\"b2c-hotels-grid\" id=\"b2c-hotel-results-container\" style=\"display: none; margin-top: 35px; text-align: left;\"\u003e"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":607,"LineContent":"                            \u003ci class=\"fa-solid fa-hotel\" style=\"font-size: 40px; margin-bottom: 15px; color: rgba(0,0,0,0.1);\"\u003e\u003c/i\u003e"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":608,"LineContent":"                            \u003cp\u003eEnter a destination and dates to search for wholesale hotel rates.\u003c/p\u003e"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":919,"LineContent":"            if (tabParam === 'hotels') {"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":920,"LineContent":"                switchB2CTab('hotels');"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":926,"LineContent":"        // B2C Hotel Search and Booking Javascript"}
+{"File":"d:\\GS\\SYSTEM-FRD-Airline\\templates\\b2c_home.html","LineNumber":931,"LineContent":"            const hotelPanel = document.getElementById(\"b2c-hotels-panel\");"}
+(...151 more results not shown)

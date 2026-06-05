@@ -1,0 +1,1 @@
+I will search the recovered text file for the Hotels panel sections to find the exact block of HTML and JS code we need to restore.

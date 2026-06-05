@@ -1,0 +1,1 @@
+I will search `transcript.jsonl` for references to `b2c-hotels-panel` to find and recover the original HTML structure for the hotel search widget.

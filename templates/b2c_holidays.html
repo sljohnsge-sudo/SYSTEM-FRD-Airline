@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group Tour Packages | Aeronexa</title>
+    <!-- Stylesheets & Fonts -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=1.0.6">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            margin: 0; padding: 0;
+            background-color: #f0f4f8;
+            color: #1e293b;
+        }
+        /* ── TOP PROMO TICKER ── */
+        .promo-ticker {
+            background: linear-gradient(90deg, #c3122e, #ac031c);
+            color: white; font-size: 13px; font-weight: 600;
+            text-align: center; padding: 9px 0; letter-spacing: 0.5px;
+        }
+        .promo-ticker a { color: #ffd6e0; text-decoration: underline; margin-left: 8px; }
+        /* ── HEADER ── */
+        .b2c-header {
+            background-color: rgba(255,255,255,0.97);
+            backdrop-filter: blur(12px);
+            padding: 14px 50px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.07);
+            position: sticky; top: 0; z-index: 200;
+        }
+        .b2c-brand {
+            font-size: 26px; font-weight: 800; color: #c3122e;
+            display: flex; align-items: center; gap: 10px; text-decoration: none;
+        }
+        .b2c-nav { display: flex; gap: 28px; align-items: center; }
+        .b2c-nav a {
+            color: #334155; text-decoration: none; font-weight: 600;
+            font-size: 14px; transition: color 0.25s;
+        }
+        .b2c-nav a:hover { color: #c3122e; }
+        .btn-b2b-login {
+            background: #c3122e; color: #fff !important;
+            padding: 9px 20px; border-radius: 25px; font-weight: 700;
+            transition: all 0.3s; box-shadow: 0 3px 12px rgba(195, 18, 46,0.3);
+        }
+        .btn-b2b-login:hover { background: #ac031c; transform: translateY(-1px); }
+        
+        /* ── HERO ── */
+        .hero-banner {
+            min-height: 380px;
+            background-image: linear-gradient(135deg, rgba(195, 18, 46, 0.9) 0%, rgba(172, 3, 28, 0.7) 40%, rgba(15, 23, 42, 0.8) 100%),
+                url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&q=80&w=2000');
+            background-size: cover; background-position: center;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            color: white; text-align: center;
+            border-bottom-left-radius: 32px; border-bottom-right-radius: 32px;
+            margin-bottom: 40px; padding: 40px 20px;
+        }
+        .hero-badge {
+            background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35);
+            backdrop-filter: blur(6px); color: white;
+            padding: 7px 20px; border-radius: 30px;
+            font-size: 13px; font-weight: 600; letter-spacing: 1px;
+            margin-bottom: 20px; display: inline-block;
+        }
+        .hero-banner h1 {
+            font-size: 48px; font-weight: 800; margin: 0 0 15px;
+            letter-spacing: -1px; text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .hero-banner p {
+            font-size: 18px; opacity: 0.9; margin: 0;
+        }
+
+        /* ── PACKAGE GRID ── */
+        .packages-container {
+            max-width: 1100px;
+            margin: 0 auto 60px auto;
+            padding: 0 20px;
+        }
+        .packages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+        .package-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .package-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+        }
+        .package-img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            background: #cbd5e1;
+        }
+        .package-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #c3122e;
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 20px;
+            z-index: 5;
+            letter-spacing: 0.5px;
+        }
+        .package-info {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        .package-dest {
+            font-size: 13px;
+            color: #c3122e;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+        .package-name {
+            font-size: 20px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0 0 12px 0;
+            line-height: 1.4;
+        }
+        .package-details-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13.5px;
+            color: #475569;
+            margin-bottom: 8px;
+        }
+        .package-details-row i {
+            color: #c3122e;
+            width: 18px;
+            text-align: center;
+        }
+        .hotel-stars {
+            color: #febb02;
+            margin-left: 5px;
+            font-size: 12px;
+        }
+        
+        .price-box {
+            background: #fff5f5;
+            border: 1px solid #ffd6e0;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+            margin-bottom: 20px;
+        }
+        .price-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            color: #475569;
+        }
+        .price-option:first-child {
+            margin-bottom: 8px;
+            border-bottom: 1px dashed #ffd6e0;
+            padding-bottom: 8px;
+        }
+        .price-val {
+            font-size: 16px;
+            font-weight: 800;
+            color: #c3122e;
+        }
+        .btn-book-package {
+            background: #c3122e;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14.5px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-align: center;
+            text-decoration: none;
+            font-family: 'Outfit', sans-serif;
+            width: 100%;
+        }
+        .btn-book-package:hover {
+            background: #ac031c;
+        }
+
+        /* ── MODAL ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            z-index: 1050;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            width: 100%;
+            max-width: 580px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #c3122e 0%, #ac031c 100%);
+            color: white;
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .modal-body {
+            padding: 25px;
+            max-height: 75vh;
+            overflow-y: auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 6px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: 'Outfit', sans-serif;
+            transition: border-color 0.2s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #c3122e;
+        }
+        .pax-selector {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .pax-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1px solid #cbd5e1;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #64748b;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .pax-btn:hover {
+            border-color: #c3122e;
+            color: #c3122e;
+        }
+        
+        @keyframes modalSlideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Promo Ticker -->
+    <div class="promo-ticker">
+        🌍 &nbsp; Aeronexa Group Tours - Unforgettable Experiences curated by George Steuart Travel! &nbsp;<a href="#packages">Explore Tours &rarr;</a>
+    </div>
+
+    <!-- B2C Header -->
+    <header class="b2c-header">
+        <a href="/b2c" class="b2c-brand">
+            <i class="fa-solid fa-plane-departure"></i> Aeronexa
+        </a>
+        <nav class="b2c-nav">
+            <a href="/b2c?tab=flights" id="nav-flights-btn"><i class="fa-solid fa-plane"></i> Flights</a>
+            <a href="/b2c?tab=hotels" id="nav-hotels-btn"><i class="fa-solid fa-hotel"></i> Hotels</a>
+            <a href="/b2c/holidays" id="nav-holidays-btn" style="color: #c3122e;"><i class="fa-solid fa-umbrella-beach"></i> Holidays</a>
+            <a href="/b2c/offers"><i class="fa-solid fa-tags"></i> Offers</a>
+            <a href="/b2c/my-bookings"><i class="fa-solid fa-briefcase"></i> My Bookings</a>
+            
+            {% if session.get('b2c_user') %}
+                <div style="display: flex; align-items: center; gap: 15px; margin-left: 15px; border-left: 1px solid #e2e8f0; padding-left: 20px;">
+                    <div style="font-weight: 600; color: #1e293b; font-size: 14px;">
+                        <i class="fa-solid fa-user-circle" style="color: #64748b; margin-right: 5px;"></i> {{ session.b2c_user.name }}
+                    </div>
+                    <a href="/b2c/logout" style="color: #ef4444; font-size: 13px; font-weight: 600;"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+                </div>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="btn-b2b-login"><i class="fa-solid fa-user"></i> Agent Login</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <!-- Hero Banner -->
+    <div class="hero-banner">
+        <div class="hero-badge">🌴 &nbsp; Premium Group Tour Packages</div>
+        <h1>Explore the World as a Group</h1>
+        <p>Fully guided premium group tours with curated hotels, transport, and flight options.</p>
+    </div>
+
+    <!-- Package Grid Section -->
+    <section class="packages-container" id="packages">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+            <div>
+                <h2 style="color: #0f172a; font-size: 28px; font-weight: 800; margin: 0;">Featured Group Tours</h2>
+                <p style="color: #64748b; margin: 5px 0 0 0; font-size: 15px;">Handpicked destinations with complete end-to-end logistics.</p>
+            </div>
+            
+            <div style="position: relative; max-width: 300px; width: 100%;">
+                <input type="text" id="package-filter" onkeyup="filterPackages()" placeholder="Search by destination..." class="form-control" style="padding-left: 35px; background: white url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 512 512\' width=\'14\' height=\'14\'><path fill=\'%2364748b\' d=\'M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z\'/></svg>') no-repeat 12px center;">
+            </div>
+        </div>
+
+        <div class="packages-grid" id="packages-grid">
+            {% for p in packages %}
+            <div class="package-card" data-name="{{ p.name }}" data-destination="{{ p.destination }}" data-country="{{ p.country }}">
+                <img src="{{ p.image }}" class="package-img" alt="{{ p.name }}">
+                <div class="package-badge">GROUP TOUR</div>
+                <div class="package-info">
+                    <div class="package-dest"><i class="fa-solid fa-location-dot"></i> {{ p.destination }}, {{ p.country }}</div>
+                    <h3 class="package-name">{{ p.name }}</h3>
+                    
+                    <div class="package-details-row">
+                        <i class="fa-solid fa-clock"></i>
+                        <span>Duration: <strong>{{ p.duration }}</strong></span>
+                    </div>
+                    
+                    <div class="package-details-row">
+                        <i class="fa-solid fa-hotel"></i>
+                        <span>
+                            Hotel: <strong>{{ p.hotel }}</strong>
+                            <span class="hotel-stars">
+                                {% for i in range(p.hotel_rating) %}<i class="fa-solid fa-star"></i>{% endfor %}
+                            </span>
+                        </span>
+                    </div>
+                    
+                    <div class="package-details-row">
+                        <i class="fa-solid fa-van-shuttle"></i>
+                        <span>Transit: {{ p.transport }}</span>
+                    </div>
+                    
+                    <div class="price-box">
+                        <div class="price-option">
+                            <span>Excluding Air Ticket:</span>
+                            <span class="price-val">LKR {{ "{:,.2f}".format(p.price_without_flight) }}</span>
+                        </div>
+                        <div class="price-option" style="margin-top: 5px;">
+                            <span>Including Air Ticket:</span>
+                            <span class="price-val" style="color: #ac031c;">LKR {{ "{:,.2f}".format(p.price_with_flight) }}</span>
+                        </div>
+                    </div>
+                    
+                    <button class="btn-book-package" onclick="openBookingModal('{{ p.id }}')">Book Tour / Inquiry</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Booking Modal -->
+    <div id="booking-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-package-title">Book Tour Package</h3>
+                <button class="modal-close" onclick="closeBookingModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="tour-booking-form" onsubmit="submitBooking(event)">
+                    <input type="hidden" id="booking-package-id">
+                    
+                    <!-- Selected Package Info Summary -->
+                    <div style="background: #fff5f5; border: 1px solid #ffd6e0; border-radius: 12px; padding: 15px; margin-bottom: 20px; font-size: 14px;">
+                        <div style="display: flex; justify-content: space-between; font-weight: 700; color: #ac031c; margin-bottom: 5px;">
+                            <span id="summary-package-name">Package Name</span>
+                            <span id="summary-duration">0 Days</span>
+                        </div>
+                        <div style="color: #475569;" id="summary-hotel-details"><i class="fa-solid fa-hotel" style="color:#c3122e;"></i> Hotel details</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Travel Option</label>
+                        <div style="display: flex; gap: 15px;">
+                            <label style="display: flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer;">
+                                <input type="radio" name="flight_option" value="with_flight" checked onchange="updateTotalPrice()" style="accent-color: #c3122e;"> Including Air Ticket
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer;">
+                                <input type="radio" name="flight_option" value="without_flight" onchange="updateTotalPrice()" style="accent-color: #c3122e;"> Excluding Air Ticket
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <div>
+                            <label style="margin-bottom: 0; font-weight: 700;">Number of Passengers</label>
+                            <span style="font-size: 12px; color: #64748b;">Ages 2 and above</span>
+                        </div>
+                        <div class="pax-selector">
+                            <button type="button" class="pax-btn" onclick="adjustPassengers(-1)"><i class="fa-solid fa-minus"></i></button>
+                            <span id="passenger-count-display" style="font-size: 16px; font-weight: 700; width: 20px; text-align: center;">1</span>
+                            <button type="button" class="pax-btn" onclick="adjustPassengers(1)"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="booking-guest-name">Primary Traveler Name</label>
+                        <input type="text" id="booking-guest-name" class="form-control" required placeholder="Enter primary guest name">
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label for="booking-email">Email Address</label>
+                            <input type="email" id="booking-email" class="form-control" required placeholder="Enter email" value="{{ session.b2c_user.email if session.get('b2c_user') else session.get('b2c_search_email', '') }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="booking-mobile">Mobile Number</label>
+                            <input type="text" id="booking-mobile" class="form-control" required placeholder="Enter mobile" value="{{ session.get('b2c_search_mobile', '') }}">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="booking-date">Preferred Travel Date</label>
+                        <input type="text" id="booking-date" class="form-control date-picker" required placeholder="Select Travel Date">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="booking-requests">Special Requests (Optional)</label>
+                        <textarea id="booking-requests" class="form-control" placeholder="Food preferences, seat choices, extra bed, etc." style="height: 70px; resize: none;"></textarea>
+                    </div>
+                    
+                    <!-- Bottom price and submit -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 20px; margin-top: 20px;">
+                        <div>
+                            <span style="font-size: 13px; color: #64748b;">Total Price (LKR)</span>
+                            <div id="modal-total-price" style="font-size: 26px; font-weight: 800; color: #c3122e;">LKR 0.00</div>
+                        </div>
+                        <button type="submit" style="background: #c3122e; color: white; border: none; padding: 12px 28px; border-radius: 30px; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#ac031c';" onmouseout="this.style.background='#c3122e';">Confirm Booking</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer style="background: #0f172a; color: #94a3b8; padding: 60px 0 0 0; margin-top: 60px;">
+        <div style="max-width: 1100px; margin: 0 auto; padding: 0 20px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 50px;">
+            <div>
+                <a href="/b2c" style="font-size: 26px; font-weight: 800; color: white; text-decoration: none; display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                    <i class="fa-solid fa-plane-departure" style="color: #c3122e;"></i> Aeronexa
+                </a>
+                <p style="font-size: 14px; line-height: 1.8; color: #64748b; margin-bottom: 24px;">Your ultimate travel companion. Powered by Flight Hub GDS & George Steuart Travel.</p>
+            </div>
+            <div>
+                <h4 style="color: white; font-size: 15px; margin-bottom: 20px; font-weight: 700;">Company</h4>
+                <ul style="list-style: none; padding: 0; line-height: 2.2;">
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;">About Us</a></li>
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;">Careers</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 style="color: white; font-size: 15px; margin-bottom: 20px; font-weight: 700;">Support</h4>
+                <ul style="list-style: none; padding: 0; line-height: 2.2;">
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;">Help Center</a></li>
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;">Contact Us</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 style="color: white; font-size: 15px; margin-bottom: 20px; font-weight: 700;">Legal</h4>
+                <ul style="list-style: none; padding: 0; line-height: 2.2;">
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;">Terms of Service</a></li>
+                    <li><a href="#" style="color: #64748b; text-decoration: none; font-size: 14px;">Privacy Policy</a></li>
+                </ul>
+            </div>
+        </div>
+        <div style="max-width: 1100px; margin: 40px auto 0; padding: 24px 20px; border-top: 1px solid #1e293b; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <p style="margin: 0; font-size: 13px; color: #475569;">&copy; 2026 Aeronexa &mdash; All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        // Pass the packages list from python to JS
+        const packagesData = {{ packages|tojson|safe }};
+        let currentPackage = null;
+        let passengerCount = 1;
+        let datePickerInstance = null;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            datePickerInstance = flatpickr("#booking-date", {
+                dateFormat: "Y-m-d",
+                minDate: "today",
+                altInput: true,
+                altFormat: "F j, Y"
+            });
+        });
+
+        // Filter packages by search input
+        function filterPackages() {
+            const query = document.getElementById("package-filter").value.toLowerCase().trim();
+            const cards = document.querySelectorAll(".package-card");
+            
+            cards.forEach(card => {
+                const name = card.getAttribute("data-name").toLowerCase();
+                const dest = card.getAttribute("data-destination").toLowerCase();
+                const country = card.getAttribute("data-country").toLowerCase();
+                
+                if (name.includes(query) || dest.includes(query) || country.includes(query)) {
+                    card.style.display = "flex";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        }
+
+        // Open booking modal and populate details
+        function openBookingModal(packageId) {
+            currentPackage = packagesData.find(p => p.id === parseInt(packageId));
+            if (!currentPackage) return;
+            
+            document.getElementById("booking-package-id").value = currentPackage.id;
+            document.getElementById("modal-package-title").innerText = `Book ${currentPackage.name}`;
+            document.getElementById("summary-package-name").innerText = currentPackage.name;
+            document.getElementById("summary-duration").innerText = currentPackage.duration;
+            
+            let starsHTML = "";
+            for (let i = 0; i < currentPackage.hotel_rating; i++) starsHTML += `<i class="fa-solid fa-star"></i>`;
+            document.getElementById("summary-hotel-details").innerHTML = `<i class="fa-solid fa-hotel" style="color:#c3122e; margin-right: 5px;"></i> Hotel: <strong>${currentPackage.hotel}</strong> <span class="hotel-stars">${starsHTML}</span>`;
+            
+            passengerCount = 1;
+            document.getElementById("passenger-count-display").innerText = passengerCount;
+            
+            // Set default travel date picker logic
+            if (datePickerInstance) datePickerInstance.clear();
+            
+            updateTotalPrice();
+            
+            document.getElementById("booking-modal").style.display = "flex";
+        }
+
+        function closeBookingModal() {
+            document.getElementById("booking-modal").style.display = "none";
+        }
+
+        // Adjust passenger counts
+        function adjustPassengers(change) {
+            passengerCount += change;
+            if (passengerCount < 1) passengerCount = 1;
+            if (passengerCount > 9) passengerCount = 9; // Limit group booking size to 9
+            
+            document.getElementById("passenger-count-display").innerText = passengerCount;
+            updateTotalPrice();
+        }
+
+        // Calculate and render price dynamically
+        function updateTotalPrice() {
+            if (!currentPackage) return;
+            
+            const flightOption = document.querySelector('input[name="flight_option"]:checked').value;
+            const unitPrice = flightOption === "with_flight" ? currentPackage.price_with_flight : currentPackage.price_without_flight;
+            const total = unitPrice * passengerCount;
+            
+            document.getElementById("modal-total-price").innerText = "LKR " + total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // Submit Booking inquiry via AJAX
+        function submitBooking(event) {
+            event.preventDefault();
+            
+            const packageId = document.getElementById("booking-package-id").value;
+            const guestName = document.getElementById("booking-guest-name").value.trim();
+            const email = document.getElementById("booking-email").value.trim();
+            const mobile = document.getElementById("booking-mobile").value.trim();
+            const travelDate = document.getElementById("booking-date").value;
+            const specialRequests = document.getElementById("booking-requests").value.trim();
+            const flightOption = document.querySelector('input[name="flight_option"]:checked').value;
+            const includeFlight = flightOption === "with_flight";
+            
+            if (!travelDate) {
+                alert("Please select a preferred travel date.");
+                return;
+            }
+            
+            const payload = {
+                package_id: packageId,
+                guest_name: guestName,
+                email: email,
+                mobile: mobile,
+                travel_date: travelDate,
+                guests_count: passengerCount,
+                include_flight: includeFlight,
+                special_requests: specialRequests
+            };
+            
+            fetch("/api/b2c/holidays/book", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Group Tour inquiry submitted successfully!\nBooking Reference: " + data.invoice_number);
+                    window.location.href = "/b2c/my-bookings";
+                } else {
+                    alert("Booking failed: " + data.error);
+                }
+            })
+            .catch(err => {
+                console.error("Booking submit error:", err);
+                alert("An error occurred. Please try again.");
+            });
+        }
+    </script>
+    
+    {% include 'b2c_chatbot.html' %}
+</body>
+</html>

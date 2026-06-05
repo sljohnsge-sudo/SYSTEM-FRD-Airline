@@ -25,7 +25,7 @@ def initialize_database():
         
         tables_to_drop = [
             "agent_rewards", "timatic_checks", "service_fees", "support_tickets",
-            "hotel_bookings", "b2c_hotel_bookings", "flight_bookings", "b2c_flight_bookings", "b2c_bookings", "bookings", "rooms", "hotels",
+            "hotel_bookings", "b2c_hotel_bookings", "b2c_holiday_bookings", "flight_bookings", "b2c_flight_bookings", "b2c_bookings", "bookings", "rooms", "hotels",
             "flights", "b2c_users", "users", "popups"
         ]
         for table in tables_to_drop:
@@ -130,7 +130,7 @@ def initialize_database():
                 CREATE TABLE b2c_bookings (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     b2c_user_id INT DEFAULT NULL,
-                    booking_type ENUM('flight', 'hotel') NOT NULL,
+                    booking_type ENUM('flight', 'hotel', 'holiday') NOT NULL,
                     status VARCHAR(50) DEFAULT 'non-ticketed',
                     total_price DECIMAL(12, 2) NOT NULL,
                     invoice_number VARCHAR(50) UNIQUE NOT NULL,
@@ -176,6 +176,23 @@ def initialize_database():
                     service_fee DECIMAL(10, 2) DEFAULT 0.00,
                     FOREIGN KEY (booking_id) REFERENCES b2c_bookings(id) ON DELETE CASCADE,
                     FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB;
+            """,
+            "b2c_holiday_bookings": """
+                CREATE TABLE b2c_holiday_bookings (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    booking_id INT NOT NULL,
+                    package_name VARCHAR(100) NOT NULL,
+                    travel_date DATE NOT NULL,
+                    guests_count INT NOT NULL,
+                    include_flight BOOLEAN NOT NULL,
+                    guest_name VARCHAR(100) NOT NULL,
+                    email VARCHAR(100) NOT NULL,
+                    mobile VARCHAR(30) NOT NULL,
+                    special_requests TEXT DEFAULT NULL,
+                    original_price DECIMAL(12, 2) NOT NULL,
+                    service_fee DECIMAL(12, 2) DEFAULT 0.00,
+                    FOREIGN KEY (booking_id) REFERENCES b2c_bookings(id) ON DELETE CASCADE
                 ) ENGINE=InnoDB;
             """,
             "hotel_bookings": """

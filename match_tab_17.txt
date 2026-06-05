@@ -1,0 +1,79 @@
+Created At: 2026-06-04T05:37:21Z
+Completed At: 2026-06-04T05:37:22Z
+File Path: `file:///d:/GS/SYSTEM-FRD-Airline/templates/b2c_home.html`
+Total Lines: 1308
+Total Bytes: 97943
+Showing lines 150 to 220
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+150:             color: #64748b;
+151:             margin-bottom: 12px;
+152:             display: flex;
+153:             align-items: center;
+154:             gap: 6px;
+155:         }
+156:         .b2c-hotel-description {
+157:             font-size: 14px;
+158:             color: #475569;
+159:             line-height: 1.6;
+160:             margin: 0 0 20px 0;
+161:             flex-grow: 1;
+162:         }
+163:         .b2c-room-item {
+164:             border-top: 1px solid #f1f5f9;
+165:             padding: 15px 0;
+166:             display: flex;
+167:             justify-content: space-between;
+168:             align-items: center;
+169:         }
+170:         .b2c-room-item:last-child {
+171:             border-bottom: none;
+172:         }
+173:         .b2c-room-name {
+174:             font-weight: 700;
+175:             color: #1e293b;
+176:             font-size: 14px;
+177:         }
+178:         .b2c-room-price {
+179:             font-size: 18px;
+180:             font-weight: 800;
+181:             color: #d11242;
+182:         }
+183:         .b2c-room-price-sub {
+184:             font-size: 11px;
+185:             color: #64748b;
+186:             font-weight: normal;
+187:         }
+188:         .btn-book-room {
+189:             background: #006ce4;
+190:             color: white;
+191:             border: none;
+192:             padding: 8px 16px;
+193:             border-radius: 6px;
+194:             font-weight: 700;
+195:             font-size: 13px;
+196:             cursor: pointer;
+197:             transition: background 0.2s;
+198:             font-family: 'Outfit', sans-serif;
+199:         }
+200:         .btn-book-room:hover {
+201:             background: #0053b3;
+202:         }
+203:     </style>
+204: </head>
+205: <body>
+206: 
+207:     <!-- B2C Header -->
+208:     <!-- Promo Ticker -->
+209:     <div class="promo-ticker">
+210:         ✈️ &nbsp;FLASH SALE: Up to 40% off on selected routes this week only! &nbsp;<a href="#tab-flights">Book Now &rarr;</a>
+211:     </div>
+212: 
+213:     <!-- B2C Header -->
+214:     <header class="b2c-header">
+215:         <a href="/b2c" class="b2c-brand">
+216:             <i class="fa-solid fa-plane-departure"></i> Aeronexa
+217:         </a>
+218:         <nav class="b2c-nav">
+219:             <a href="/b2c?tab=flights" id="nav-flights-btn" onclick="switchB2CTab('flights', event)"><i class="fa-solid fa-plane"></i> Flights</a>
+220:             <a href="/b2c?tab=hotels" id="nav-hotels-btn" onclick="switchB2CTab('hotels', event)"><i class="fa-solid fa-hotel"></i> Hotels</a>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

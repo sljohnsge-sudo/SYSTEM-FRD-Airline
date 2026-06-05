@@ -1,0 +1,72 @@
+Created At: 2026-06-04T06:55:28Z
+Completed At: 2026-06-04T06:55:28Z
+File Path: `file:///d:/GS/SYSTEM-FRD-Airline/templates/b2c_home.html`
+Total Lines: 1603
+Total Bytes: 122505
+Showing lines 900 to 1100
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+900:                     const isRoundTrip = document.getElementById('pill-roundtrip') && document.getElementById('pill-roundtrip').classList.contains('active');
+901:                     if (isRoundTrip) {
+902:                         setTimeout(() => {
+903:                             if (retPicker) retPicker.open();
+904:                         }, 150);
+905:                     }
+906:                 }
+907:             });
+908: 
+909:             // Automatically open departure date picker when destination is changed/selected
+910:             const destInput = document.getElementById('flight-dest');
+911:             if (destInput) {
+912:                 destInput.addEventListener('change', function() {
+913:                     if (this.value.trim() !== '') {
+914:                         setTimeout(() => {
+915:                             if (depPicker) depPicker.open();
+916:                         }, 150);
+917:                     }
+918:                 });
+919:             }
+920: 
+921:             // Automatically switch tab on page load based on query parameter
+922:             const urlParams = new URLSearchParams(window.location.search);
+923:             const tabParam = urlParams.get('tab');
+924:             if (tabParam === 'hotels') {
+925:                 switchB2CTab('hotels');
+926:             } else if (tabParam === 'flights') {
+927:                 switchB2CTab('flights');
+928:             }
+929:         });
+930: 
+931:         // B2C Hotel Search and Booking Javascript
+932:         function switchB2CTab(tabName, event) {
+933:       
+<truncated 7985 bytes>
+             renderB2CHotelResults(data.hotels);
+1073:                     } else {
+1074:                         container.innerHTML = `
+1075:                             <div style="text-align: center; color: #64748b; padding: 60px 0; grid-column: 1 / -1;">
+1076:                                 <i class="fa-solid fa-circle-exclamation" style="font-size: 40px; color: #ef4444; margin-bottom: 15px;"></i>
+1077:                                 <p style="font-size: 16px; font-weight: 600;">No hotels found matching "${location}".</p>
+1078:                                 <p style="font-size: 14px; margin-top: 5px; color: #94a3b8;">Try searching for 'London', 'Dubai', or 'Maldives'.</p>
+1079:                             </div>
+1080:                         `;
+1081:                     }
+1082:                 })
+1083:                 .catch(err => {
+1084:                     console.error("Hotel search error:", err);
+1085:                     container.innerHTML = `
+1086:                         <div style="text-align: center; color: #64748b; padding: 60px 0; grid-column: 1 / -1;">
+1087:                             <i class="fa-solid fa-triangle-exclamation" style="font-size: 40px; color: #ef4444; margin-bottom: 15px;"></i>
+1088:                             <p style="font-size: 16px; font-weight: 600;">An error occurred while searching for hotels.</p>
+1089:                         </div>
+1090:                     `;
+1091:                 });
+1092:         }
+1093: 
+1094:         function renderB2CHotelResults(hotels) {
+1095:             const container = document.getElementById("b2c-hotel-results-container");
+1096:             container.innerHTML = "";
+1097:             
+1098:             hotels.forEach(h => {
+1099:                 let starsHTML = "";
+1100:                 for (let i = 0; i < h.rating; i++) {
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

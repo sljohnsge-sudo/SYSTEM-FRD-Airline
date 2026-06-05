@@ -1,0 +1,1 @@
+I will modify `b2c_home.html` to remove all separate Hotels-related search widgets, tab selections, navigation links, and JavaScript routines, and change the "Holidays" navbar item to link to `/b2c/holidays`.

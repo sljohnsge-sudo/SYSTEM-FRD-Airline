@@ -4,15 +4,15 @@
     --bg-dark: #ffffff;
     --panel-dark: #ffffff;
     --border-dark: #e9ecef;
-    --border-glow: rgba(136, 18, 59, 0.1);
+    --border-glow: rgba(195, 18, 46, 0.1);
     
-    --primary-gradient: linear-gradient(135deg, #88123B 0%, #a31d52 100%);
-    --accent-gradient: linear-gradient(135deg, #003b95 0%, #0056b3 100%);
+    --primary-gradient: linear-gradient(135deg, #c3122e 0%, #ac031c 100%);
+    --accent-gradient: linear-gradient(135deg, #ac031c 0%, #ff0026 100%);
     --success-gradient: linear-gradient(135deg, #008234 0%, #00b04a 100%);
     
-    --primary: #88123B;
-    --secondary: #003b95;
-    --secondary-tint: #effcff;
+    --primary: #c3122e;
+    --secondary: #ac031c;
+    --secondary-tint: #fff5f5;
     --success: #008234;
     --warning: #ff8c00;
     --danger: #d9534f;
@@ -20,7 +20,7 @@
     --text-muted: #6c757d;
     
     --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-    --glow-shadow: 0 2px 8px rgba(136, 18, 59, 0.12);
+    --glow-shadow: 0 2px 8px rgba(195, 18, 46, 0.12);
     --glow-success: 0 2px 8px rgba(0, 130, 52, 0.12);
 }
 
@@ -404,7 +404,7 @@ h1, h2, h3, h4, .brand-font {
     right: 0;
     width: 80px;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(0, 59, 149, 0.05));
+    background: linear-gradient(90deg, transparent, rgba(172, 3, 28, 0.05));
     pointer-events: none;
 }
 
@@ -993,7 +993,7 @@ h1, h2, h3, h4, .brand-font {
 
 .hotel-image {
     height: 180px;
-    background: linear-gradient(135deg, rgba(136, 18, 59, 0.1) 0%, rgba(79, 172, 254, 0.1) 100%);
+    background: linear-gradient(135deg, rgba(195, 18, 46, 0.1) 0%, rgba(79, 172, 254, 0.1) 100%);
     position: relative;
     display: flex;
     align-items: center;
@@ -1369,8 +1369,8 @@ h1, h2, h3, h4, .brand-font {
 
 /* System Alerts Popups (Modal on Load) */
 .announcement-box {
-    background: linear-gradient(135deg, rgba(136, 18, 59, 0.08) 0%, rgba(79, 172, 254, 0.05) 100%);
-    border: 1px solid rgba(136, 18, 59, 0.2);
+    background: linear-gradient(135deg, rgba(195, 18, 46, 0.08) 0%, rgba(79, 172, 254, 0.05) 100%);
+    border: 1px solid rgba(195, 18, 46, 0.2);
     border-radius: 16px;
     padding: 20px;
     margin-bottom: 30px;
@@ -1387,7 +1387,7 @@ h1, h2, h3, h4, .brand-font {
 
 @keyframes pulse {
     0% { transform: scale(1); }
-    50% { transform: scale(1.1); text-shadow: 0 0 10px rgba(136, 18, 59, 0.4); }
+    50% { transform: scale(1.1); text-shadow: 0 0 10px rgba(195, 18, 46, 0.4); }
     100% { transform: scale(1); }
 }
 

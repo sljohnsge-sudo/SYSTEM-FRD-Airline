@@ -1,0 +1,1 @@
+I will update the recovery script to find the exact step where the complete, original content of `b2c_home.html` was viewed, and extract it.

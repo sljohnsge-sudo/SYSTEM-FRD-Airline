@@ -1,0 +1,36 @@
+Created At: 2026-06-04T07:11:24Z
+Completed At: 2026-06-04T07:11:24Z
+File Path: `file:///d:/GS/SYSTEM-FRD-Airline/templates/b2c_home.html`
+Total Lines: 1603
+Total Bytes: 122505
+Showing lines 218 to 245
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+218:     <!-- B2C Header -->
+219:     <header class="b2c-header">
+220:         <a href="/b2c" class="b2c-brand">
+221:             <i class="fa-solid fa-plane-departure"></i> Aeronexa
+222:         </a>
+223:         <nav class="b2c-nav">
+224:             <a href="/b2c?tab=flights" id="nav-flights-btn" onclick="switchB2CTab('flights', event)"><i class="fa-solid fa-plane"></i> Flights</a>
+225:             <a href="/b2c?tab=hotels" id="nav-hotels-btn" onclick="switchB2CTab('hotels', event)"><i class="fa-solid fa-hotel"></i> Hotels</a>
+226:             <a href="#"><i class="fa-solid fa-umbrella-beach"></i> Holidays</a>
+227:             <a href="#"><i class="fa-solid fa-tags" style="color:#c3122e;"></i> <span style="color:#c3122e;">Offers</span></a>
+228:             <a href="/b2c/my-bookings"><i class="fa-solid fa-briefcase"></i> My Bookings</a>
+229:             
+230:             {% if session.get('b2c_user') %}
+231:                 <div style="display: flex; align-items: center; gap: 15px; margin-left: 15px; border-left: 1px solid #e2e8f0; padding-left: 20px;">
+232:                     <div style="font-weight: 600; color: #1e293b; font-size: 14px;">
+233:                         <i class="fa-solid fa-user-circle" style="color: #64748b; margin-right: 5px;"></i> {{ session.b2c_user.name }}
+234:                     </div>
+235:                     <a href="/b2c/logout" style="color: #ef4444; font-size: 13px; font-weight: 600;"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+236:                 </div>
+237:             {% else %}
+238:                 <a href="{{ url_for('login') }}" class="btn-b2b-login"><i class="fa-solid fa-user"></i> Agent Login</a>
+239:             {% endif %}
+240:         </nav>
+241:     </header>
+242: 
+243:     <!-- Hero Banner -->
+244:     <div class="hero-banner">
+245:         <div class="hero-badge">🌍 &nbsp; #1 Travel Booking Platform in Sri Lanka</div>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

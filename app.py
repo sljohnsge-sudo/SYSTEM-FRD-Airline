@@ -143,6 +143,11 @@ def b2c_flight_results():
     modifying_old_price = session.get('modifying_old_price', 0)
     return render_template("b2c_flight_results.html", agent=None, modifying_old_price=modifying_old_price)
 
+# Route: B2C Hotel Booking Checkout
+@app.route("/b2c/hotel-booking")
+def b2c_hotel_booking():
+    return render_template("b2c_hotel_booking.html")
+
 # Route: B2C Google Sign-In
 @app.route("/b2c/login/google")
 def b2c_login_google():
@@ -206,6 +211,7 @@ def b2c_my_bookings():
     booking_data = None
     history_data = []
     hotel_history_data = []
+    holiday_history_data = []
     error = None
     b2c_user = session.get('b2c_user')
     search_email = session.get('b2c_search_email')
@@ -322,15 +328,37 @@ def b2c_my_bookings():
                 """
                 c.execute(hotel_query, tuple(final_hotel_params))
                 hotel_history_data = c.fetchall()
+
+            # Step 4: Fetch all holiday bookings using expanded email & mobile set
+            holiday_history_data = []
+            final_holiday_where = []
+            final_holiday_params = []
+            if emails:
+                final_holiday_where.append(f"hb.email IN ({', '.join(['%s'] * len(emails))})")
+                final_holiday_params.extend(list(emails))
+            if mobiles:
+                final_holiday_where.append(f"hb.mobile IN ({', '.join(['%s'] * len(mobiles))})")
+                final_holiday_params.extend(list(mobiles))
                 
-            if request.method == "POST" and not history_data and not hotel_history_data:
+            if final_holiday_where:
+                holiday_query = f"""
+                    SELECT DISTINCT hb.id, hb.*, b.status as booking_status, b.total_price, b.invoice_number, b.created_at
+                    FROM b2c_holiday_bookings hb
+                    JOIN b2c_bookings b ON hb.booking_id = b.id
+                    WHERE {' OR '.join(final_holiday_where)}
+                    ORDER BY b.created_at DESC
+                """
+                c.execute(holiday_query, tuple(final_holiday_params))
+                holiday_history_data = c.fetchall()
+                
+            if request.method == "POST" and not history_data and not hotel_history_data and not holiday_history_data:
                 error = "No booking history found for the provided details."
                 
         except Exception as e:
             error = f"An error occurred while loading history: {str(e)}"
             
     conn.close()
-    return render_template("b2c_my_bookings.html", booking_data=None, history_data=history_data, hotel_history_data=hotel_history_data, error=error)
+    return render_template("b2c_my_bookings.html", booking_data=None, history_data=history_data, hotel_history_data=hotel_history_data, holiday_history_data=holiday_history_data, error=error)
 
 # Route: B2C Clear Booking Search Session
 @app.route("/b2c/my-bookings/clear")
@@ -338,6 +366,158 @@ def b2c_my_bookings_clear():
     session.pop('b2c_search_email', None)
     session.pop('b2c_search_mobile', None)
     return redirect(url_for('b2c_my_bookings'))
+
+# Holiday packages static definition
+HOLIDAY_PACKAGES = [
+    {
+        "id": 1,
+        "name": "Maldives Group Tour Escape",
+        "destination": "Male",
+        "country": "Maldives",
+        "duration": "4 Days / 3 Nights",
+        "hotel": "Kurumba Maldives Resort",
+        "hotel_rating": 5,
+        "transport": "Speedboat transfers included",
+        "price_with_flight": 295000.00,
+        "price_without_flight": 175000.00,
+        "image": "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&q=80&w=800"
+    },
+    {
+        "id": 2,
+        "name": "Dubai City & Desert Safari Group Tour",
+        "destination": "Dubai",
+        "country": "United Arab Emirates (UAE)",
+        "duration": "5 Days / 4 Nights",
+        "hotel": "Burj Al Arab Jumeirah",
+        "hotel_rating": 5,
+        "transport": "Private AC Sedan for sightseeing & transfers",
+        "price_with_flight": 480000.00,
+        "price_without_flight": 320000.00,
+        "image": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&q=80&w=800"
+    },
+    {
+        "id": 3,
+        "name": "London Heritage & Culture Group Tour",
+        "destination": "London",
+        "country": "United Kingdom (UK)",
+        "duration": "6 Days / 5 Nights",
+        "hotel": "Grand Plaza Hotel",
+        "hotel_rating": 4,
+        "transport": "Airport transfers + Hop-On Hop-Off London Bus pass",
+        "price_with_flight": 650000.00,
+        "price_without_flight": 410000.00,
+        "image": "https://images.unsplash.com/photo-1513635269975-59663e0ca1ad?auto=format&fit=crop&q=80&w=800"
+    },
+    {
+        "id": 4,
+        "name": "Singapore Sentosa Adventure Group Tour",
+        "destination": "Singapore City",
+        "country": "Singapore",
+        "duration": "5 Days / 4 Nights",
+        "hotel": "Changi Village Inn",
+        "hotel_rating": 3,
+        "transport": "Airport & activity transfers in private AC Van",
+        "price_with_flight": 280000.00,
+        "price_without_flight": 160000.00,
+        "image": "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&q=80&w=800"
+    },
+    {
+        "id": 5,
+        "name": "Cultural Triangle & Scenic Sri Lanka Group Tour",
+        "destination": "Kandy & Ella",
+        "country": "Sri Lanka",
+        "duration": "7 Days / 6 Nights",
+        "hotel": "Cinnamon Lodge",
+        "hotel_rating": 4,
+        "transport": "Private AC Micro Van with driver/guide for the entire tour",
+        "price_with_flight": 220000.00,
+        "price_without_flight": 125000.00,
+        "image": "https://images.unsplash.com/photo-1588598126487-dbd2382103f6?auto=format&fit=crop&q=80&w=800"
+    }
+]
+
+# Route: B2C Holidays
+@app.route("/b2c/holidays")
+def b2c_holidays():
+    return render_template("b2c_holidays.html", packages=HOLIDAY_PACKAGES)
+
+# Route: B2C Offers
+@app.route("/b2c/offers")
+def b2c_offers():
+    return render_template("b2c_offers.html")
+
+# API: Book B2C Holiday Package
+@app.route("/api/b2c/holidays/book", methods=["POST"])
+def api_b2c_holidays_book():
+    data = request.json
+    package_id = data.get("package_id")
+    guest_name = data.get("guest_name")
+    email = data.get("email")
+    mobile = data.get("mobile")
+    travel_date_str = data.get("travel_date")
+    guests_count = int(data.get("guests_count", 1))
+    include_flight = bool(data.get("include_flight", True))
+    special_requests = data.get("special_requests", "")
+    
+    if not package_id or not guest_name or not email or not mobile or not travel_date_str:
+        return jsonify({"success": False, "error": "All fields are required"}), 400
+        
+    # Find package
+    package = next((p for p in HOLIDAY_PACKAGES if p["id"] == int(package_id)), None)
+    if not package:
+        return jsonify({"success": False, "error": "Holiday package not found"}), 404
+        
+    try:
+        travel_date = datetime.datetime.strptime(travel_date_str, "%Y-%m-%d").date()
+    except ValueError:
+        return jsonify({"success": False, "error": "Invalid date format. Use YYYY-MM-DD"}), 400
+        
+    # Calculate price
+    base_price = package["price_with_flight"] if include_flight else package["price_without_flight"]
+    total_price = Decimal(str(base_price)) * guests_count
+    service_fee = Decimal("1500.00") * guests_count # LKR 1500 per passenger markup
+    original_price = total_price - service_fee
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        invoice_number = f"INV-HP{random.randint(100000, 999999)}"
+        
+        # Insert main booking record
+        cursor.execute("""
+            INSERT INTO b2c_bookings (booking_type, status, total_price, invoice_number, created_at)
+            VALUES ('holiday', 'ticketed', %s, %s, NOW())
+        """, (total_price, invoice_number))
+        
+        booking_id = cursor.lastrowid
+        
+        # Insert holiday booking details
+        cursor.execute("""
+            INSERT INTO b2c_holiday_bookings (booking_id, package_name, travel_date, guests_count, include_flight, guest_name, email, mobile, special_requests, original_price, service_fee)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (booking_id, package["name"], travel_date, guests_count, include_flight, guest_name, email, mobile, special_requests, original_price, service_fee))
+        
+        # Store in session to automatically view immediately
+        session['b2c_search_email'] = email
+        session['b2c_search_mobile'] = mobile
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            "success": True,
+            "message": "Holiday package booked successfully!",
+            "invoice_number": invoice_number,
+            "total_price": float(total_price)
+        })
+        
+    except Exception as e:
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        return jsonify({"success": False, "error": str(e)}), 500
 
 # Route: B2C Self-Service Cancel Booking
 @app.route("/b2c/booking/cancel", methods=["POST"])
@@ -1458,7 +1638,17 @@ def api_hotels_search():
                             # Random rating from 3 to 5
                             rating = random.randint(3, 5)
                             # Pick a random placeholder image or generic name
-                            img_url = f"hotel_{city_code.lower()}_{random.randint(1,3)}.jpg"
+                            code_lower = city_code.lower()
+                            if code_lower in ['lon', 'lhr']:
+                                img_url = 'hotel_london.jpg'
+                            elif code_lower in ['dxb', 'auh']:
+                                img_url = 'hotel_dubai.jpg'
+                            elif code_lower in ['mle']:
+                                img_url = 'hotel_maldives.jpg'
+                            elif code_lower in ['sin']:
+                                img_url = 'hotel_singapore.jpg'
+                            else:
+                                img_url = f"hotel_{code_lower}_{random.randint(1,3)}.jpg"
                             
                             cursor.execute("""
                                 INSERT INTO hotels (name, location, rating, description, image_url)
@@ -1637,7 +1827,7 @@ def api_b2c_hotels_book():
         
         # Calculate pricing: convert to LKR (1 USD = 300 LKR for hotel pricing)
         orig_price_usd = room["price_per_night"] * nights
-        markup_usd = Decimal("25.00")
+        markup_usd = Decimal("25.00") * nights
         total_price_usd = orig_price_usd + markup_usd
         total_price_lkr = total_price_usd * Decimal("300.00")
         
@@ -2631,8 +2821,8 @@ def chatbot_ask():
         price = "{:,.2f}".format(round(random.uniform(35000, 150000), 2))
         
         flight_html = f"""
-        <div style='background: white; border: 1px solid #cbd5e1; border-radius: 12px; padding: 15px; margin-top: 10px; color: #1e293b; text-align: left; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);'>
-            <div style='font-weight: 800; color: #1e3a8a; font-size: 15px; margin-bottom: 8px;'><i class='fa-solid fa-plane-departure'></i> Best Flight Found</div>
+        <div style='background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-top: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); font-family: "Outfit", sans-serif; color: #1e293b; text-align: left;'>
+            <div style='font-weight: 800; color: #ac031c; font-size: 15px; margin-bottom: 8px;'><i class='fa-solid fa-plane-departure'></i> Best Flight Found</div>
             <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;'>
                 <div>
                     <div style='font-size: 18px; font-weight: 700;'>{origin}</div>
@@ -2646,7 +2836,7 @@ def chatbot_ask():
             </div>
             <div style='font-size: 13px; color: #475569; margin-bottom: 5px;'><i class='fa-regular fa-calendar'></i> <strong>{date}</strong></div>
             <div style='font-size: 18px; font-weight: 800; color: #10b981; margin-bottom: 12px;'>LKR {price}</div>
-            <a href='/b2c-flight-results?origin={origin}&dest={dest}&date={date}&adults=1' style='display: block; text-align: center; background: #d11242; color: white; padding: 10px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: bold; transition: background 0.3s;'>Book This Flight Now</a>
+            <a href='/b2c-flight-results?origin={origin}&dest={dest}&date={date}&adults=1' style='display: block; text-align: center; background: #c3122e; color: white; padding: 10px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: bold; transition: background 0.3s;'>Book This Flight Now</a>
         </div>
         """
         return jsonify({"reply": f"I've searched our real-time inventory and found a great option for you! {flight_html}"})
@@ -2675,6 +2865,12 @@ def chatbot_ask():
     time.sleep(1) # Simulate AI thinking time
     
     return jsonify({"reply": reply})
+
+
+# Route: B2C Hotel Details
+@app.route("/b2c/hotel-details")
+def b2c_hotel_details():
+    return render_template("b2c_hotel_details.html")
 
 if __name__ == "__main__":
     app.run(debug=True, host="127.0.0.1", port=5000)

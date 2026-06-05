@@ -1,0 +1,1 @@
+I will write a temporary python script to search the conversation log `transcript.jsonl` and extract the original content of `b2c_home.html` (before the hotel search widget was removed).
