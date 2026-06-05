@@ -313,7 +313,7 @@
             
         </div>
         
-        {% if booking_data or history_data or hotel_history_data %}
+        {% if session.get('b2c_search_email') or session.get('b2c_search_mobile') or session.get('b2c_user') or booking_data or history_data or hotel_history_data or holiday_history_data or price_alerts_data %}
             {% set results = booking_data if booking_data else history_data %}
             {% set ns = namespace(has_active=false, has_cancelled=false) %}
             {% if results %}
@@ -339,6 +339,9 @@
                 </button>
                 <button onclick="switchBookingTab('hotels')" id="tab-hotels" style="background: transparent; border: none; font-size: 16px; font-weight: 600; color: #64748b; padding: 12px 20px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s;">
                     <i class="fa-solid fa-hotel"></i> Hotel Bookings
+                </button>
+                <button onclick="switchBookingTab('alerts')" id="tab-alerts" style="background: transparent; border: none; font-size: 16px; font-weight: 600; color: #64748b; padding: 12px 20px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s;">
+                    <i class="fa-solid fa-bell"></i> Price Alerts
                 </button>
             </div>
 
@@ -666,6 +669,93 @@
                 </div>
             </div>
 
+            <!-- Price Alerts Section -->
+            <div id="section-alerts" style="display: none;">
+                <div style="background: white; border-radius: 12px; padding: 30px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.02); margin-bottom: 30px;">
+                    <h3 style="margin: 0 0 5px 0; color: #0f172a;"><i class="fa-solid fa-bell" style="color: #c3122e; margin-right: 8px;"></i> Create a New Price Alert</h3>
+                    <p style="color: #64748b; margin: 0 0 20px 0; font-size: 14px;">Select your favorite destinations and get notified immediately when we drop special promo prices!</p>
+                    
+                    <form id="addAlertForm" onsubmit="addPriceAlert(event)" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: end;">
+                        <input type="hidden" id="alert-email" value="{{ session.b2c_search_email or session.get('b2c_user', {}).get('email', '') }}">
+                        <input type="hidden" id="alert-mobile" value="{{ session.b2c_search_mobile or '' }}">
+                        
+                        <div style="grid-column: 1 / -1;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: #1e293b;">Favorite Destinations <span style="color: #ef4444;">*</span></label>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                                <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; color: #334155; cursor: pointer;"><input type="checkbox" name="alert-dest" value="Maldives" style="width: 16px; height: 16px; accent-color: #c3122e;"> Maldives</label>
+                                <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; color: #334155; cursor: pointer;"><input type="checkbox" name="alert-dest" value="Thailand" style="width: 16px; height: 16px; accent-color: #c3122e;"> Thailand</label>
+                                <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; color: #334155; cursor: pointer;"><input type="checkbox" name="alert-dest" value="Cambodia" style="width: 16px; height: 16px; accent-color: #c3122e;"> Cambodia</label>
+                                <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; color: #334155; cursor: pointer;"><input type="checkbox" name="alert-dest" value="Singapore" style="width: 16px; height: 16px; accent-color: #c3122e;"> Singapore</label>
+                                <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; color: #334155; cursor: pointer;"><input type="checkbox" name="alert-dest" value="Dubai" style="width: 16px; height: 16px; accent-color: #c3122e;"> Dubai</label>
+                                <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; color: #334155; cursor: pointer;"><input type="checkbox" name="alert-dest" value="London" style="width: 16px; height: 16px; accent-color: #c3122e;"> London</label>
+                                <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; color: #334155; cursor: pointer;"><input type="checkbox" name="alert-dest" value="Paris" style="width: 16px; height: 16px; accent-color: #c3122e;"> Paris</label>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: #1e293b;">Preferred Airline</label>
+                            <select id="alert-airline" style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; font-family: 'Outfit', sans-serif;">
+                                <option value="Any Airline">Any Airline</option>
+                                <option value="Emirates">Emirates</option>
+                                <option value="Qatar Airways">Qatar Airways</option>
+                                <option value="Singapore Airlines">Singapore Airlines</option>
+                                <option value="SriLankan Airlines">SriLankan Airlines</option>
+                            </select>
+                        </div>
+                        
+                        <div style="display: flex; gap: 20px; align-items: center; padding: 10px 0;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: #334155;">
+                                <input type="checkbox" id="alert-email-notify" checked style="width: 18px; height: 18px; accent-color: #c3122e;"> Email Notification
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: #334155;">
+                                <input type="checkbox" id="alert-sms-notify" style="width: 18px; height: 18px; accent-color: #c3122e;"> SMS Notification
+                            </label>
+                        </div>
+                        
+                        <div>
+                            <button type="submit" class="btn-primary" style="width: 100%;"><i class="fa-solid fa-plus" style="margin-right: 8px;"></i> Add to Favorites</button>
+                        </div>
+                    </form>
+                    <div id="alert-message" style="margin-top: 15px; font-weight: 600; font-size: 14px; text-align: center; display: none;"></div>
+                </div>
+                
+                <h3 style="margin: 0 0 20px 0; color: #0f172a; font-size: 20px;">Your Active Alerts</h3>
+                <div id="list-alerts" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+                    {% if price_alerts_data %}
+                        {% for alert in price_alerts_data %}
+                        <div style="background: white; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.03); display: flex; flex-direction: column; position: relative;">
+                            <div style="position: absolute; top: 15px; right: 15px; color: #fbbf24; font-size: 20px;">
+                                <i class="fa-solid fa-star"></i>
+                            </div>
+                            <div style="font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-bottom: 5px;">Destination</div>
+                            <div style="font-size: 20px; font-weight: 800; color: #1e293b; margin-bottom: 15px;">{{ alert.destination }}</div>
+                            
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; font-size: 14px; color: #475569;">
+                                <i class="fa-solid fa-plane"></i> {{ alert.airline }}
+                            </div>
+                            
+                            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                                {% if alert.notify_email %}
+                                <span style="background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;"><i class="fa-solid fa-envelope" style="color: #3b82f6;"></i> Email</span>
+                                {% endif %}
+                                {% if alert.notify_sms %}
+                                <span style="background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;"><i class="fa-solid fa-comment-sms" style="color: #10b981;"></i> SMS</span>
+                                {% endif %}
+                            </div>
+                            
+                            <button onclick="deletePriceAlert({{ alert.id }})" style="margin-top: auto; background: #fff1f2; color: #ef4444; border: 1px solid #fecdd3; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: 600; font-family: 'Outfit', sans-serif; transition: all 0.2s;"><i class="fa-regular fa-trash-can"></i> Remove Alert</button>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div style="grid-column: 1 / -1; background: white; border-radius: 12px; padding: 40px; text-align: center; border: 1px dashed #cbd5e1;">
+                            <i class="fa-regular fa-bell-slash" style="font-size: 48px; color: #cbd5e1; margin-bottom: 15px;"></i>
+                            <h4 style="margin: 0 0 10px 0; color: #64748b; font-size: 16px; font-weight: 600;">No Price Alerts Setup</h4>
+                            <p style="color: #94a3b8; margin: 0; font-size: 13px;">Add your favorite destinations above to start receiving special offers.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
             <script>
                 function filterBookings(type) {
                     const input = document.getElementById('search-' + type);
@@ -690,20 +780,22 @@
                     const tabCancelled = document.getElementById('tab-cancelled');
                     const tabHolidays = document.getElementById('tab-holidays');
                     const tabHotels = document.getElementById('tab-hotels');
+                    const tabAlerts = document.getElementById('tab-alerts');
                     
                     const secActive = document.getElementById('section-active');
                     const secCancelled = document.getElementById('section-cancelled');
                     const secHolidays = document.getElementById('section-holidays');
                     const secHotels = document.getElementById('section-hotels');
+                    const secAlerts = document.getElementById('section-alerts');
 
-                    [tabActive, tabCancelled, tabHolidays, tabHotels].forEach(t => {
+                    [tabActive, tabCancelled, tabHolidays, tabHotels, tabAlerts].forEach(t => {
                         if (t) {
                             t.style.color = '#64748b';
                             t.style.borderBottomColor = 'transparent';
                             t.style.fontWeight = '600';
                         }
                     });
-                    [secActive, secCancelled, secHolidays, secHotels].forEach(s => {
+                    [secActive, secCancelled, secHolidays, secHotels, secAlerts].forEach(s => {
                         if (s) s.style.display = 'none';
                     });
 
@@ -735,6 +827,79 @@
                             tabHotels.style.fontWeight = '700';
                         }
                         if (secHotels) secHotels.style.display = 'block';
+                    } else if (tab === 'alerts') {
+                        if (tabAlerts) {
+                            tabAlerts.style.color = '#c3122e';
+                            tabAlerts.style.borderBottomColor = '#c3122e';
+                            tabAlerts.style.fontWeight = '700';
+                        }
+                        if (secAlerts) secAlerts.style.display = 'block';
+                    }
+                }
+                
+                async function addPriceAlert(e) {
+                    e.preventDefault();
+                    const email = document.getElementById('alert-email').value;
+                    const mobile = document.getElementById('alert-mobile').value;
+                    
+                    const checkedDests = document.querySelectorAll('input[name="alert-dest"]:checked');
+                    const destination = Array.from(checkedDests).map(cb => cb.value);
+                    
+                    const airline = document.getElementById('alert-airline').value;
+                    const notify_email = document.getElementById('alert-email-notify').checked;
+                    const notify_sms = document.getElementById('alert-sms-notify').checked;
+                    
+                    const msgDiv = document.getElementById('alert-message');
+                    
+                    if (!email && !mobile) {
+                        msgDiv.style.display = 'block';
+                        msgDiv.style.color = '#ef4444';
+                        msgDiv.innerText = 'Email or Mobile must be synced to your bookings to save alerts!';
+                        return;
+                    }
+                    if (destination.length === 0) {
+                        msgDiv.style.display = 'block';
+                        msgDiv.style.color = '#ef4444';
+                        msgDiv.innerText = 'Please select at least one destination!';
+                        return;
+                    }
+                    if (!notify_email && !notify_sms) {
+                        msgDiv.style.display = 'block';
+                        msgDiv.style.color = '#ef4444';
+                        msgDiv.innerText = 'Please select at least one notification method!';
+                        return;
+                    }
+                    
+                    const res = await fetch('/api/b2c/alerts/add', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ email, mobile, destination, airline, notify_email, notify_sms })
+                    });
+                    const data = await res.json();
+                    
+                    msgDiv.style.display = 'block';
+                    if(data.success) {
+                        msgDiv.style.color = '#10b981';
+                        msgDiv.innerText = 'Favorite destination added! Reloading...';
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        msgDiv.style.color = '#ef4444';
+                        msgDiv.innerText = data.error;
+                    }
+                }
+                
+                async function deletePriceAlert(id) {
+                    if(!confirm('Are you sure you want to remove this price alert?')) return;
+                    const res = await fetch('/api/b2c/alerts/delete', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ id })
+                    });
+                    const data = await res.json();
+                    if(data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.error);
                     }
                 }
             </script>

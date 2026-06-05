@@ -1,0 +1,373 @@
+Comparing files D:\GS\SYSTEM-FRD-AIRLINE\TEMPLATES\flight_results.html and D:\GS\SYSTEM-FRD-AIRLINE\TEMPLATES\B2C_FLIGHT_RESULTS.HTML
+***** D:\GS\SYSTEM-FRD-AIRLINE\TEMPLATES\flight_results.html
+            color: #ffffff !important;
+            box-shadow: 0 0 8px rgba(0, 59, 149, 0.4);
+            font-weight: bold;
+***** D:\GS\SYSTEM-FRD-AIRLINE\TEMPLATES\B2C_FLIGHT_RESULTS.HTML
+            color: #ffffff !important;
+            box-shadow: 0 0 8px rgba(172, 3, 28, 0.4);
+            font-weight: bold;
+*****
+
+***** D:\GS\SYSTEM-FRD-AIRLINE\TEMPLATES\flight_results.html
+    <header class="results-header">
+        <div class="header-brand"><i class="fa-solid fa-plane-departure"></i> Flight Hub Results</div>
+        <div>Logged in as {{ agent.company_name }}</div>
+    </header>
+***** D:\GS\SYSTEM-FRD-AIRLINE\TEMPLATES\B2C_FLIGHT_RESULTS.HTML
+    <header class="results-header">
+        <a href="/b2c" class="header-brand" style="text-decoration: none; color: inherit;"><i class="fa-solid fa-plane-departur
+e"></i> Aeronexa Flight Results</a>
+    </header>
+*****
+
+***** D:\GS\SYSTEM-FRD-AIRLINE\TEMPLATES\flight_results.html
+            <!-- Transit Info Banner -->
+            <div class="transit-info-banner" style="background: var(--blue-tint); border: 1px solid rgba(0, 59, 149, 0.2); bord
+er-radius: 4px; padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--primary-dark);
+***** D:\GS\SYSTEM-FRD-AIRLINE\TEMPLATES\B2C_FLIGHT_RESULTS.HTML
+            <!-- Transit Info Banner -->
+            <div class="transit-info-banner" style="background: var(--blue-tint); border: 1px solid rgba(172, 3, 28, 0.2); bord
+er-radius: 4px; padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--primary-dark);
+*****
+
+***** D:\GS\SYSTEM-FRD-AIRLINE\TEMPLATES\flight_results.html
+x; border-radius: 4px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; tran
+sition: background 0.2s;" onclick="alert('You are already signed in as {{ agent.company_name }}'); return false;">
+                                Sign In <i class="fa-solid fa-right-to-bracket"></i>
+***** D:\GS\SYSTEM-FRD-AIRLINE\TEMPLATES\B2C_FLIGHT_RESULTS.HTML
+x; border-radius: 4px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; tran
+sition: background 0.2s;" onclick="alert('You are browsing as a guest'); return false;">
+                                Sign In <i class="fa-solid fa-right-to-bracket"></i>
+*****
+
+***** D:\GS\SYSTEM-FRD-AIRLINE\TEMPLATES\flight_results.html
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <!-- Option 1: Deduct from Available Credit Balance -->
+                            <label for="pay-method-credit" style="position: relative; border: 2px solid var(--primary-blue); ba
+ckground: #f0f9ff; border-radius: 8px; padding: 15px; cursor: pointer; display: flex; align-items: flex-start; gap: 12px; trans
+ition: all 0.2s;" id="pay-tile-credit">
+                                <input type="radio" id="pay-method-credit" name="payment_method_option" value="credit" checked 
+onchange="updatePaymentSelection('credit')" style="margin-top: 3px; width: 18px; height: 18px; accent-color: var(--primary-blue
+);">
+                                <div style="display: flex; flex-direction: column; gap: 3px;">
+                                    <span style="font-size: 14.5px; font-weight: 700; color: #0369a1; display: flex; align-item
+s: center; gap: 6px;">
+                                        <i class="fa-solid fa-wallet"></i> Deduct from Available Credit Balance
+                                    </span>
+                                    <span style="font-size: 12.5px; color: #64748b;">Instantly deduct the invoice value from yo
+ur pre-funded agency account.</span>
+                                </div>
+***** D:\GS\SYSTEM-FRD-AIRLINE\TEMPLATES\B2C_FLIGHT_RESULTS.HTML
+                        
+                        <div style="display: grid; grid-template-columns: 1fr; gap: 15px;">
+                            <!-- Option: Pay via Corporate Credit Card / PG -->
+                            <label for="pay-method-card" style="position: relative; border: 2px solid var(--primary-blue); back
+ground: #f0f9ff; border-radius: 8px; padding: 15px; cursor: pointer; display: flex; align-items: flex-start; gap: 12px; transit
+ion: all 0.2s;" id="pay-tile-card">
+                                <input type="radio" id="pay-method-card" name="payment_method_option" value="card" checked onch
+ange="updatePaymentSelection('card')" style="margin-top: 3px; width: 18px; height: 18px; accent-color: var(--primary-blue);">
+                                <div style="display: flex; flex-direction: column; gap: 3px;">
+                                    <span style="font-size: 14.5px; font-weight: 700; color: #334155; display: flex; align-item
+s: center; gap: 6px;">
+                                        <i class="fa-solid fa-credit-card"></i> Pay via Credit/Debit Card (PG)
+                                    </span>
+                                    <span style="font-size: 12.5px; color: #64748b;">Secure checkout via our payment gateway. S
+upports Visa, MasterCard & AMEX.</span>
+                                </div>
+*****
+
+***** D:\GS\SYSTEM-FRD-AIRLINE\TEMPLATES\flight_results.html
+                            </label>
+                            
+                            <!-- Option 2: Pay via Corporate Credit Card / PG -->
+                            <label for="pay-method-card" style="position: relative; border: 1px solid #e2e8f0; background: #fff
+fff; border-radius: 8px; padding: 15px; cursor: pointer; display: flex; align-items: flex-start; gap: 12px; transition: all 0.2
+s;" id="pay-tile-card">
+                                <input type="radio" id="pay-method-card" name="payment_method_option" value="card" onchange="up
+datePaymentSelection('card')" style="margin-top: 3px; width: 18px; height: 18px; accent-color: var(--primary-blue);">
+                                <div style="display: flex; flex-direction: column; gap: 3px;">
+                                    <span style="font-size: 14.5px; font-weight: 700; color: #334155; display: flex; align-item
+s: center; gap: 6px;">
+                                        <i class="fa-solid fa-credit-card"></i> Pay via Credit/Debit Card (PG)
+                                    </span>
+                                    <span style="font-size: 12.5px; color: #64748b;">Secure checkout via our payment gateway. S
+upports Visa, MasterCard & AMEX.</span>
+                                </div>
+                            </label>
+                        </div>
+***** D:\GS\SYSTEM-FRD-AIRLINE\TEMPLATES\B2C_FLIGHT_RESULTS.HTML
+                            </label>
+                        </div>
+*****
+
+***** D:\GS\SYSTEM-FRD-AIRLINE\TEMPLATES\flight_results.html
+                    <!-- Payment Gateway Card Form Container -->
+                    <div id="card-payment-form" style="display: none; background: #fafafa; border: 1px solid #e2e8f0; border-ra
+dius: 8px; padding: 20px; margin-top: 15px; transition: all 0.3s ease;">
+                        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 25px; align-items: center;">
+***** D:\GS\SYSTEM-FRD-AIRLINE\TEMPLATES\B2C_FLIGHT_RESULTS.HTML
+                    <!-- Payment Gateway Card Form Container -->
+                    <div id="card-payment-form" style="display: block; background: #fafafa; border: 1px solid #e2e8f0; border-r
+adius: 8px; padding: 20px; margin-top: 15px; transition: all 0.3s ease;">
+                        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 25px; align-items: center;">
+*****
+
+***** D:\GS\SYSTEM-FRD-AIRLINE\TEMPLATES\flight_results.html
+                            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase
+;">Total Price (Inclusive of Taxes)</span>
+                            
+***** D:\GS\SYSTEM-FRD-AIRLINE\TEMPLATES\B2C_FLIGHT_RESULTS.HTML
+                            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase
+;">Flight Price</span>
+                            <div id="summary-flight-price" style="font-size: 16px; font-weight: 800; color: #1e293b; margin-bot
+tom: 5px;">LKR 0</div>
+                            
+                            {% if session.get('modifying_booking_id') %}
+                            <span style="font-size: 12px; color: #10b981; font-weight: 600; text-transform: uppercase;">Previou
+s Ticket Credit</span>
+                            <div style="font-size: 16px; font-weight: 800; color: #10b981; margin-bottom: 5px;">- LKR {{ "{:,.2
+f}".format(modifying_old_price) }}</div>
+                            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase
+; margin-top: 5px;">Total Balance to Pay</span>
+                            {% else %}
+                            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase
+;">Total Price (Inclusive of Taxes)</span>
+                            {% endif %}
+                            
+*****
+
+***** D:\GS\SYSTEM-FRD-AIRLINE\TEMPLATES\flight_results.html
+            const infants = urlParams.get('infants') || '0';
+            window.searchAdults = parseInt(adults) || 1;
+            window.searchChildren = parseInt(children) || 0;
+            window.searchInfants = parseInt(infants) || 0;
+            window.totalTravelers = window.searchAdults + window.searchChildren + window.searchInfants;
+***** D:\GS\SYSTEM-FRD-AIRLINE\TEMPLATES\B2C_FLIGHT_RESULTS.HTML
+            const infants = urlParams.get('infants') || '0';
+            window.searchAdults = parseInt(adults);
+            window.searchChildren = parseInt(children);
+            window.searchInfants = parseInt(infants);
+            window.totalTravelers = window.searchAdults + window.searchChildren + window.searchInfants;
+*****
+
+***** D:\GS\SYSTEM-FRD-AIRLINE\TEMPLATES\flight_results.html
+            
+            document.getElementById('summary-adults').innerText = window.searchAdults;
+            document.getElementById('summary-children').innerText = window.searchChildren;
+            document.getElementById('summary-infant').innerText = window.searchInfants;
+
+***** D:\GS\SYSTEM-FRD-AIRLINE\TEMPLATES\B2C_FLIGHT_RESULTS.HTML
+            
+            document.getElementById('summary-adults').innerText = adults;
+            document.getElementById('summary-children').innerText = children;
+            document.getElementById('summary-infant').innerText = infants;
+
+*****
+
+Resync Failed.  Files are too different.
+***** D:\GS\SYSTEM-FRD-AIRLINE\TEMPLATES\flight_results.html
+
+        function getTravelerFormHtml(index, type, subIndex) {
+            const titleLabel = type === 'adult' ? `Adult ${subIndex}` : type === 'child' ? `Child ${subIndex} (2-11 YRS)` : `In
+fant ${subIndex} (Under 2 YRS)`;
+            const titleOptions = type === 'adult' 
+                ? `<option value="Mr">Mr</option><option value="Mrs">Mrs</option><option value="Miss">Miss</option><option valu
+e="Ms">Ms</option>`
+                : `<option value="Mstr">Mstr</option><option value="Miss">Miss</option>`;
+                
+            const flyerHtml = type === 'adult' ? `
+                <!-- Frequent Flyer Expansion -->
+                <div id="flyer-toggle-${index}" style="color: #0284c7; font-size: 13px; font-weight: 700; cursor: pointer; marg
+in-top: 15px; display: inline-flex; align-items: center; gap: 6px;" onclick="toggleFrequentFlyer(${index})">
+                    <span id="flyer-toggle-sign-${index}">+</span> Add optional ( <span style="text-decoration: underline;">Fre
+quent Flyer Number</span> )
+                </div>
+                
+                <!-- Frequent Flyer Expansion Container -->
+                <div id="flyer-container-${index}" class="frequent-flyer-box" style="display: none; background: #ffffff; border
+: 1px solid #e2e8f0; border-radius: 6px; padding: 15px; margin-top: 12px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 12.5px; font-weight: 700; color: #334155; width: 150px;">Frequent Flyer Pro
+gram</span>
+                            <select id="book-flyer-program-${index}" style="flex: 1; padding: 10px 12px; border: 1px solid #cbd
+5e1; border-radius: 6px; font-size: 14px; background: white;" onchange="updateFrequentFlyerPrefix(${index})">
+                                <option value="UL">Fly Smiles</option>
+                                <option value="EY">Etihad Guest</option>
+                                <option value="EK">Emirates Skywards</option>
+                                <option value="SQ">Singapore KrisFlyer</option>
+                                <option value="OTHER">Other Airlines</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 12.5px; font-weight: 700; color: #334155;">Frequent Flyer Number</span>
+                            <div style="display: flex; flex: 1; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden
+; background: white;">
+                                <span id="ff-prefix-${index}" style="background: #f1f5f9; padding: 10px 12px; font-size: 14px; 
+border-right: 1px solid #cbd5e1; color: #64748b; font-weight: bold;">UL-</span>
+                                <input type="text" id="book-flyer-number-${index}" placeholder="Your Flyer Number" style="borde
+r: none; outline: none; padding: 10px 12px; font-size: 14px; flex: 1;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ` : '';
+
+            return `
+                <div class="traveler-details-card" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; p
+adding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                    <!-- Collapsible Header -->
+                    <div class="traveler-header" onclick="toggleTravelerDetails(${index})" style="display: flex; justify-conten
+t: space-between; align-items: center; font-size: 16px; font-weight: 700; color: #1e293b; cursor: pointer; padding-bottom: 12px
+; border-bottom: 1px solid #e2e8f0; margin-bottom: 18px;">
+                        <span style="display: flex; align-items: center; gap: 8px; color: #1e293b;">
+                            <span style="position: relative; display: inline-flex; align-items: center; justify-content: center
+; width: 28px; height: 28px; background: #e0f2fe; color: #0284c7; border-radius: 50%;">
+                                <i class="fa-solid fa-user" style="font-size: 14px;"></i>
+                                <i class="fa-solid fa-circle-check" style="position: absolute; bottom: -2px; right: -2px; font-
+size: 10px; color: #10b981; background: white; border-radius: 50%;"></i>
+                            </span>
+                            ${titleLabel}
+                        </span>
+                        <i class="fa-solid fa-chevron-down" id="traveler-chevron-${index}" style="color: #64748b; font-size: 14
+px;"></i>
+                    </div>
+                    
+                    <div id="traveler-form-body-${index}">
+                        <!-- Passenger Name Fields -->
+                        <div style="display: grid; grid-template-columns: 140px 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                            <div>
+                                <label style="display:block; font-size:12.5px; font-weight:700; color:#334155; margin-bottom:6p
+x;">Title</label>
+                                <select id="book-title-${index}" class="form-control" onchange="updateFormattedPaxName()" style
+="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white; outline: 
+none; transition: border-color 0.2s;">
+                                    ${titleOptions}
+                                </select>
+                            </div>
+                            <div style="display: flex; flex-direction: column; justify-content: flex-end;">
+                                <input type="text" id="book-lastname-${index}" placeholder="Surnames (Lastnames)" required onin
+put="updateFormattedPaxName()" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size
+: 14px; background: white; outline: none; transition: border-color 0.2s;">
+                            </div>
+                            <div style="display: flex; flex-direction: column; justify-content: flex-end;">
+                                <input type="text" id="book-firstname-${index}" placeholder="Other Names (Firstnames)" required
+ oninput="updateFormattedPaxName()" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font
+-size: 14px; background: white; outline: none; transition: border-color 0.2s;">
+                            </div>
+                        </div>
+                        
+                        <!-- Date of Birth (DOB) -->
+                        <div style="display: grid; grid-template-columns: 140px 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; al
+ign-items: center;">
+                            <label style="font-size:12.5px; font-weight:700; color:#334155; margin-bottom: 0;">Date of Birth</l
+abel>
+                            <div>
+                                <select id="book-dob-day-${index}" required style="width: 100%; padding: 10px 12px; border: 1px
+ solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white;"></select>
+                            </div>
+***** D:\GS\SYSTEM-FRD-AIRLINE\TEMPLATES\B2C_FLIGHT_RESULTS.HTML
+
+        // Helper: Populate DOB and Expiry date dropdowns
+        function populateDobAndExpiryDropdowns() {
+            const days = document.querySelectorAll('#book-dob-day, #book-exp-day');
+            const months = document.querySelectorAll('#book-dob-month, #book-exp-month');
+            const dobYearSelect = document.getElementById('book-dob-year');
+            const expYearSelect = document.getElementById('book-exp-year');
+            
+            // Only populate if they are not already filled
+            if (days[0].options.length > 0) return;
+            
+            days.forEach(sel => {
+                sel.innerHTML = '<option value="">Day</option>';
+                for (let d = 1; d <= 31; d++) {
+                    const dStr = String(d).padStart(2, '0');
+                    sel.innerHTML += `<option value="${dStr}">${d}</option>`;
+                }
+            });
+            
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            months.forEach(sel => {
+                sel.innerHTML = '<option value="">Month</option>';
+                monthNames.forEach((m, idx) => {
+                    const mVal = String(idx + 1).padStart(2, '0');
+                    sel.innerHTML += `<option value="${mVal}">${m}</option>`;
+                });
+            });
+            
+            // DOB years (1920 to current year)
+            const currentYear = new Date().getFullYear();
+            dobYearSelect.innerHTML = '<option value="">Year</option>';
+            for (let y = currentYear; y >= 1920; y--) {
+                dobYearSelect.innerHTML += `<option value="${y}">${y}</option>`;
+            }
+            
+            // Expiry years (current year to 20 years in future)
+            expYearSelect.innerHTML = '<option value="">Year</option>';
+            for (let y = currentYear; y <= currentYear + 20; y++) {
+                expYearSelect.innerHTML += `<option value="${y}">${y}</option>`;
+            }
+        }
+        
+        // Helper: Toggle traveler card visibility
+        function toggleTravelerDetails() {
+            const body = document.getElementById('traveler-form-body');
+            const chev = document.getElementById('traveler-chevron');
+            if (body.style.display === 'none') {
+                body.style.display = 'block';
+                chev.className = 'fa-solid fa-chevron-down';
+            } else {
+                body.style.display = 'none';
+                chev.className = 'fa-solid fa-chevron-right';
+            }
+        }
+        
+        // Helper: Toggle Frequent Flyer program
+        function toggleFrequentFlyer() {
+            const container = document.getElementById('flyer-container');
+            const sign = document.getElementById('flyer-toggle-sign');
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+                sign.innerText = '-';
+            } else {
+                container.style.display = 'none';
+                sign.innerText = '+';
+            }
+        }
+        
+        // Helper: Concatenate title, first and last name to book-pax-name
+        function updateFormattedPaxName() {
+            let allNames = [];
+            for (let i = 1; i <= window.totalTravelers; i++) {
+                const title = document.getElementById(`book-title-${i}`).value;
+                const lastname = document.getElementById(`book-lastname-${i}`).value.trim();
+                const firstname = document.getElementById(`book-firstname-${i}`).value.trim();
+                if (firstname || lastname) {
+                    allNames.push(`${title} ${firstname} ${lastname}`.trim());
+                }
+            }
+            document.getElementById('book-pax-name').value = allNames.join(' & ');
+        }
+        
+        // Helper: Synchronize mobile, email, passport to original form hidden fields
+        function syncFormValues() {
+            // Names
+            updateFormattedPaxName();
+
+            // Passports
+            let allPassports = [];
+            for (let i = 1; i <= window.totalTravelers; i++) {
+                const el = document.getElementById(`book-passport-new-${i}`);
+                const passport = el ? el.value.trim() : '';
+                if (passport) {
+                    allPassports.push(passport);
+                }
+            }
+            document.getElementById('book-passport').value = allPassports.join(', ');
+            
+            // Mobile
+            let allMobiles = [];
+*****
+

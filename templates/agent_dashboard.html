@@ -97,7 +97,7 @@
                     </button>
                     <div class="welcome-section">
                         <h1 id="welcome-message">Hello, {{ agent.username }}!</h1>
-                        <p>Access GDS, NDC, LCC ticketing systems from a unified console.</p>
+                        <p>Access Flight API ticketing systems from a unified console.</p>
                     </div>
                 </div>
                 
@@ -201,7 +201,7 @@
                     <div class="card-header">
                         <div class="card-title">
                             <i class="fa-solid fa-fire" style="color: var(--primary);"></i>
-                            <span>ATL Flyers - Daily Lowest Available Fares (NDC & GDS)</span>
+                            <span>ATL Flyers - Daily Lowest Available Fares (NDC & API)</span>
                         </div>
                     </div>
                     <div class="table-responsive">
@@ -210,7 +210,7 @@
                                 <tr>
                                     <th>Sector Route</th>
                                     <th>Airline Carrier</th>
-                                    <th>Standard GDS/LCC</th>
+                                    <th>Standard API/LCC</th>
                                     <th>Lowest Available Fare</th>
                                     <th>Action</th>
                                 </tr>
@@ -344,7 +344,7 @@
                             <label>Fare Segment Channel</label>
                             <select id="flight-channel" class="form-control">
                                 <option value="ALL">All Consolidated Fares</option>
-                                <option value="GDS">Flight Hub GDS Fares</option>
+                                <option value="GDS">Aeronexa API Fares</option>
                                 <option value="LCC">LCC Low Cost Fares</option>
                                 <option value="NDC">NDC Direct Connect Fares</option>
                             </select>
@@ -532,11 +532,11 @@
                     <div class="card-header">
                         <div class="card-title">
                             <i class="fa-solid fa-rectangle-xmark" style="color: var(--danger);"></i>
-                            <span>Instant Booking Cancellation & GDS TRF Refund Console</span>
+                            <span>Instant Booking Cancellation & Instant TRF Refund Console</span>
                         </div>
                     </div>
                     <p style="color: var(--text-muted); font-size:13.5px; margin-bottom:25px;">
-                        Cancel active reservations (Voiding for non-ticketed bookings) or request instant Ticket Refund Functionality (TRF) GDS refund back to your agency credit wallet.
+                        Cancel active reservations (Voiding for non-ticketed bookings) or request instant Ticket Refund Functionality (TRF) API refund back to your agency credit wallet.
                     </p>
                     
                     <div class="table-responsive">
@@ -885,7 +885,7 @@
                     </div>
                 </div>
 
-                <!-- Amadeus Penalty Notification simulation -->
+                <!-- Airline Penalty Notification -->
                 <div class="penalty-notifier-box" style="margin-top:20px; background: rgba(195, 18, 46, 0.04); border: 1px solid rgba(195, 18, 46, 0.15); margin-bottom: 0;">
                     <i class="fa-solid fa-circle-info" style="color:var(--primary);"></i>
                     <div>

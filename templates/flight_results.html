@@ -552,7 +552,7 @@
     <div class="modal-overlay" id="booking-modal">
         <div class="modal-content" style="width: 850px; max-width: 95vw; border-radius: 12px; padding: 25px 30px; background: #ffffff; box-shadow: 0 10px 30px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto;">
             <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-                <span id="booking-modal-title" style="font-weight: 700; font-size: 20px; color: var(--primary-dark);"><i class="fa-solid fa-plane-departure" style="margin-right: 8px;"></i>GDS Flight Booking Confirmation</span>
+                <span id="booking-modal-title" style="font-weight: 700; font-size: 20px; color: var(--primary-dark);"><i class="fa-solid fa-plane-departure" style="margin-right: 8px;"></i>Flight Booking Confirmation</span>
                 <span class="modal-close" onclick="closeBookingModal()" style="font-size: 24px; cursor: pointer; color: var(--text-muted);">&times;</span>
             </div>
             
@@ -867,7 +867,7 @@
                 <div style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: 6px; padding: 12px 15px; display: flex; gap: 10px; align-items: flex-start;">
                     <i class="fa-solid fa-triangle-exclamation" style="color: #d97706; margin-top: 2px;"></i>
                     <div style="font-size: 12px; color: #b45309; line-height: 1.4;">
-                        <strong>Important Security Advisory:</strong> This ticketing request is submitted directly to GDS. Once proceed is clicked, it cannot be aborted, and standard cancellation/reissue penalties will apply.
+                        <strong>Important Security Advisory:</strong> This ticketing request is submitted directly to API. Once proceed is clicked, it cannot be aborted, and standard cancellation/reissue penalties will apply.
                     </div>
                 </div>
             </div>
@@ -1486,12 +1486,12 @@
                     
                     applyFilters();
                 } else {
-                    document.getElementById('flight-list-container').innerHTML = `<div class="loading-state">Error fetching flights: ${data.message || 'Unknown GDS error'}</div>`;
+                    document.getElementById('flight-list-container').innerHTML = `<div class="loading-state">Error fetching flights: ${data.message || 'Unknown API error'}</div>`;
                 }
             })
             .catch(err => {
                 flightsLoaded = true;
-                document.getElementById('flight-list-container').innerHTML = `<div class="loading-state">Error fetching flights from GDS consolidation servers.</div>`;
+                document.getElementById('flight-list-container').innerHTML = `<div class="loading-state">Error fetching flights from API consolidation servers.</div>`;
             });
         }
 
@@ -1600,7 +1600,7 @@
                 const fPriceLkr = parseFloat(f.price) * (window.totalTravelers || 1);
                 if (fPriceLkr > maxPrice) return false;
                 
-                // Fare Type (GDS=Refundable, LCC=Non Refundable)
+                // Fare Type (API=Refundable, LCC=Non Refundable)
                 const isRef = f.flight_type !== 'LCC';
                 if (isRef && !fareTypes.includes('REFUNDABLE')) return false;
                 if (!isRef && !fareTypes.includes('NON_REFUNDABLE')) return false;
@@ -1719,7 +1719,7 @@
 
         function getSourceBadge(f) {
             let source = (f.gds_source || f.flight_type || '').toUpperCase();
-            if (source === 'AMADEUS' || source === 'SABRE') {
+            if (source === 'AERONEXA' || source === 'OTHER') {
                 source = 'GDS';
             }
             
@@ -2774,11 +2774,11 @@
             const submitBtn = document.getElementById('book-submit-btn');
             
             if (ticketNow) {
-                titleEl.innerHTML = `<i class="fa-solid fa-plane-departure" style="margin-right: 8px;"></i>GDS Flight Instant Issuance`;
+                titleEl.innerHTML = `<i class="fa-solid fa-plane-departure" style="margin-right: 8px;"></i>Flight Instant Issuance`;
                 submitBtn.innerText = "Book Ticket Now";
                 submitBtn.style.background = 'var(--success-green)';
             } else {
-                titleEl.innerHTML = `<i class="fa-solid fa-plane-departure" style="margin-right: 8px;"></i>GDS Flight Hold (HOLD for FREE)`;
+                titleEl.innerHTML = `<i class="fa-solid fa-plane-departure" style="margin-right: 8px;"></i>Flight Hold (HOLD for FREE)`;
                 submitBtn.innerText = "Hold Booking (Free)";
                 submitBtn.style.background = '#ff8c00';
             }
@@ -3332,7 +3332,7 @@ function printReceipt() {
             }
 
             // Populate table values
-            document.getElementById('receipt-pnr').innerText = data.pnr_reference || 'PNR-GDS' + Math.floor(Math.random() * 900000 + 100000);
+            document.getElementById('receipt-pnr').innerText = data.pnr_reference || 'PNR-API' + Math.floor(Math.random() * 900000 + 100000);
             if (data.ticket_numbers && data.ticket_numbers.length > 0) {
                 let formattedTkts = '';
                 data.ticket_numbers.forEach((tkt, idx) => {
@@ -3384,7 +3384,7 @@ function printReceipt() {
             
             const submitBtn = document.getElementById('book-submit-btn');
             submitBtn.disabled = true;
-            submitBtn.innerText = "Processing GDS transaction...";
+            submitBtn.innerText = "Processing transaction...";
             
             fetch('/api/flights/book', {
                 method: 'POST',
@@ -3559,7 +3559,7 @@ function printReceipt() {
                 // Otherwise submit card or non-ticket hold immediately
                 const submitBtn = document.getElementById('book-submit-btn');
                 submitBtn.disabled = true;
-                submitBtn.innerText = "Processing GDS transaction...";
+                submitBtn.innerText = "Processing transaction...";
                 
                 fetch('/api/flights/book', {
                     method: 'POST',

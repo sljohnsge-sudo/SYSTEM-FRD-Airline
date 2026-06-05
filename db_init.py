@@ -195,6 +195,18 @@ def initialize_database():
                     FOREIGN KEY (booking_id) REFERENCES b2c_bookings(id) ON DELETE CASCADE
                 ) ENGINE=InnoDB;
             """,
+            "b2c_price_alerts": """
+                CREATE TABLE b2c_price_alerts (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    email VARCHAR(100) NOT NULL,
+                    mobile VARCHAR(30) NOT NULL,
+                    destination VARCHAR(100) NOT NULL,
+                    airline VARCHAR(100) DEFAULT 'Any Airline',
+                    notify_email BOOLEAN DEFAULT TRUE,
+                    notify_sms BOOLEAN DEFAULT FALSE,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB;
+            """,
             "hotel_bookings": """
                 CREATE TABLE hotel_bookings (
                     id INT AUTO_INCREMENT PRIMARY KEY,

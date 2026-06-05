@@ -212,6 +212,7 @@ def b2c_my_bookings():
     history_data = []
     hotel_history_data = []
     holiday_history_data = []
+    price_alerts_data = []
     error = None
     b2c_user = session.get('b2c_user')
     search_email = session.get('b2c_search_email')
@@ -351,14 +352,34 @@ def b2c_my_bookings():
                 c.execute(holiday_query, tuple(final_holiday_params))
                 holiday_history_data = c.fetchall()
                 
-            if request.method == "POST" and not history_data and not hotel_history_data and not holiday_history_data:
+            # Step 5: Fetch price alerts using expanded email & mobile set
+            final_alerts_where = []
+            final_alerts_params = []
+            if emails:
+                final_alerts_where.append(f"email IN ({', '.join(['%s'] * len(emails))})")
+                final_alerts_params.extend(list(emails))
+            if mobiles:
+                final_alerts_where.append(f"mobile IN ({', '.join(['%s'] * len(mobiles))})")
+                final_alerts_params.extend(list(mobiles))
+                
+            if final_alerts_where:
+                alerts_query = f"""
+                    SELECT *
+                    FROM b2c_price_alerts
+                    WHERE {' OR '.join(final_alerts_where)}
+                    ORDER BY created_at DESC
+                """
+                c.execute(alerts_query, tuple(final_alerts_params))
+                price_alerts_data = c.fetchall()
+                
+            if request.method == "POST" and not history_data and not hotel_history_data and not holiday_history_data and not price_alerts_data:
                 error = "No booking history found for the provided details."
                 
         except Exception as e:
             error = f"An error occurred while loading history: {str(e)}"
             
     conn.close()
-    return render_template("b2c_my_bookings.html", booking_data=None, history_data=history_data, hotel_history_data=hotel_history_data, holiday_history_data=holiday_history_data, error=error)
+    return render_template("b2c_my_bookings.html", booking_data=None, history_data=history_data, hotel_history_data=hotel_history_data, holiday_history_data=holiday_history_data, price_alerts_data=price_alerts_data, error=error)
 
 # Route: B2C Clear Booking Search Session
 @app.route("/b2c/my-bookings/clear")
@@ -366,6 +387,73 @@ def b2c_my_bookings_clear():
     session.pop('b2c_search_email', None)
     session.pop('b2c_search_mobile', None)
     return redirect(url_for('b2c_my_bookings'))
+
+# API: Add Price Alert
+@app.route("/api/b2c/alerts/add", methods=["POST"])
+def api_b2c_alerts_add():
+    data = request.json
+    email = data.get("email", "").strip()
+    mobile = data.get("mobile", "").strip()
+    
+    destinations = data.get("destination")
+    if not destinations:
+        return jsonify({"success": False, "error": "Destination is required"}), 400
+        
+    if isinstance(destinations, str):
+        destinations = [destinations]
+        
+    airline = data.get("airline", "Any Airline").strip()
+    notify_email = data.get("notify_email", True)
+    notify_sms = data.get("notify_sms", False)
+    
+    if not email and not mobile:
+        return jsonify({"success": False, "error": "Email or mobile is required to save an alert"}), 400
+        
+    conn = get_db_connection()
+    c = conn.cursor()
+    try:
+        for dest in destinations:
+            dest = dest.strip()
+            if dest:
+                c.execute("""
+                    INSERT INTO b2c_price_alerts (email, mobile, destination, airline, notify_email, notify_sms)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """, (email, mobile, dest, airline, notify_email, notify_sms))
+        conn.commit()
+        
+        # Save to session to ensure user sees their alert immediately
+        if email: session['b2c_search_email'] = email
+        if mobile: session['b2c_search_mobile'] = mobile
+            
+        return jsonify({"success": True, "message": "Price alert created successfully!"})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        c.close()
+        conn.close()
+
+# API: Delete Price Alert
+@app.route("/api/b2c/alerts/delete", methods=["POST"])
+def api_b2c_alerts_delete():
+    data = request.json
+    alert_id = data.get("id")
+    
+    if not alert_id:
+        return jsonify({"success": False, "error": "Alert ID is required"}), 400
+        
+    conn = get_db_connection()
+    c = conn.cursor()
+    try:
+        c.execute("DELETE FROM b2c_price_alerts WHERE id = %s", (alert_id,))
+        conn.commit()
+        return jsonify({"success": True, "message": "Price alert deleted!"})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        c.close()
+        conn.close()
 
 # Holiday packages static definition
 HOLIDAY_PACKAGES = [
@@ -749,7 +837,7 @@ def get_country_flag(country_code):
     except Exception:
         return ""
 
-def resolve_iata_code(keyword, amadeus_client=None):
+def resolve_iata_code(keyword, flight_api_client=None):
     if not keyword:
         return None
         
@@ -765,10 +853,10 @@ def resolve_iata_code(keyword, amadeus_client=None):
     # Check local mapping
     if val in LOCATION_MAPPING:
         return LOCATION_MAPPING[val]
-    # Fallback to Amadeus Location Search API
-    if amadeus_client:
+    # Fallback to Location Search API
+    if flight_api_client:
         try:
-            response = amadeus_client.reference_data.locations.get(
+            response = flight_api_client.reference_data.locations.get(
                 keyword=keyword,
                 subType='CITY'
             )
@@ -793,15 +881,15 @@ def api_locations_search():
             matches.append(loc.copy())
             seen_codes.add(loc["code"])
             
-    # Then query Amadeus Reference Data API if we have a query
+    # Then query Flight API Reference Data API if we have a query
     if q and len(q) >= 2:
         try:
-            amadeus_client = Client(
+            flight_api_client = Client(
                 client_id='3ZBEyT1bTUzMUPkcEPBUOEKIAkEjgu5o',
                 client_secret='2K9Xh5GC2UF9rVo3',
                 hostname='test'
             )
-            response = amadeus_client.reference_data.locations.get(
+            response = flight_api_client.reference_data.locations.get(
                 keyword=q,
                 subType='AIRPORT,CITY'
             )
@@ -830,7 +918,7 @@ def api_locations_search():
                     matches.append(loc)
                     seen_codes.add(code)
         except Exception as e:
-            print("Amadeus Reference Data search error:", e)
+            print("Flight API Reference Data search error:", e)
             
     # Group results by country
     grouped = {}
@@ -871,19 +959,19 @@ def api_flights_search():
     airline_filter = request.args.get("airline", "").strip()
     travel_class = request.args.get("travelClass", "ECONOMY").strip()
     
-    # Initialize Amadeus client to resolve locations and query flight offers
-    amadeus = None
+    # Initialize Global client to resolve locations and query flight offers
+    flight_api = None
     try:
-        amadeus = Client(
+        flight_api = Client(
             client_id='3ZBEyT1bTUzMUPkcEPBUOEKIAkEjgu5o',
             client_secret='2K9Xh5GC2UF9rVo3',
             hostname='test'
         )
     except Exception as e:
-        print("Failed to initialize Amadeus Client:", e)
+        print("Failed to initialize Flight API Client:", e)
         
-    origin = resolve_iata_code(origin_input, amadeus)
-    destination = resolve_iata_code(destination_input, amadeus)
+    origin = resolve_iata_code(origin_input, flight_api)
+    destination = resolve_iata_code(destination_input, flight_api)
     
     # Fallback to uppercase values if resolution failed to prevent completely empty SQL matching
     if not origin:
@@ -891,10 +979,10 @@ def api_flights_search():
     if not destination:
         destination = destination_input.upper()
     
-    amadeus_flight_ids = []
-    amadeus_return_flight_ids = []
+    api_flight_ids = []
+    api_return_flight_ids = []
     
-    # Pre-fetch live GDS flights from Amadeus API and cache them in local database
+    # Pre-fetch live GDS flights from Flight API and cache them in local database
     if flight_type in ["ALL", "GDS"] and origin and destination and date_str:
         try:
             search_params = {
@@ -907,7 +995,7 @@ def api_flights_search():
             if travel_class != "ALL":
                 search_params["travelClass"] = travel_class
 
-            response = amadeus.shopping.flight_offers_search.get(**search_params)
+            response = flight_api.shopping.flight_offers_search.get(**search_params)
             
             conn = get_db_connection()
             cursor = conn.cursor()
@@ -916,7 +1004,7 @@ def api_flights_search():
                 flight_no = f"{segments[0]['carrierCode']}-{segments[0]['number']}"
                 carrier_code = segments[0]['carrierCode']
                 airline = AIRLINE_MAPPING.get(carrier_code, carrier_code)
-                # Convert Amadeus EUR to LKR (approx 325 exchange rate)
+                # Convert EUR to LKR (approx 325 exchange rate)
                 price_val = Decimal(str(f['price']['total'])) * Decimal("325.00")
                 # Keep first 19 chars for mysql datetime format (YYYY-MM-DD HH:MM:SS)
                 dept = segments[0]['departure']['at'].replace('T', ' ')[:19]
@@ -928,16 +1016,16 @@ def api_flights_search():
                     cursor.execute("SELECT id FROM flights WHERE flight_number = %s", (flight_no,))
                     row = cursor.fetchone()
                     if row:
-                        amadeus_flight_ids.append(row[0])
+                        api_flight_ids.append(row[0])
                         cursor.execute("UPDATE flights SET departure_time = %s, arrival_time = %s, price = %s WHERE id = %s", (dept, arr, price_val, row[0]))
                     else:
                         cursor.execute("""
                             INSERT INTO flights (flight_number, airline, origin, destination, departure_time, arrival_time, price, seats_available, flight_type, segment_count)
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'GDS', %s)
                         """, (flight_no, airline, origin, destination, dept, arr, price_val, f.get('numberOfBookableSeats', 9), seg_count))
-                        amadeus_flight_ids.append(cursor.lastrowid)
+                        api_flight_ids.append(cursor.lastrowid)
                 except Exception as ex:
-                    print(f"Amadeus API flight loop error for {flight_no}:", ex)
+                    print(f"Flight API flight loop error for {flight_no}:", ex)
                     
             # Pre-fetch return flights if return date is specified
             if return_date_str:
@@ -952,13 +1040,13 @@ def api_flights_search():
                     if travel_class != "ALL":
                         return_search_params["travelClass"] = travel_class
 
-                    return_response = amadeus.shopping.flight_offers_search.get(**return_search_params)
+                    return_response = flight_api.shopping.flight_offers_search.get(**return_search_params)
                     for f in return_response.data:
                         segments = f['itineraries'][0]['segments']
                         flight_no = f"{segments[0]['carrierCode']}-{segments[0]['number']}"
                         carrier_code = segments[0]['carrierCode']
                         airline = AIRLINE_MAPPING.get(carrier_code, carrier_code)
-                        # Convert Amadeus EUR to LKR (approx 325 exchange rate)
+                        # Convert EUR to LKR (approx 325 exchange rate)
                         price_val = Decimal(str(f['price']['total'])) * Decimal("325.00")
                         dept = segments[0]['departure']['at'].replace('T', ' ')[:19]
                         arr = segments[-1]['arrival']['at'].replace('T', ' ')[:19]
@@ -968,24 +1056,24 @@ def api_flights_search():
                             cursor.execute("SELECT id FROM flights WHERE flight_number = %s", (flight_no,))
                             row = cursor.fetchone()
                             if row:
-                                amadeus_return_flight_ids.append(row[0])
+                                api_return_flight_ids.append(row[0])
                                 cursor.execute("UPDATE flights SET departure_time = %s, arrival_time = %s, price = %s WHERE id = %s", (dept, arr, price_val, row[0]))
                             else:
                                 cursor.execute("""
                                     INSERT INTO flights (flight_number, airline, origin, destination, departure_time, arrival_time, price, seats_available, flight_type, segment_count)
                                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'GDS', %s)
                                 """, (flight_no, airline, destination, origin, dept, arr, price_val, f.get('numberOfBookableSeats', 9), seg_count))
-                                amadeus_return_flight_ids.append(cursor.lastrowid)
+                                api_return_flight_ids.append(cursor.lastrowid)
                         except Exception as ex:
-                            print(f"Amadeus Return API flight loop error for {flight_no}:", ex)
+                            print(f"Flight API Return flight loop error for {flight_no}:", ex)
                 except Exception as ex:
-                    print("Amadeus Return API error:", ex)
+                    print("Flight API Return error:", ex)
                     
             conn.commit()
             cursor.close()
             conn.close()
         except Exception as e:
-            print("Amadeus API error:", e)
+            print("Flight API error:", e)
  
     # Query outbound flights
     if origin and destination and date_str:
@@ -1025,15 +1113,15 @@ def api_flights_search():
         params = [origin, destination]
         
         if flight_type == "ALL":
-            if amadeus_flight_ids:
-                format_strings = ','.join(['%s'] * len(amadeus_flight_ids))
+            if api_flight_ids:
+                format_strings = ','.join(['%s'] * len(api_flight_ids))
                 query_conditions.append(f"(flight_type IN ('LCC', 'NDC') OR id IN ({format_strings}))")
-                params.extend(amadeus_flight_ids)
+                params.extend(api_flight_ids)
         elif flight_type == "GDS":
-            if amadeus_flight_ids:
-                format_strings = ','.join(['%s'] * len(amadeus_flight_ids))
+            if api_flight_ids:
+                format_strings = ','.join(['%s'] * len(api_flight_ids))
                 query_conditions.append(f"id IN ({format_strings})")
-                params.extend(amadeus_flight_ids)
+                params.extend(api_flight_ids)
             else:
                 query_conditions.append("flight_type = 'GDS'")
         else: # LCC or NDC
@@ -1152,15 +1240,15 @@ def api_flights_search():
         params = [destination, origin]
         
         if flight_type == "ALL":
-            if amadeus_return_flight_ids:
-                format_strings = ','.join(['%s'] * len(amadeus_return_flight_ids))
+            if api_return_flight_ids:
+                format_strings = ','.join(['%s'] * len(api_return_flight_ids))
                 query_conditions.append(f"(flight_type IN ('LCC', 'NDC') OR id IN ({format_strings}))")
-                params.extend(amadeus_return_flight_ids)
+                params.extend(api_return_flight_ids)
         elif flight_type == "GDS":
-            if amadeus_return_flight_ids:
-                format_strings = ','.join(['%s'] * len(amadeus_return_flight_ids))
+            if api_return_flight_ids:
+                format_strings = ','.join(['%s'] * len(api_return_flight_ids))
                 query_conditions.append(f"id IN ({format_strings})")
-                params.extend(amadeus_return_flight_ids)
+                params.extend(api_return_flight_ids)
             else:
                 query_conditions.append("flight_type = 'GDS'")
         else: # LCC or NDC
@@ -1593,10 +1681,10 @@ def api_flights_book():
 def api_hotels_search():
     location = request.args.get("location", "").strip()
     
-    # Call Amadeus API if location is provided
+    # Call Flight API if location is provided
     if location:
         try:
-            amadeus = Client(
+            flight_api = Client(
                 client_id='3ZBEyT1bTUzMUPkcEPBUOEKIAkEjgu5o',
                 client_secret='2K9Xh5GC2UF9rVo3',
                 hostname='test'
@@ -1607,7 +1695,7 @@ def api_hotels_search():
             if len(location) == 3 and location.isalpha():
                 city_code = location.upper()
             else:
-                loc_response = amadeus.reference_data.locations.get(
+                loc_response = flight_api.reference_data.locations.get(
                     keyword=location,
                     subType='CITY'
                 )
@@ -1616,7 +1704,7 @@ def api_hotels_search():
                     
             if city_code:
                 # Get hotels in that city
-                hotels_response = amadeus.reference_data.locations.hotels.by_city.get(
+                hotels_response = flight_api.reference_data.locations.hotels.by_city.get(
                     cityCode=city_code
                 )
                 
@@ -1671,7 +1759,7 @@ def api_hotels_search():
                     cursor.close()
                     conn.close()
         except Exception as e:
-            print("Amadeus Hotel API error:", e)
+            print("Hotel API error:", e)
 
     query = "SELECT * FROM hotels WHERE 1=1"
     params = []
@@ -2027,15 +2115,15 @@ def api_bookings_reissue():
         fee = cursor.fetchone()
         reissue_markup = Decimal(str(fee["amount"])) if fee else Decimal("25.00")
         
-        # Amadeus Penalty Notifier Logic
+        # Global Penalty Notifier Logic
         # Let's say penalty is 10% of old flight cost or flat $50
-        amadeus_penalty = Decimal("50.00")
+        airline_cancellation_penalty = Decimal("50.00")
         
         old_price = curr_booking["original_price"]
         new_price = new_flight["price"]
         fare_difference = max(Decimal("0.00"), new_price - old_price)
         
-        total_reissue_cost = amadeus_penalty + fare_difference + reissue_markup
+        total_reissue_cost = airline_cancellation_penalty + fare_difference + reissue_markup
         
         # Verify credit balance
         cursor.execute("SELECT credit_balance FROM users WHERE id = %s", (session["user_id"],))
@@ -2070,7 +2158,7 @@ def api_bookings_reissue():
             "success": True,
             "message": "Auto Re-Issue (ATC) processed instantly via Flight Hub!",
             "details": {
-                "amadeus_penalty": float(amadeus_penalty),
+                "airline_cancellation_penalty": float(airline_cancellation_penalty),
                 "fare_difference": float(fare_difference),
                 "service_markup": float(reissue_markup),
                 "total_charged": float(total_reissue_cost)
@@ -2109,13 +2197,13 @@ def api_bookings_refund():
         fee = cursor.fetchone()
         refund_markup = Decimal(str(fee["amount"])) if fee else Decimal("10.00")
         
-        # Amadeus penalty (typically flat $75 for refunds)
-        amadeus_penalty = Decimal("75.00")
+        # Airline penalty (typically flat $75 for refunds)
+        airline_cancellation_penalty = Decimal("75.00")
         
         original_price = booking["total_price"]
         
-        # Calculated refund value: original paid price minus Amadeus penalty and minus our refund processing fee
-        refund_amount = original_price - amadeus_penalty - refund_markup
+        # Calculated refund value: original paid price minus Airline penalty and minus our refund processing fee
+        refund_amount = original_price - airline_cancellation_penalty - refund_markup
         
         if refund_amount < 0:
             refund_amount = Decimal("0.00")
@@ -2146,7 +2234,7 @@ def api_bookings_refund():
             "message": "Ticket Refund Functionality (TRF) processed instantly! Account credited.",
             "details": {
                 "original_ticket_price": float(original_price),
-                "amadeus_cancellation_penalty": float(amadeus_penalty),
+                "airline_cancellation_penalty": float(airline_cancellation_penalty),
                 "refund_service_markup": float(refund_markup),
                 "net_refund_credited": float(refund_amount)
             }
@@ -2476,7 +2564,7 @@ def api_admin_stats():
         """)
         totals = cursor.fetchone()
         
-        # Segment counts GDS-wise (Amadeus vs Sabre vs LCC vs NDC)
+        # Segment counts GDS-wise (Global vs Sabre vs LCC vs NDC)
         cursor.execute("""
             SELECT gds_type, COUNT(id) as segments
             FROM flight_bookings
