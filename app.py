@@ -2960,5 +2960,27 @@ def chatbot_ask():
 def b2c_hotel_details():
     return render_template("b2c_hotel_details.html")
 
+# Route: B2B Hotel Details
+@app.route("/hotel-details")
+def b2b_hotel_details():
+    if "user_id" not in session or session["role"] != "agent":
+        return redirect(url_for("login"))
+    
+    agent_id = session["user_id"]
+    agent_info = query_db("SELECT * FROM users WHERE id = %s", (agent_id,), one=True)
+        
+    return render_template("hotel_details.html", agent=agent_info)
+
+# Route: B2B Hotel Booking Checkout
+@app.route("/hotel-booking")
+def b2b_hotel_booking():
+    if "user_id" not in session or session["role"] != "agent":
+        return redirect(url_for("login"))
+        
+    agent_id = session["user_id"]
+    agent_info = query_db("SELECT * FROM users WHERE id = %s", (agent_id,), one=True)
+        
+    return render_template("hotel_booking.html", agent=agent_info)
+
 if __name__ == "__main__":
     app.run(debug=True, host="127.0.0.1", port=5000)

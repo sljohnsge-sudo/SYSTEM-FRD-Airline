@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Details | Aeronexa</title>
+    <title>Hotel Details | Flight Hub B2B</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=1.0.6">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -91,8 +91,8 @@
 
     <div class="container">
         <div class="breadcrumbs">
-            <a href="/b2c">Home</a> <i class="fa-solid fa-chevron-right" style="font-size: 10px;"></i> 
-            <a href="/b2c?tab=hotels">Hotels</a> <i class="fa-solid fa-chevron-right" style="font-size: 10px;"></i> 
+            <a href="/dashboard">Home</a> <i class="fa-solid fa-chevron-right" style="font-size: 10px;"></i> 
+            <a href="/dashboard?tab=hotels">Hotels</a> <i class="fa-solid fa-chevron-right" style="font-size: 10px;"></i> 
             <span id="detail-bc-hotel-name">Loading...</span>
         </div>
         
@@ -214,7 +214,7 @@
     <footer style="background: #0f172a; color: #94a3b8; padding: 60px 0 0 0; margin-top: 60px;">
         <div style="max-width: 1100px; margin: 0 auto; padding: 0 20px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 50px;">
             <div>
-                <a href="/b2c" style="font-size: 26px; font-weight: 800; color: white; text-decoration: none; display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                <a href="/dashboard" style="font-size: 26px; font-weight: 800; color: white; text-decoration: none; display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
                     <i class="fa-solid fa-plane-departure" style="color: #c3122e;"></i> Aeronexa
                 </a>
                 <p style="font-size: 14px; line-height: 1.8; color: #64748b; margin-bottom: 24px;">Your ultimate travel companion. Powered by Flight Hub GDS & George Steuart Travel.</p>
@@ -349,7 +349,7 @@
                 checkout: checkout,
                 room_img: roomImg
             });
-            window.location.href = `/b2c/hotel-booking?${params.toString()}`;
+            window.location.href = `/hotel-booking?${params.toString()}`;
         }
     </script>
 </body>
