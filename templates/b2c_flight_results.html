@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flight Search Results - Flight Hub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
             --bg-color: #ffffff;
@@ -1716,7 +1717,7 @@
 
         function getSourceBadge(f) {
             let source = (f.gds_source || f.flight_type || '').toUpperCase();
-            if (source === 'AMADEUS' || source === 'SABRE') {
+            if (source === 'AMADEUS' || source === 'SABRE' || source === 'TRAVELPORT') {
                 source = 'GDS';
             }
             
@@ -2989,9 +2990,25 @@ function printReceipt() {
 
         function downloadTicket() {
             if (!window.currentBookingData) return;
-            document.getElementById('success-receipt-modal').style.display = 'none';
-            generateEticket(window.currentBookingData.data, window.currentBookingData.payload);
-            document.getElementById('eticket-modal').style.display = 'flex';
+            // The receipt modal contains the e-ticket
+            const element = document.querySelector('#success-receipt-modal > div');
+            
+            // We temporarily hide the buttons before generating PDF
+            const buttonsDiv = element.querySelector('div[style*="display: flex; gap: 12px"]');
+            if (buttonsDiv) buttonsDiv.style.display = 'none';
+            
+            const opt = {
+                margin:       0.5,
+                filename:     'E-Ticket-Receipt.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Restore buttons after download
+                if (buttonsDiv) buttonsDiv.style.display = 'flex';
+            });
         }
 
         function closeEticketModal() {
@@ -3009,7 +3026,7 @@ function printReceipt() {
         }
 
         function generateEticket(data, payload) {
-            document.getElementById('eticket-pnr').innerText = data.pnr_reference || '-';
+            document.getElementById('eticket-pnr').innerText = data.pnr || data.pnr_reference || '-';
             if (payload.passenger_name) {
                 const names = payload.passenger_name.split(' & ');
                 let formattedPax = '';
@@ -3409,7 +3426,7 @@ function printReceipt() {
             const vasHTML = vasList.length > 0 ? vasList.join('<br>') : 'Standard Services';
 
             // Populate table values
-            document.getElementById('receipt-pnr').innerText = data.pnr_reference || 'PNR-GDS' + Math.floor(Math.random() * 900000 + 100000);
+            document.getElementById('receipt-pnr').innerText = data.pnr || data.pnr_reference || 'PNR-GDS' + Math.floor(Math.random() * 900000 + 100000);
             if (data.ticket_numbers && data.ticket_numbers.length > 0) {
                 let formattedTkts = '';
                 data.ticket_numbers.forEach((tkt, idx) => {

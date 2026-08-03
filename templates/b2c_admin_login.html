@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aviation Booking Systems - Sign In</title>
+    <!-- CSS & FontAwesome -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        }');
+            
+        
+        body {
+            background-size: 110% 110%; /* Extra size for panning */
+            animation: plane-bobbing 6s ease-in-out infinite;
+        }
+
+        @keyframes plane-bobbing {
+            0% { background-position: 50% 50%; }
+            50% { background-position: 50% 53%; }
+            100% { background-position: 50% 50%; }
+        }
+
+        
+        
+            100% { transform: translate(120vw, 30vh) rotate(-5deg) scale(0.3); }
+        }
+    
+        .clouds-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        @keyframes float-fast {
+            0% { transform: translateX(110vw); }
+            100% { transform: translateX(-50vw); }
+        }
+        
+        @keyframes float-slow {
+            0% { transform: translateX(110vw); }
+            100% { transform: translateX(-50vw); }
+        }
+
+        .css-cloud {
+            position: absolute;
+            background: #ffffff;
+            border-radius: 200px;
+            opacity: 0.15;
+            filter: blur(25px);
+            will-change: transform;
+        }
+
+        .css-cloud::before, .css-cloud::after {
+            content: '';
+            position: absolute;
+            background: #ffffff;
+            border-radius: 50%;
+        }
+
+        .c1 {
+            width: 400px; height: 120px;
+            top: 15%; animation: float-fast 18s linear infinite;
+        }
+        .c1::before { width: 180px; height: 180px; top: -80px; left: 50px; }
+        .c1::after { width: 120px; height: 120px; top: -50px; right: 60px; }
+
+        .c2 {
+            width: 500px; height: 150px;
+            top: 45%; animation: float-slow 35s linear infinite; animation-delay: -10s;
+            opacity: 0.12; filter: blur(35px);
+        }
+        .c2::before { width: 220px; height: 220px; top: -100px; left: 70px; }
+        .c2::after { width: 150px; height: 150px; top: -60px; right: 80px; }
+
+        .c3 {
+            width: 350px; height: 100px;
+            top: 80%; animation: float-fast 22s linear infinite; animation-delay: -8s;
+        }
+        .c3::before { width: 150px; height: 150px; top: -70px; left: 40px; }
+        .c3::after { width: 100px; height: 100px; top: -40px; right: 50px; }
+        
+        .c4 {
+            width: 600px; height: 160px;
+            top: 5%; animation: float-slow 40s linear infinite; animation-delay: -20s;
+            opacity: 0.1; filter: blur(40px);
+        }
+        .c4::before { width: 250px; height: 250px; top: -110px; left: 80px; }
+        .c4::after { width: 180px; height: 180px; top: -70px; right: 90px; }
+    
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
+        
+        
+
+        .auth-card {
+            background: rgba(255, 255, 255, 0.92) !important;
+            backdrop-filter: blur(24px) !important;
+            -webkit-backdrop-filter: blur(24px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.4) !important;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3) !important;
+        }
+    
+        /* Video Background */
+        body {
+            background-color: #000;
+        }
+        
+        
+        
+        
+        
+        
+    
+
+                                    2.77% { opacity: 1; }
+            8.33% { opacity: 1; transform: scale(1.03); }
+            11.11% { opacity: 0; transform: scale(1.05); }
+            100% { opacity: 0; transform: scale(1.0); }
+        }
+            4.16% { opacity: 1; }
+            16.66% { opacity: 1; transform: scale(1.06); }
+            20.83% { opacity: 0; transform: scale(1.08); }
+            100% { opacity: 0; transform: scale(1.0); }
+        }
+            10% { opacity: 1; }
+            25% { opacity: 1; transform: scale(1.05); }
+            35% { opacity: 0; transform: scale(1.08); }
+            100% { opacity: 0; transform: scale(1.0); }
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(195, 18, 46, 0.55) 0%, rgba(172, 3, 28, 0.65) 100%);
+            z-index: -1;
+        }
+    
+
+        /* Dynamic Parallax Clouds */
+        .clouds-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        @keyframes float-fast {
+            0% { transform: translateX(110vw); }
+            100% { transform: translateX(-50vw); }
+        }
+        
+        @keyframes float-slow {
+            0% { transform: translateX(110vw); }
+            100% { transform: translateX(-50vw); }
+        }
+
+        .css-cloud {
+            position: absolute;
+            background: #ffffff;
+            border-radius: 200px;
+            opacity: 0.25;
+            filter: blur(20px);
+            will-change: transform;
+        }
+
+        .css-cloud::before, .css-cloud::after {
+            content: '';
+            position: absolute;
+            background: #ffffff;
+            border-radius: 50%;
+        }
+
+        .c1 { width: 400px; height: 120px; top: 15%; animation: float-fast 18s linear infinite; }
+        .c1::before { width: 180px; height: 180px; top: -80px; left: 50px; }
+        .c1::after { width: 120px; height: 120px; top: -50px; right: 60px; }
+
+        .c2 { width: 500px; height: 150px; top: 45%; animation: float-slow 35s linear infinite; animation-delay: -10s; opacity: 0.2; filter: blur(30px); }
+        .c2::before { width: 220px; height: 220px; top: -100px; left: 70px; }
+        .c2::after { width: 150px; height: 150px; top: -60px; right: 80px; }
+
+        .c3 { width: 350px; height: 100px; top: 80%; animation: float-fast 22s linear infinite; animation-delay: -8s; }
+        .c3::before { width: 150px; height: 150px; top: -70px; left: 40px; }
+        .c3::after { width: 100px; height: 100px; top: -40px; right: 50px; }
+
+        /* Live Flight Planes */
+        .live-flight-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .flying-plane {
+            position: absolute;
+            width: 120px;
+            height: auto;
+            opacity: 0.9;
+            filter: drop-shadow(0 15px 15px rgba(0,0,0,0.3));
+            will-change: transform;
+        }
+
+        .plane-1 { animation: fly-live-1 25s linear infinite; top: 20%; left: -20%; width: 180px; z-index: 2; }
+        .plane-2 { animation: fly-live-2 40s linear infinite; animation-delay: -15s; top: 60%; left: -20%; width: 90px; opacity: 0.6; filter: blur(2px); z-index: 1; }
+        .plane-3 { animation: fly-live-3 32s linear infinite; animation-delay: -5s; top: 10%; left: -20%; width: 110px; opacity: 0.8; filter: blur(1px); z-index: 1; }
+
+        @keyframes fly-live-1 {
+            0% { transform: translate(-20vw, 30vh) rotate(-10deg) scale(0.8); }
+            100% { transform: translate(120vw, -30vh) rotate(-10deg) scale(1.1); }
+        }
+
+        @keyframes fly-live-2 {
+            0% { transform: translate(-20vw, 10vh) rotate(-5deg) scale(0.5); }
+            100% { transform: translate(120vw, -10vh) rotate(-5deg) scale(0.6); }
+        }
+
+        @keyframes fly-live-3 {
+            0% { transform: translate(-20vw, -20vh) rotate(-8deg) scale(0.6); }
+            100% { transform: translate(120vw, 20vh) rotate(-8deg) scale(0.7); }
+        }
+    
+
+        /* Video Background */
+        body {
+            background-color: #000;
+        }
+        
+        
+        
+        
+    
+
+        /* Custom Background Montage (Unbranded) */
+        .custom-montage {
+            position: fixed;
+            top: 0; right: 0; bottom: 0; left: 0;
+            z-index: -2;
+            overflow: hidden;
+            background: #000;
+        }
+        
+        .slide {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            animation: kenburns-crossfade 24s infinite;
+        }
+        
+        /* 1. Flights (Instantly access flights) */
+        .slide-1 {
+            background-image: url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=2000&q=80');
+            animation-delay: 0s;
+        }
+        
+        /* 2. Wholesale Hotels */
+        .slide-2 {
+            background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=2000&q=80'); /* Luxury Hotel Resort/Lobby */
+            animation-delay: 6s;
+        }
+        
+        /* 3. Passenger Visa Compliance */
+        .slide-3 {
+            background-image: url('https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=2000&q=80'); /* Passport / Visa Stamps */
+            animation-delay: 12s;
+        }
+        
+        /* 4. Tickets, Re-issues, Refunds */
+        .slide-4 {
+            background-image: url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=2000&q=80'); /* Agent processing data/payments */
+            animation-delay: 18s;
+        }
+        
+        @keyframes kenburns-crossfade {
+            0% { opacity: 0; transform: scale(1.0); }
+            4% { opacity: 1; }
+            25% { opacity: 1; transform: scale(1.04); }
+            30% { opacity: 0; transform: scale(1.05); }
+            100% { opacity: 0; transform: scale(1.0); }
+        }
+    
+</style>
+    
+</head>
+<body style="display:flex; align-items:center; justify-content:center;">
+    
+    
+    
+    <!-- Custom Service-Matching Background Montage -->
+    <div class="custom-montage">
+        <!-- Flights -->
+        <div class="slide slide-1"></div>
+        <!-- Wholesale Hotels -->
+        <div class="slide slide-2"></div>
+        <!-- Passenger Visa Compliance -->
+        <div class="slide slide-3"></div>
+        <!-- Automated Tickets, Re-issues & Refunds -->
+        <div class="slide slide-4"></div>
+    </div>
+    
+    <div class="overlay"></div>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="brand-logo">
+                <i class="fa-solid fa-plane-departure"></i>
+            </div>
+            <h2>Flight Hub</h2>
+            <p>B2B Flight & Hotel Booking Platform</p>
+            
+            {% if error %}
+            <div class="alert-danger">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>{{ error }}</span>
+            </div>
+            {% endif %}
+            
+            <form action="{{ url_for('b2c_admin_login') }}" method="POST">
+                <div class="form-group">
+                    <label for="username">User Identity / Username</label>
+                    <input type="text" id="username" name="username" class="form-control" placeholder="e.g. premium_agent" required autocomplete="off">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Security Password</label>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
+                </div>
+                
+                <button type="submit" class="btn-primary">
+                    <span>Access Portal</span>
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                </button>
+            </form>
+            
+            <div style="margin-top: 30px; border-top: 1px solid var(--border-dark); padding-top: 20px; text-align: left;">
+                <h5 style="color: var(--primary); font-size:12px; font-weight:600; text-transform:uppercase; margin-bottom:8px; letter-spacing:0.5px;">Sample Demo Logins:</h5>
+                <ul style="list-style:none; font-size:12px; color: var(--text-muted); display:flex; flex-direction:column; gap:6px;">
+                    <li><strong style="color: var(--text-main);">Premium Agent (Has credit):</strong> `premium_agent` / `agent123`</li>
+                    <li><strong style="color: var(--text-main);">Standard Agent (Low credit):</strong> `standard_agent` / `agent123`</li>
+                    <li><strong style="color: var(--text-main);">Zero Agent (No credit):</strong> `zero_agent` / `agent123`</li>
+                    <li><strong style="color: var(--text-main);">ATL Administrator:</strong> `admin` / `admin123`</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

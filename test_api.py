@@ -1,8 +1,32 @@
-from mock_gds import MockGDSClient as Client
+from travelport_client import TravelportClient as Client
 import traceback
-amadeus = Client(client_id='3ZBEyT1bTUzMUPkcEPBUOEKIAkEjgu5o', client_secret='2K9Xh5GC2UF9rVo3', hostname='test')
+
+# Initialize TravelportClient with credentials
+travelport = Client(
+    client_id='ISpiYxWT8r1rfMCkKiHp4HsLpyOA1hz3',
+    client_secret='C0Sdvh6SuXcVT7abfBNX4DPWIsok5heRmsd-6IZb-tYDSD60UZh5EgrjA5OcYkt0',
+    username='TP22497906',
+    password='XgxNZ9Fm',
+    access_group='7C6A54F8-78FF-458E-909E-194900761899',
+    pcc='79G2'
+)
+
 try:
-    response = amadeus.shopping.flight_offers_search.get(originLocationCode='CMB', destinationLocationCode='MLE', departureDate='2026-06-01', adults=1, max=5)
-    print('Success:', len(response.data))
+    print("Executing Travelport flight search...")
+    response = travelport.shopping.flight_offers_search.get(
+        originLocationCode='CMB', 
+        destinationLocationCode='MLE', 
+        departureDate='2026-06-16', 
+        adults=1
+    )
+    print('Success! Flights returned:', len(response.data))
+    if response.data:
+        first = response.data[0]
+        print("First Flight Offer:")
+        print("  Price (EUR):", first['price']['total'])
+        print("  Seats Available:", first['numberOfBookableSeats'])
+        print("  Outbound Segments:")
+        for seg in first['itineraries'][0]['segments']:
+            print(f"    - {seg['carrierCode']}-{seg['number']} from {seg['departure']['at']} to {seg['arrival']['at']}")
 except Exception as e:
     traceback.print_exc()

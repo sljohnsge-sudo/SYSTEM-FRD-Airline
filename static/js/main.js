@@ -222,6 +222,14 @@ function switchTab(tabId) {
         loadTimaticLogs();
     } else if (tabId === "cancellations") {
         loadCancellations();
+    } else if (tabId === "pnr") {
+        const codeInput = document.getElementById("pnr-search-code");
+        const resultsWrapper = document.getElementById("pnr-results-wrapper");
+        if (codeInput) codeInput.value = "";
+        if (resultsWrapper) {
+            resultsWrapper.style.display = "none";
+            resultsWrapper.innerHTML = "";
+        }
     }
 }
 
@@ -323,6 +331,21 @@ function initAutocompleteSearch() {
     
     setupAutocompleteForInput(originInput, "flight-origin-dropdown");
     setupAutocompleteForInput(destInput, "flight-dest-dropdown");
+    
+    // Auto-resolve initial values to full names
+    [originInput, destInput].forEach(input => {
+        if (input && input.value && input.value.length === 3) {
+            fetch(`/api/locations/search?q=${input.value}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.groups.length > 0 && data.groups[0].locations.length > 0) {
+                        const loc = data.groups[0].locations[0];
+                        const country = data.groups[0].country.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+                        input.value = `${loc.city}, ${country} (${loc.code})`;
+                    }
+                }).catch(e => console.error(e));
+        }
+    });
 }
 
 function setupAutocompleteForInput(input, dropdownId) {
@@ -1570,7 +1593,7 @@ function loadBookings() {
                     
                     tbody.innerHTML += `
                         <tr>
-                            <td><strong style="color:#fff;">${b.invoice_number}</strong></td>
+                            <td><strong style="color:var(--text-dark, #333);">${b.invoice_number}</strong></td>
                             <td><span class="badge-type">${b.booking_type.toUpperCase()}</span></td>
                             <td>${b.booking_type === 'flight' ? b.details.passenger_name : b.details.guest_name}</td>
                             <td>${detailsHTML}</td>
@@ -1648,7 +1671,7 @@ function refundBooking(bookingId) {
     .then(data => {
         if (data.success) {
             const d = data.details;
-            const message = `Net Credit Refunded: ${formatPrice(d.net_refund_credited)}. GDS penalty: ${formatPrice(d.amadeus_cancellation_penalty)}. Agency refund fee: ${formatPrice(d.refund_service_markup)}.`;
+            const message = `Net Credit Refunded: ${formatPrice(d.net_refund_credited)}. GDS penalty: ${formatPrice(d.airline_cancellation_penalty)}. Agency refund fee: ${formatPrice(d.refund_service_markup)}.`;
             alert("TRF REFUND PROCESSED BY FLIGHT HUB:\n\n" + message);
             showNotification("TRF Refund Processed", "Net refund balance credited to wallet.", "success");
             updateAgentUI();
@@ -1758,7 +1781,7 @@ function loadCancellations() {
                     
                     tbody.innerHTML += `
                         <tr>
-                            <td><strong style="color:#fff;">${b.invoice_number}</strong></td>
+                            <td><strong style="color:var(--text-dark, #333);">${b.invoice_number}</strong></td>
                             <td><span class="badge-type">${b.booking_type.toUpperCase()}</span></td>
                             <td>${passengerName}</td>
                             <td>${detailsHTML}</td>
@@ -1850,7 +1873,7 @@ function submitReissueChange() {
         closeModal("reissue-modal");
         if (data.success) {
             const d = data.details;
-            const message = `Auto Re-issue complete!\nGDS Penalty: ${formatPrice(d.amadeus_penalty)}\nFare Difference Collected: ${formatPrice(d.fare_difference)}\nAgency markup: ${formatPrice(d.service_markup)}\n\nTotal charged: ${formatPrice(d.total_charged)}`;
+            const message = `Auto Re-issue complete!\nGDS Penalty: ${formatPrice(d.airline_cancellation_penalty)}\nFare Difference Collected: ${formatPrice(d.fare_difference)}\nAgency markup: ${formatPrice(d.service_markup)}\n\nTotal charged: ${formatPrice(d.total_charged)}`;
             alert(message);
             showNotification("Auto Re-Issue Completed", "Seat reassigned, ticket updated.", "success");
             updateAgentUI();
@@ -2008,7 +2031,7 @@ function loadAgentReports() {
                     tbody.innerHTML += `
                         <tr>
                             <td><strong>${d.day_label}</strong></td>
-                            <td style="color:#fff; font-weight:600;">${formatPrice(d.turnover)}</td>
+                            <td style="color:var(--text-dark, #333); font-weight:600;">${formatPrice(d.turnover)}</td>
                             <td>${formatPrice(cost)}</td>
                             <td style="color:var(--success); font-weight:700;">${formatPrice(d.gp)}</td>
                             <td style="font-weight:600; color:var(--primary);">${margin.toFixed(1)}%</td>
@@ -2108,6 +2131,12 @@ function switchAdminTab(tabId) {
         loadAdminReports();
     } else if (tabId === "tickets") {
         loadAdminTickets();
+    } else if (tabId === "b2c-users") {
+        loadAdminB2CUsers();
+    } else if (tabId === "b2c-fees") {
+        loadAdminB2CFees();
+    } else if (tabId === "b2c-reports") {
+        loadAdminB2CReports();
     }
 }
 
@@ -2131,7 +2160,7 @@ function updateAdminUI() {
                 data.top_agents.forEach(ag => {
                     tbody.innerHTML += `
                         <tr>
-                            <td><strong style="color:#fff;">${ag.username}</strong></td>
+                            <td><strong style="color:var(--text-dark, #333);">${ag.username}</strong></td>
                             <td>${ag.company_name}</td>
                             <td style="color:var(--success);">$${ag.credit_balance.toFixed(2)}</td>
                             <td style="color:var(--primary); font-weight:700;">$${ag.turnover.toFixed(2)}</td>
@@ -2190,13 +2219,19 @@ function loadAdminAgents() {
                 data.agents.forEach(ag => {
                     tbody.innerHTML += `
                         <tr>
-                            <td><strong style="color:#fff;">${ag.username}</strong><br><span style="font-size:11px; color:var(--text-muted);">${ag.email}</span></td>
+                            <td><strong style="color:var(--text-dark, #333);">${ag.username}</strong><br><span style="font-size:11px; color:var(--text-muted);">${ag.email}</span></td>
                             <td>${ag.company_name}<br><span style="font-size:11px; color:var(--text-muted);">${ag.phone}</span></td>
-                            <td style="color:var(--success); font-weight:700;">$${ag.credit_balance.toFixed(2)}</td>
+                            <td style="color:var(--success); font-weight:700;">${ag.currency || 'USD'} ${ag.credit_balance.toFixed(2)}</td>
                             <td>${ag.onboarded_at.split('T')[0]}</td>
                             <td>
-                                <button class="btn-action" onclick="openAdjustCreditModal(${ag.id}, '${ag.company_name}', ${ag.credit_balance})">
+                                <span class="badge ${ag.status === 'active' ? 'badge-ticketed' : 'badge-failed'}">${ag.status.toUpperCase()}</span>
+                            </td>
+                            <td>
+                                <button class="btn-action" style="color: var(--text-dark, #333);" onclick="openAdjustCreditModal(${ag.id}, '${ag.company_name}', ${ag.credit_balance}, '${ag.currency || 'USD'}')">
                                     <i class="fa-solid fa-pen-to-square"></i> Adjust Credit
+                                </button>
+                                <button class="btn-action" style="color: ${ag.status === 'active' ? 'var(--danger)' : 'var(--success)'}; margin-top: 5px;" onclick="toggleAgentStatus(${ag.id}, '${ag.status === 'active' ? 'inactive' : 'active'}')">
+                                    <i class="fa-solid ${ag.status === 'active' ? 'fa-ban' : 'fa-check'}"></i> ${ag.status === 'active' ? 'Deactivate' : 'Activate'}
                                 </button>
                             </td>
                         </tr>
@@ -2218,6 +2253,7 @@ function submitOnboardAgent() {
     const company = document.getElementById("onboard-company").value.trim();
     const phone = document.getElementById("onboard-phone").value.trim();
     const credit = document.getElementById("onboard-credit").value;
+    const curr = document.getElementById("onboard-currency").value;
     
     if (!username || !password || !email || !company) {
         showNotification("Required Fields", "Please complete all mandatory credentials to onboard.", "danger");
@@ -2233,7 +2269,8 @@ function submitOnboardAgent() {
             email: email,
             company_name: company,
             phone: phone,
-            credit_balance: parseFloat(credit) || 0.0
+            credit_balance: parseFloat(credit) || 0.0,
+            currency: curr
         })
     })
     .then(res => res.json())
@@ -2254,10 +2291,12 @@ function submitOnboardAgent() {
 }
 
 // Adjust Agent Credit manual loader modal
-function openAdjustCreditModal(agentId, name, balance) {
+function openAdjustCreditModal(agentId, name, balance, currency) {
     document.getElementById("adjust-credit-agent-id").value = agentId;
     document.getElementById("adjust-credit-agent-name").innerText = name;
-    document.getElementById("adjust-credit-agent-current").innerText = `$${balance.toFixed(2)}`;
+    document.getElementById("adjust-credit-agent-current").innerText = `${currency || 'USD'} ${balance.toFixed(2)}`;
+    const currLabel = document.getElementById("adjust-credit-currency-label");
+    if (currLabel) currLabel.innerText = currency || 'USD';
     document.getElementById("adjust-credit-amount").value = "";
     document.getElementById("adjust-credit-reason").value = "";
     openModal("adjust-credit-modal");
@@ -2305,15 +2344,30 @@ function loadAdminFees() {
                 tbody.innerHTML = "";
                 
                 data.fees.forEach(f => {
+                    // Default to fixed if not set
+                    const amountType = f.amount_type || 'fixed';
+                    const isFixed = amountType === 'fixed' ? 'selected' : '';
+                    const isPct = amountType === 'percentage' ? 'selected' : '';
+                    
                     tbody.innerHTML += `
                         <tr>
-                            <td><strong style="text-transform:uppercase; color:#fff;">${f.transaction_type}</strong></td>
+                            <td><strong style="text-transform:uppercase; color:var(--text-dark, #333);">${f.transaction_type}</strong></td>
                             <td><span class="badge badge-ticketed">${f.fee_type}</span></td>
                             <td>
-                                <input type="number" id="fee-amt-${f.id}" class="form-control" style="width: 130px;" value="${f.amount.toFixed(2)}" min="0">
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <input type="number" id="fee-amt-${f.id}" class="form-control" style="width: 130px;" value="${f.amount.toFixed(2)}" min="0">
+                                    <select id="fee-curr-${f.id}" class="form-control" style="width: 80px; padding: 5px;">
+                                        <option value="USD" ${f.currency === 'USD' ? 'selected' : ''}>USD</option>
+                                        <option value="LKR" ${f.currency === 'LKR' ? 'selected' : ''}>LKR</option>
+                                    </select>
+                                    <select id="fee-type-${f.id}" class="form-control" style="width: 100px; padding: 5px;">
+                                        <option value="fixed" ${isFixed}>Fixed</option>
+                                        <option value="percentage" ${isPct}>%</option>
+                                    </select>
+                                </div>
                             </td>
                             <td>
-                                <button class="btn-action" onclick="updateAdminFee(${f.id})">
+                                <button class="btn-action" style="color: #333;" onclick="updateAdminFee(${f.id})">
                                     <i class="fa-solid fa-floppy-disk"></i> Save Rate
                                 </button>
                             </td>
@@ -2326,6 +2380,9 @@ function loadAdminFees() {
 
 function updateAdminFee(id) {
     const val = document.getElementById(`fee-amt-${id}`).value;
+    const typeVal = document.getElementById(`fee-type-${id}`).value;
+    const currVal = document.getElementById(`fee-curr-${id}`).value;
+    
     if (!val || parseFloat(val) < 0) {
         showNotification("Invalid Entry", "Markup rate cannot be negative.", "danger");
         return;
@@ -2334,7 +2391,7 @@ function updateAdminFee(id) {
     fetch("/api/admin/fees/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: id, amount: parseFloat(val) })
+        body: JSON.stringify({ id: id, amount: parseFloat(val), amount_type: typeVal, currency: currVal })
     })
     .then(res => res.json())
     .then(data => {
@@ -2783,4 +2840,377 @@ function updatePassengerSummary() {
     } else {
         summary.innerText = `${total} Traveler${total > 1 ? 's' : ''}`;
     }
+}
+
+// B2B Retrieve PNR details dynamically
+function retrieveBookingByPNR() {
+    const codeInput = document.getElementById("pnr-search-code");
+    if (!codeInput) return;
+    const pnrCode = codeInput.value.trim().toUpperCase();
+    
+    if (!pnrCode) {
+        showNotification("Missing PNR Code", "Please enter a valid PNR reference code to search.", "danger");
+        return;
+    }
+    
+    const resultsWrapper = document.getElementById("pnr-results-wrapper");
+    if (!resultsWrapper) return;
+    
+    resultsWrapper.style.display = "block";
+    resultsWrapper.innerHTML = `
+        <div style="text-align:center; padding:40px;">
+            <i class="fa-solid fa-circle-notch fa-spin" style="font-size:32px; color:var(--primary);"></i>
+            <p style="margin-top:10px; color:var(--text-muted);">Retrieving reservation details from GDS channels...</p>
+        </div>
+    `;
+    
+    fetch(`/api/pnr/retrieve?pnr=${pnrCode}`)
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) {
+                resultsWrapper.innerHTML = `
+                    <div style="background: rgba(239, 68, 68, 0.05); border: 1px dashed rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 30px; text-align: center;">
+                        <i class="fa-solid fa-circle-exclamation" style="font-size: 40px; color: var(--danger); margin-bottom: 15px;"></i>
+                        <h3 style="margin: 0 0 5px 0; color: #fff; font-size: 16px;">Retrieval Failed</h3>
+                        <p style="color: var(--text-muted); margin: 0; font-size: 13.5px;">${data.error}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const records = data.records;
+            const source = data.source;
+            const first = records[0];
+            
+            // Format total price
+            const displayPrice = formatPrice(first.total_price);
+            
+            // Format status badge
+            let statusClass = "badge-reservation";
+            const status = first.booking_status || first.ticket_status;
+            if (status === "ticketed") statusClass = "badge-ticketed";
+            else if (status === "refunded") statusClass = "badge-refunded";
+            else if (status === "voided") statusClass = "badge-voided";
+            
+            // Format channels
+            let channelText = "B2C Public Portal";
+            if (source === "B2B") {
+                channelText = `B2B Agent Console (${first.agent_company || first.agent_username || 'N/A'})`;
+            } else if (first.user_fullname) {
+                channelText = `B2C Portal (User: ${first.user_fullname})`;
+            }
+            
+            // Render passenger profile cards
+            let passengersHTML = "";
+            let specialRequestsHTML = "";
+            let hasSpecialRequests = false;
+            
+            const uniquePassengers = {};
+            
+            records.forEach(r => {
+                const pName = r.passenger_name || 'Unknown Passenger';
+                const pPass = r.passport_number || 'N/A';
+                const pKey = pName + "_" + pPass;
+                if (uniquePassengers[pKey]) {
+                    return;
+                }
+                uniquePassengers[pKey] = true;
+                
+                passengersHTML += `
+                    <div style="background: var(--panel-dark); border: 1px solid var(--border-dark); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <strong style="color: var(--text-main); font-size: 14px;"><i class="fa-solid fa-user" style="color: var(--primary); margin-right: 8px;"></i> ${pName}</strong>
+                            <span class="badge-type" style="background: rgba(0, 242, 254, 0.1); color: #00f2fe; border: 1px solid rgba(0, 242, 254, 0.2); padding: 2px 6px; font-size: 11px; border-radius: 4px;">Seat: ${r.seat_number || 'N/A'}</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 12.5px; color: var(--text-muted);">
+                            <div>Passport: <strong style="color: var(--text-main);">${pPass}</strong></div>
+                            <div>Mobile: <strong style="color: var(--text-main);">${r.mobile || 'N/A'}</strong></div>
+                            <div>Email: <strong style="color: var(--text-main);">${r.email || 'N/A'}</strong></div>
+                            <div>Ticket Number: <strong style="color: var(--success); font-family: monospace;">${r.ticket_number || 'PENDING'}</strong></div>
+                        </div>
+                    </div>
+                `;
+                
+                // Add special requests card
+                if (r.meal_preference || r.wheelchair_assistance || r.airport_assistance || r.allergy_conditions || r.other_requests) {
+                    hasSpecialRequests = true;
+                    let reqItems = [];
+                    if (r.meal_preference) reqItems.push(`Meal Pref: <strong style="color: var(--text-main);">${r.meal_preference}</strong>`);
+                    if (r.wheelchair_assistance) reqItems.push(`Wheelchair: <strong style="color: var(--text-main);">${r.wheelchair_assistance}</strong>`);
+                    if (r.airport_assistance) reqItems.push(`Airport Asst: <strong style="color: var(--text-main);">${r.airport_assistance}</strong>`);
+                    if (r.allergy_conditions) reqItems.push(`Allergies: <strong style="color: var(--danger);">${r.allergy_conditions}</strong>`);
+                    if (r.other_requests) reqItems.push(`Other: <em style="color: var(--text-main);">"${r.other_requests}"</em>`);
+                    
+                    specialRequestsHTML += `
+                        <div style="background: rgba(251, 191, 36, 0.05); border: 1px solid rgba(251, 191, 36, 0.2); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+                            <div style="font-weight: 700; color: #fbbf24; font-size: 13px; margin-bottom: 8px; text-transform: uppercase;">
+                                <i class="fa-solid fa-bell-concierge"></i> Service Request - ${r.passenger_name}
+                            </div>
+                            <div style="font-size: 12.5px; line-height: 1.6; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px;">
+                                ${reqItems.map(item => `<div>• ${item}</div>`).join("")}
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            // Format segments (unique segments sorted by ID)
+            const uniqueSegments = [];
+            const segmentIds = {};
+            records.forEach(r => {
+                if (!segmentIds[r.flight_id]) {
+                    segmentIds[r.flight_id] = true;
+                    uniqueSegments.push(r);
+                }
+            });
+            
+            // Sort by departure time
+            uniqueSegments.sort((a,b) => new Date(a.departure_time) - new Date(b.departure_time));
+            
+            let segmentsHTML = "";
+            uniqueSegments.forEach((s, index) => {
+                const deptDate = new Date(s.departure_time);
+                const arrDate = new Date(s.arrival_time);
+                const isReturn = index > 0;
+                
+                segmentsHTML += `
+                    <div style="background: var(--panel-dark); border: 1px solid var(--border-dark); border-radius: 16px; padding: 20px; position: relative; overflow: hidden; margin-bottom: 15px;">
+                        <div style="position: absolute; top: 0; right: 0; background: ${isReturn ? '#88123b' : 'var(--primary)'}; color: white; padding: 4px 12px; font-size: 10px; font-weight: 700; border-radius: 0 0 0 12px; text-transform: uppercase;">
+                            ${isReturn ? 'Return Segment' : 'Outbound Segment'}
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 12px; margin-bottom: 15px;">
+                            <div>
+                                <strong style="color: var(--text-main); font-size: 16px;">${s.airline}</strong>
+                                <span style="font-size: 12px; color: var(--text-muted); margin-left: 8px;">Flight No: ${s.flight_number}</span>
+                            </div>
+                            <div style="text-align: right; font-size: 12px; color: var(--text-muted); margin-right: 110px;">
+                                Channel: <span class="badge-type">${s.gds_source || s.flight_type || 'GDS'}</span>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+                            <div style="min-width: 120px;">
+                                <div style="font-size: 24px; font-weight: 800; color: var(--text-main); line-height: 1.1;">${s.origin}</div>
+                                <div style="font-size: 13px; font-weight: 700; color: var(--text-muted); margin-top: 4px;">${deptDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false})}</div>
+                                <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">${deptDate.toLocaleDateString([], {weekday: 'short', day: '2-digit', month: 'short'})}</div>
+                            </div>
+                            
+                            <div style="flex-grow: 1; text-align: center; position: relative; min-width: 100px; display: flex; flex-direction: column; align-items: center;">
+                                <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">NON-STOP</span>
+                                <div style="width: 100%; height: 2px; background: rgba(0,0,0,0.1); position: relative; display: flex; justify-content: center; align-items: center;">
+                                    <i class="fa-solid fa-plane" style="font-size: 12px; color: var(--primary); background: #ffffff; padding: 0 8px; transform: ${isReturn ? 'rotate(180deg)' : 'none'};"></i>
+                                </div>
+                            </div>
+                            
+                            <div style="text-align: right; min-width: 120px;">
+                                <div style="font-size: 24px; font-weight: 800; color: var(--text-main); line-height: 1.1;">${s.destination}</div>
+                                <div style="font-size: 13px; font-weight: 700; color: var(--text-muted); margin-top: 4px;">${arrDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false})}</div>
+                                <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">${arrDate.toLocaleDateString([], {weekday: 'short', day: '2-digit', month: 'short'})}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            resultsWrapper.innerHTML = `
+                <div style="background: var(--panel-dark); border: 1px solid var(--border-dark); border-radius: 16px; padding: 20px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px; margin-bottom: 25px; box-shadow: var(--card-shadow);">
+                    <div>
+                        <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;">PNR Booking Reference</div>
+                        <strong style="font-size: 26px; font-family: monospace; color: var(--warning);">${first.pnr_reference}</strong>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Ticketing Channel</div>
+                        <div style="font-size: 13.5px; color: var(--text-main); font-weight: 600;"><i class="fa-solid fa-sitemap" style="color: var(--primary); margin-right: 6px;"></i> ${channelText}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Invoice Number</div>
+                        <div style="font-size: 13.5px; color: var(--text-main); font-weight: 700; font-family: monospace;">${first.invoice_number}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Total Reservation Fare</div>
+                        <div style="font-size: 18px; font-weight: 800; color: var(--primary);">${displayPrice}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Ticket Status</div>
+                        <span class="badge ${statusClass}">${status.toUpperCase()}</span>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Live GDS Status</div>
+                        <span class="badge" style="background: rgba(0, 242, 254, 0.1); color: #00f2fe; border: 1px solid rgba(0, 242, 254, 0.2);">${data.api_status || 'Unknown'}</span>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 3fr 2fr; gap: 25px;">
+                    <div>
+                        <h4 style="font-size: 15px; font-weight: 700; margin: 0 0 15px 0; color: #fff; text-transform: uppercase; letter-spacing: 0.5px;">Flight Sectors</h4>
+                        ${segmentsHTML}
+                    </div>
+                    
+                    <div>
+                        <h4 style="font-size: 15px; font-weight: 700; margin: 0 0 15px 0; color: #fff; text-transform: uppercase; letter-spacing: 0.5px;">Passenger Profiles</h4>
+                        ${passengersHTML}
+                        
+                        ${hasSpecialRequests ? `
+                            <h4 style="font-size: 15px; font-weight: 700; margin: 25px 0 15px 0; color: #fff; text-transform: uppercase; letter-spacing: 0.5px;">Special Requests & Assistance</h4>
+                            ${specialRequestsHTML}
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        })
+        .catch(err => {
+            console.error(err);
+            resultsWrapper.innerHTML = `
+                <div style="background: rgba(239, 68, 68, 0.05); border: 1px dashed rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 30px; text-align: center;">
+                    <i class="fa-solid fa-circle-exclamation" style="font-size: 40px; color: var(--danger); margin-bottom: 15px;"></i>
+                    <h3 style="margin: 0 0 5px 0; color: #fff; font-size: 16px;">Retrieval Error</h3>
+                    <p style="color: var(--text-muted); margin: 0; font-size: 13.5px;">An error occurred while connecting to GDS databases: ${err.message}</p>
+                </div>
+            `;
+        });
+}
+
+
+// Toggle Agent Status
+function toggleAgentStatus(agentId, newStatus) {
+    if (!confirm(`Are you sure you want to ${newStatus === 'active' ? 'activate' : 'deactivate'} this agent?`)) return;
+    
+    fetch("/api/admin/agents/toggle-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ agent_id: agentId, status: newStatus })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showNotification("Status Updated", data.message, "success");
+            loadAdminAgents();
+        } else {
+            showNotification("Update Failed", data.error, "danger");
+        }
+    });
+}
+
+
+// ==========================================
+// B2C ADMIN PORTAL LOGIC
+// ==========================================
+
+function loadAdminB2CUsers() {
+    fetch("/api/admin/b2c/users")
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const tbody = document.getElementById("admin-b2c-users-table");
+                if (!tbody) return;
+                tbody.innerHTML = "";
+                data.users.forEach(u => {
+                    const date = u.registered_at ? u.registered_at.split('T')[0] : 'N/A';
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${u.username}</strong></td>
+                            <td>${u.email}</td>
+                            <td>${u.phone || 'N/A'}</td>
+                            <td>${date}</td>
+                        </tr>
+                    `;
+                });
+            }
+        });
+}
+
+function loadAdminB2CFees() {
+    fetch("/api/admin/b2c/fees/list")
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const tbody = document.getElementById("admin-b2c-fees-table");
+                if (!tbody) return;
+                tbody.innerHTML = "";
+                data.fees.forEach(f => {
+                    const amountType = f.amount_type || 'fixed';
+                    const isFixed = amountType === 'fixed' ? 'selected' : '';
+                    const isPct = amountType === 'percentage' ? 'selected' : '';
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong style="text-transform:uppercase; color:var(--text-dark, #333);">${f.transaction_type}</strong></td>
+                            <td><span class="badge badge-ticketed">${f.fee_type}</span></td>
+                            <td>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <input type="number" id="b2c-fee-amt-${f.id}" class="form-control" style="width: 130px;" value="${f.amount.toFixed(2)}" min="0">
+                                    <select id="b2c-fee-curr-${f.id}" class="form-control" style="width: 80px; padding: 5px;">
+                                        <option value="USD" ${f.currency === 'USD' ? 'selected' : ''}>USD</option>
+                                        <option value="LKR" ${f.currency === 'LKR' ? 'selected' : ''}>LKR</option>
+                                    </select>
+                                    <select id="b2c-fee-type-${f.id}" class="form-control" style="width: 100px; padding: 5px;">
+                                        <option value="fixed" ${isFixed}>Fixed</option>
+                                        <option value="percentage" ${isPct}>%</option>
+                                    </select>
+                                </div>
+                            </td>
+                            <td>
+                                <button class="btn-action" style="color: #333;" onclick="updateAdminB2CFee(${f.id})">
+                                    <i class="fa-solid fa-floppy-disk"></i> Save Rate
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+        });
+}
+
+function updateAdminB2CFee(id) {
+    const val = document.getElementById(`b2c-fee-amt-${id}`).value;
+    const typeVal = document.getElementById(`b2c-fee-type-${id}`).value;
+    const currVal = document.getElementById(`b2c-fee-curr-${id}`).value;
+    
+    if (!val || parseFloat(val) < 0) {
+        showNotification("Invalid Entry", "Markup rate cannot be negative.", "danger");
+        return;
+    }
+    
+    fetch("/api/admin/b2c-fees/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: id, amount: parseFloat(val), amount_type: typeVal, currency: currVal })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showNotification("B2C Markup Applied", data.message, "success");
+            loadAdminB2CFees();
+        } else {
+            showNotification("Update Failed", data.error, "danger");
+        }
+    });
+}
+
+function loadAdminB2CReports() {
+    fetch("/api/admin/b2c/bookings")
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const tbody = document.getElementById("admin-b2c-bookings-table");
+                if (!tbody) return;
+                tbody.innerHTML = "";
+                data.bookings.forEach(b => {
+                    const date = b.created_at ? b.created_at.split('T')[0] : 'N/A';
+                    let badgeClass = 'badge-pending';
+                    if (b.status === 'ticketed' || b.status === 'confirmed') badgeClass = 'badge-ticketed';
+                    if (b.status === 'cancelled') badgeClass = 'badge-failed';
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${b.pnr}</strong></td>
+                            <td>User ID: ${b.b2c_user_id}</td>
+                            <td style="color:var(--success); font-weight:700;">$${b.total_price.toFixed(2)}</td>
+                            <td><span class="badge ${badgeClass}">${b.status.toUpperCase()}</span></td>
+                            <td>${date}</td>
+                        </tr>
+                    `;
+                });
+            }
+        });
 }

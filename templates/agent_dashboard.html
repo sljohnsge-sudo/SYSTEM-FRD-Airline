@@ -58,6 +58,10 @@
                     <i class="fa-solid fa-headset"></i>
                     <span>Feedback & Tickets</span>
                 </a>
+                <a class="menu-item" onclick="switchTab('pnr')">
+                    <i class="fa-solid fa-receipt"></i>
+                    <span>Retrieve PNR</span>
+                </a>
             
                 <div style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
                     <a href="{{ url_for('index') }}" class="menu-item">
@@ -720,6 +724,39 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- TAB: RETRIEVE PNR -->
+            <!-- ========================================================= -->
+            <section id="tab-pnr" class="tab-content-panel">
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-receipt" style="color: var(--primary);"></i>
+                            <span>GDS Reservation Retrieval</span>
+                        </div>
+                    </div>
+                    <p style="color: var(--text-muted); font-size:13.5px; margin-bottom:25px;">
+                        Retrieve passenger name records (PNR) and live e-ticket information directly from GDS systems and database logs.
+                    </p>
+                    
+                    <div style="display: flex; gap: 15px; align-items: flex-end; max-width: 500px; margin-bottom: 30px;">
+                        <div class="search-input-group" style="flex: 1; position: relative;">
+                            <label>PNR Reference Code</label>
+                            <input type="text" id="pnr-search-code" class="form-control" placeholder="e.g. PNR410660" style="text-transform: uppercase;">
+                        </div>
+                        <button class="btn-search" onclick="retrieveBookingByPNR()" style="height: 48px; min-width: 150px;">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <span>Retrieve Data</span>
+                        </button>
+                    </div>
+
+                    <!-- PNR Results Area -->
+                    <div id="pnr-results-wrapper" style="display: none; margin-top: 25px;">
+                        <!-- Content will be populated dynamically -->
                     </div>
                 </div>
             </section>

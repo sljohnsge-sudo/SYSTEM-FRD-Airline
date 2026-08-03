@@ -22,43 +22,25 @@
             </div>
             
             <nav class="sidebar-menu">
-                <a class="menu-item active" onclick="switchAdminTab('dashboard')">
-                    <i class="fa-solid fa-chart-line"></i>
-                    <span>Admin Dashboard</span>
+                <a class="menu-item active" onclick="switchB2CAdminTab('b2c-users')">
+                    <i class="fa-solid fa-user-tag"></i>
+                    <span>B2C Users</span>
                 </a>
-                <a class="menu-item" onclick="switchAdminTab('agents')">
-                    <i class="fa-solid fa-users-gear"></i>
-                    <span>Manage Agents</span>
+                <a class="menu-item" onclick="switchB2CAdminTab('b2c-fees')">
+                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                    <span>B2C Fee Config</span>
                 </a>
-                <a class="menu-item" onclick="switchAdminTab('fees')">
-                    <i class="fa-solid fa-tags"></i>
-                    <span>Fee Configuration</span>
+                <a class="menu-item" onclick="switchB2CAdminTab('b2c-reports')">
+                    <i class="fa-solid fa-file-contract"></i>
+                    <span>B2C Reports</span>
                 </a>
-                <a class="menu-item" onclick="switchAdminTab('reports')">
-                    <i class="fa-solid fa-file-invoice-dollar"></i>
-                    <span>Reports Console</span>
-                </a>
-                <a class="menu-item" onclick="switchAdminTab('notices')">
-                    <i class="fa-solid fa-bullhorn"></i>
-                    <span>System Notices</span>
-                </a>
-                <a class="menu-item" onclick="switchAdminTab('tickets')">
-                    <i class="fa-solid fa-headset"></i>
-                    <span>Support Queue</span>
-                </a>
-            
                 <div style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
-                    <a href="{{ url_for('index') }}" class="menu-item">
-                        <i class="fa-solid fa-house"></i>
-                        <span>Back to Main Page</span>
-                    </a>
-                    <a href="{{ url_for('logout') }}" class="menu-item" style="color: #ff6b6b;">
+                    <a href="/b2c/admin/logout" class="menu-item" style="color: #ff6b6b;">
                         <i class="fa-solid fa-right-from-bracket"></i>
                         <span>Logout Account</span>
                     </a>
                 </div>
             </nav>
-            
             <div class="sidebar-footer">
                 <div class="user-profile">
                     <div class="profile-avatar" style="background: #e11d48;">
@@ -66,13 +48,11 @@
                     </div>
                     <div class="profile-info">
                         <div class="profile-name">{{ admin.company_name }}</div>
-                        <div class="profile-role">ATL Operations Admin</div>
+                        <div class="profile-role">B2C Administrator</div>
                     </div>
                 </div>
-                
-                
             </div>
-        </aside>
+            </aside>
 
         <!-- Main Content Area -->
         <main class="app-content">
@@ -80,8 +60,8 @@
             <!-- Content Header -->
             <header class="content-header">
                 <div class="welcome-section">
-                    <h1>ATL System Administrator</h1>
-                    <p>Manage B2B contracts, adjust service fees, and evaluate transaction reports.</p>
+                    <h1>ATL B2C System Administrator</h1>
+                    <p>Manage B2C users, public markups, and evaluate B2C booking reports.</p>
                 </div>
                 
                 <div style="font-size:12px; color: var(--text-muted); background: var(--panel-dark); padding: 10px 20px; border-radius:10px; border:1px solid var(--border-dark);">
@@ -184,7 +164,7 @@
             <!-- ========================================================= -->
             <!-- TAB: MANAGE AGENTS & ONBOARDING -->
             <!-- ========================================================= -->
-            <section id="tab-agents" class="tab-content-panel">
+            <section id="tab-agents" class="tab-content-panel active">
                 <div style="display: flex; flex-direction: column; gap:24px;">
                     <!-- Onboarded Agents list -->
                     <div class="content-card">
@@ -241,18 +221,9 @@
                             <label>Contact Phone</label>
                             <input type="text" id="onboard-phone" class="form-control" placeholder="+9411223344">
                         </div>
-                        <div class="form-group" style="display:flex; gap:10px;">
-                            <div style="flex:1;">
-                                <label>Initial Credit Balance</label>
-                                <input type="number" id="onboard-credit" class="form-control" placeholder="0.00" value="5000">
-                            </div>
-                            <div style="width: 120px;">
-                                <label>Currency</label>
-                                <select id="onboard-currency" class="form-control">
-                                    <option value="USD">USD</option>
-                                    <option value="LKR">LKR</option>
-                                </select>
-                            </div>
+                        <div class="form-group">
+                            <label>Initial Credit Balance ($USD)</label>
+                            <input type="number" id="onboard-credit" class="form-control" placeholder="0.00" value="5000">
                         </div>
                         <button class="btn-primary" onclick="submitOnboardAgent()">
                             <i class="fa-solid fa-circle-check"></i>
@@ -283,7 +254,7 @@
                                 <tr>
                                     <th>Transaction Type</th>
                                     <th>Fee Configuration Type</th>
-                                    <th>Configured Fee Amount & Currency</th>
+                                    <th>Configured Fee Amount ($USD)</th>
                                     <th>Edit & Save</th>
                                 </tr>
                             </thead>
@@ -446,7 +417,7 @@
                 </div>
                 
                 <div class="form-group">
-                    <label>Adjustment Value (<span id="adjust-credit-currency-label">USD</span>)</label>
+                    <label>Adjustment Value ($USD)</label>
                     <input type="number" id="adjust-credit-amount" class="form-control" placeholder="Use negative for deductions (e.g. -200)" required>
                 </div>
                 <div class="form-group">
@@ -463,5 +434,24 @@
 
     <!-- Dynamic administrative controller script -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <script>
+        function switchB2CAdminTab(tabId) {
+            document.querySelectorAll(".menu-item").forEach(item => item.classList.remove("active"));
+            document.querySelectorAll(".tab-content-panel").forEach(panel => panel.classList.remove("active"));
+            
+            event.currentTarget.classList.add("active");
+            document.getElementById(`tab-${tabId}`).classList.add("active");
+            
+            if (tabId === "b2c-users") loadAdminB2CUsers();
+            else if (tabId === "b2c-fees") loadAdminB2CFees();
+            else if (tabId === "b2c-reports") loadAdminB2CReports();
+        }
+        
+        // Initial Load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAdminB2CUsers();
+        });
+    </script>
 </body>
 </html>

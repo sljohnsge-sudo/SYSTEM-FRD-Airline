@@ -26,7 +26,7 @@ def initialize_database():
         tables_to_drop = [
             "agent_rewards", "timatic_checks", "service_fees", "support_tickets",
             "hotel_bookings", "b2c_hotel_bookings", "b2c_holiday_bookings", "flight_bookings", "b2c_flight_bookings", "b2c_bookings", "bookings", "rooms", "hotels",
-            "flights", "b2c_users", "users", "popups"
+            "flights", "b2c_users", "users", "popups", "b2c_price_alerts"
         ]
         for table in tables_to_drop:
             cursor.execute(f"DROP TABLE IF EXISTS {table}")
@@ -61,7 +61,7 @@ def initialize_database():
             "flights": """
                 CREATE TABLE flights (
                     id INT AUTO_INCREMENT PRIMARY KEY,
-                    flight_number VARCHAR(10) UNIQUE NOT NULL,
+                    flight_number VARCHAR(10) NOT NULL,
                     airline VARCHAR(50) NOT NULL,
                     origin VARCHAR(50) NOT NULL,
                     destination VARCHAR(50) NOT NULL,
@@ -113,7 +113,7 @@ def initialize_database():
                     flight_id INT NOT NULL,
                     passenger_name VARCHAR(100) NOT NULL,
                     seat_number VARCHAR(10),
-                    gds_type ENUM('Amadeus', 'Sabre', 'LCC', 'NDC', 'GDS') NOT NULL,
+                    gds_type ENUM('Travelport', 'Sabre', 'LCC', 'NDC', 'GDS') NOT NULL,
                     ticket_status ENUM('ticketed', 'non-ticketed', 'refunded', 'voided') NOT NULL,
                     original_price DECIMAL(10, 2) NOT NULL,
                     service_fee DECIMAL(10, 2) DEFAULT 0.00,
@@ -122,6 +122,11 @@ def initialize_database():
                     passport_number VARCHAR(50) DEFAULT NULL,
                     mobile VARCHAR(30) DEFAULT NULL,
                     email VARCHAR(100) DEFAULT NULL,
+                    meal_preference VARCHAR(100) DEFAULT NULL,
+                    wheelchair_assistance VARCHAR(100) DEFAULT NULL,
+                    airport_assistance VARCHAR(100) DEFAULT NULL,
+                    allergy_conditions VARCHAR(255) DEFAULT NULL,
+                    other_requests TEXT DEFAULT NULL,
                     FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
                     FOREIGN KEY (flight_id) REFERENCES flights(id) ON DELETE CASCADE
                 ) ENGINE=InnoDB;
@@ -289,76 +294,109 @@ def initialize_database():
         """)
         print("Seeded users table.")
         
-        # Seed flights
-        # We need LCC, NDC, and GDS (Amadeus/Sabre) flights
-        flights_data = [
-            ('QR-832', 'Qatar Airways', 'DOH', 'LHR', 'GDS', 'GDS', 1, 450.00, 48),
-            ('EK-348', 'Emirates', 'DXB', 'SIN', 'GDS', 'GDS', 1, 620.00, 35),
-            ('UL-101', 'SriLankan Airlines', 'CMB', 'MLE', 'LCC', 'LCC', 1, 150.00, 18),
-            ('SQ-421', 'Singapore Airlines', 'SIN', 'SYD', 'NDC', 'NDC', 2, 750.00, 22),
-            ('6E-451', 'IndiGo', 'DEL', 'CMB', 'LCC', 'LCC', 1, 180.00, 60),
-            ('BA-117', 'British Airways', 'LHR', 'JFK', 'GDS', 'GDS', 1, 550.00, 40),
-            ('UL-308', 'SriLankan Airlines', 'CMB', 'SIN', 'GDS', 'GDS', 1, 310.00, 28),
-            
-            # Seed flights for CMB <-> MEL Colombo-Melbourne
-            ('EY-264', 'Etihad Airways', 'CMB', 'MEL', 'GDS', 'GDS', 2, 504.10, 9),
-            ('EY-265', 'Etihad Airways', 'MEL', 'CMB', 'GDS', 'GDS', 2, 504.10, 9),
-            ('6E-804', 'IndiGo', 'CMB', 'MEL', 'LCC', 'LCC', 2, 594.60, 9),
-            ('6E-805', 'IndiGo', 'MEL', 'CMB', 'LCC', 'LCC', 2, 594.60, 9),
-            ('MH-178', 'Malaysia Airlines', 'CMB', 'MEL', 'GDS', 'GDS', 2, 676.21, 9),
-            ('MH-179', 'Malaysia Airlines', 'MEL', 'CMB', 'GDS', 'GDS', 2, 676.21, 9),
-            ('CX-610', 'Cathay Pacific', 'CMB', 'MEL', 'NDC', 'NDC', 2, 787.05, 9),
-            ('CX-611', 'Cathay Pacific', 'MEL', 'CMB', 'NDC', 'NDC', 2, 787.05, 9)
+        # Seed flights via Travelport Client dynamically
+        from travelport_client import TravelportClient
+        tp_client = TravelportClient()
+        
+        routes = [
+            ("CMB", "MLE"),
+            ("CMB", "SIN"),
+            ("CMB", "DXB"),
+            ("CMB", "MEL"),
+            ("MEL", "CMB"),
+            ("DOH", "LHR")
         ]
-
         
         now = datetime.datetime.now()
-        for i, f in enumerate(flights_data):
-            dep = now + datetime.timedelta(days=random.randint(2, 10), hours=random.randint(1, 23))
-            arr = dep + datetime.timedelta(hours=f[6]) # Segment/Hours estimate
-            cursor.execute("""
-                INSERT INTO flights (flight_number, airline, origin, destination, flight_type, gds_source, departure_time, arrival_time, price, seats_available, segment_count)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (f[0], f[1], f[2], f[3], f[4], f[5], dep, arr, f[7], f[8], f[6]))
-            
-        print("Seeded flights table.")
+        AIRLINE_MAPPING = {
+            "UL": "SriLankan Airlines",
+            "EK": "Emirates",
+            "QR": "Qatar Airways",
+            "SQ": "Singapore Airlines",
+            "6E": "IndiGo",
+            "BA": "British Airways",
+            "EY": "Etihad Airways",
+            "MH": "Malaysia Airlines",
+            "TG": "Thai Airways",
+            "CX": "Cathay Pacific"
+        }
         
-        # Seed hotels
-        hotels_data = [
-            ("Grand Plaza Hotel", "London, UK", 4, "A premium luxury boutique hotel right in the heart of London, offering elegant rooms and 5-star service.", "hotel_london.jpg"),
-            ("Burj Al Arab Jumeirah", "Dubai, UAE", 5, "The global icon of Arabian luxury, towering over the Persian Gulf. Experience unparalleled world-class hospitality.", "hotel_dubai.jpg"),
-            ("Paradise Island Resort", "Maldives", 5, "An luxury beach and overwater villa sanctuary in Maldives, surrounded by turquoise waters and white sandy beaches.", "hotel_maldives.jpg"),
-            ("Changi Village Inn", "Singapore", 3, "A clean, modern, and affordable business hotel conveniently located near Changi Airport.", "hotel_singapore.jpg")
-        ]
-        for name, loc, stars, desc, img in hotels_data:
-            cursor.execute("""
-                INSERT INTO hotels (name, location, rating, description, image_url)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (name, loc, stars, desc, img))
+        for origin, destination in routes:
+            dept_date = (now + datetime.timedelta(days=random.randint(2, 8))).strftime("%Y-%m-%d")
+            try:
+                # Get flight offers in Amadeus compatible format (mapped to Travelport)
+                response = tp_client.shopping.flight_offers_search.get(
+                    originLocationCode=origin,
+                    destinationLocationCode=destination,
+                    departureDate=dept_date,
+                    adults=1
+                )
+                for f in response.data:
+                    segments = f['itineraries'][0]['segments']
+                    flight_no = f"{segments[0]['carrierCode']}-{segments[0]['number']}"
+                    carrier_code = segments[0]['carrierCode']
+                    airline = AIRLINE_MAPPING.get(carrier_code, carrier_code)
+                    # Convert to LKR (325 multiplier)
+                    price_val = Decimal(str(f['price']['total'])) * Decimal("325.00")
+                    dept = segments[0]['departure']['at'].replace('T', ' ')[:19]
+                    arr = segments[-1]['arrival']['at'].replace('T', ' ')[:19]
+                    seg_count = len(segments)
+                    
+                    cursor.execute("""
+                        INSERT INTO flights (flight_number, airline, origin, destination, departure_time, arrival_time, price, seats_available, flight_type, gds_source, segment_count)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'GDS', 'GDS', %s)
+                        ON DUPLICATE KEY UPDATE departure_time = VALUES(departure_time), arrival_time = VALUES(arrival_time), price = VALUES(price)
+                    """, (flight_no, airline, origin, destination, dept, arr, price_val, f.get('numberOfBookableSeats', 9), seg_count))
+            except Exception as e:
+                print(f"Failed to dynamically seed route {origin}-{destination} via Travelport: {e}")
             
-        print("Seeded hotels table.")
+        print("Seeded flights table via Travelport.")
         
-        # Seed rooms for hotels
-        cursor.execute("SELECT id, name FROM hotels")
-        hotels_list = cursor.fetchall()
-        for hotel_id, name in hotels_list:
-            if "London" in name or "Dubai" in name:
-                cursor.execute("""
-                    INSERT INTO rooms (hotel_id, room_type, price_per_night, availability)
-                    VALUES 
-                    (%s, 'Deluxe Double Room', 220.00, 1),
-                    (%s, 'Executive Ocean Suite', 580.00, 1),
-                    (%s, 'Presidential Penthouse', 1200.00, 1)
-                """, (hotel_id, hotel_id, hotel_id))
-            else:
-                cursor.execute("""
-                    INSERT INTO rooms (hotel_id, room_type, price_per_night, availability)
-                    VALUES 
-                    (%s, 'Standard Single Room', 95.00, 1),
-                    (%s, 'Deluxe Lagoon Villa', 320.00, 1),
-                    (%s, 'Overwater Bungalow', 650.00, 1)
-                """, (hotel_id, hotel_id, hotel_id))
-        print("Seeded rooms table.")
+        # Seed hotels and rooms via Travelport Client Stays (fallback/real)
+        hotel_cities = ["CMB", "MLE", "LHR", "SIN", "DXB"]
+        for city in hotel_cities:
+            try:
+                hotels_response = tp_client.reference_data.locations.hotels.by_city.get(cityCode=city)
+                for h_data in hotels_response.data[:3]:
+                    hotel_name = h_data['name'].title()
+                    hotel_loc = f"{h_data['address'].get('cityName', city).title()}, {h_data['address'].get('countryCode', '')}"
+                    rating = random.randint(3, 5)
+                    
+                    # Image URL matching the city code
+                    city_lower = city.lower()
+                    if city_lower in ['lon', 'lhr']:
+                        img_url = 'hotel_london.jpg'
+                    elif city_lower in ['dxb', 'auh']:
+                        img_url = 'hotel_dubai.jpg'
+                    elif city_lower in ['mle']:
+                        img_url = 'hotel_maldives.jpg'
+                    elif city_lower in ['sin']:
+                        img_url = 'hotel_singapore.jpg'
+                    else:
+                        img_url = f"hotel_{city_lower}_{random.randint(1,3)}.jpg"
+                        
+                    desc = f"A premium hotel in {hotel_loc} sourced via Travelport. Offers comfortable lodging and premium amenities."
+                    
+                    cursor.execute("""
+                        INSERT INTO hotels (name, location, rating, description, image_url)
+                        VALUES (%s, %s, %s, %s, %s)
+                    """, (hotel_name, hotel_loc, rating, desc, img_url))
+                    hotel_id = cursor.lastrowid
+                    
+                    # Add rooms
+                    rooms_data = [
+                        ('Standard Single Room', Decimal(str(random.randint(80, 150)))),
+                        ('Deluxe Double Room', Decimal(str(random.randint(180, 300)))),
+                        ('Executive Luxury Suite', Decimal(str(random.randint(400, 750))))
+                    ]
+                    for room_type, price in rooms_data:
+                        cursor.execute("""
+                            INSERT INTO rooms (hotel_id, room_type, price_per_night, availability)
+                            VALUES (%s, %s, %s, 1)
+                        """, (hotel_id, room_type, price))
+            except Exception as e:
+                print(f"Failed to dynamically seed hotels for city {city} via Travelport: {e}")
+        print("Seeded rooms and hotels tables via Travelport.")
         
         # Seed default service fees (Markup / Markdown configs)
         # Type: issuance ($15 markup), re-issue ($25 markup), refund ($10 markup)
@@ -419,8 +457,8 @@ def initialize_database():
                     tkt = f"TKT-{random.randint(1000000000, 9999999999)}" if status == "ticketed" else None
                     cursor.execute("""
                         INSERT INTO flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee, pnr_reference, ticket_number)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    """, (booking_id, fl_id, random.choice(passenger_names), f"{random.randint(12, 28)}{random.choice(['A','C','F'])}", fl_type, status, orig_price, markup, pnr, tkt))
+                        VALUES (%s, %s, %s, %s, 'Travelport', %s, %s, %s, %s, %s)
+                    """, (booking_id, fl_id, random.choice(passenger_names), f"{random.randint(12, 28)}{random.choice(['A','C','F'])}", status, orig_price, markup, pnr, tkt))
                 
                 else: # hotel booking
                     room = random.choice(rooms_pool)
@@ -450,7 +488,7 @@ def initialize_database():
         cursor.execute("""
             INSERT INTO support_tickets (agent_id, subject, message, status, created_at)
             VALUES 
-            (%s, 'Amadeus API Timeout Issue', 'Hello ATL support, we noticed periodic timeouts when searching for GDS flights to LHR this morning around 9:00 AM. Please advise.', 'open', %s),
+            (%s, 'Travelport API Timeout Issue', 'Hello ATL support, we noticed periodic timeouts when searching for GDS flights to LHR this morning around 9:00 AM. Please advise.', 'open', %s),
             (%s, 'Credit Top-Up Pending', 'We submitted a bank transfer for a $5,000 credit top-up, but it has not been activated yet. Reference code TXN-88741.', 'resolved', %s)
         """, (std_agent_id, now - datetime.timedelta(hours=4), prem_agent_id, now - datetime.timedelta(days=1)))
         print("Seeded agent support tickets.")

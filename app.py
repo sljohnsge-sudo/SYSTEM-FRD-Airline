@@ -7,10 +7,8 @@ import os
 import socket
 socket.setdefaulttimeout(2.0)
 from authlib.integrations.flask_client import OAuth
-from mock_gds import MockGDSClient as Client
-
 app = Flask(__name__)
-app.secret_key = "travel_portal_secret_key_amadeus_b2b"
+app.secret_key = "travel_portal_secret_key_travelport_b2b"
 
 # Configure OAuth
 oauth = OAuth(app)
@@ -76,14 +74,17 @@ def login():
         
         user = query_db("SELECT * FROM users WHERE username = %s AND password = %s", (username, password), one=True)
         if user:
-            session["user_id"] = user["id"]
-            session["username"] = user["username"]
-            session["role"] = user["role"]
-            session["company_name"] = user["company_name"]
-            
-            if user["role"] == "admin":
-                return redirect(url_for("admin_dashboard"))
-            return redirect(url_for("agent_dashboard"))
+            if user.get("status") == "inactive":
+                error = "Your account has been deactivated. Please contact support."
+            else:
+                session["user_id"] = user["id"]
+                session["username"] = user["username"]
+                session["role"] = user["role"]
+                session["company_name"] = user["company_name"]
+                
+                if user["role"] == "admin":
+                    return redirect(url_for("admin_dashboard"))
+                return redirect(url_for("agent_dashboard"))
         else:
             error = "Invalid username or password."
             
@@ -104,8 +105,8 @@ def agent_dashboard():
     agent_id = session["user_id"]
     agent_info = query_db("SELECT * FROM users WHERE id = %s", (agent_id,), one=True)
     
-    # Get active popups
-    popups = query_db("SELECT * FROM popups WHERE is_active = 1 ORDER BY created_at DESC")
+    # Get active popups (global or specific to this agent)
+    popups = query_db("SELECT * FROM popups WHERE is_active = 1 AND (agent_id IS NULL OR agent_id = %s) ORDER BY created_at DESC", (agent_id,))
     
     # Get flight list for search default
     flights = query_db("SELECT * FROM flights ORDER BY price ASC")
@@ -838,8 +839,21 @@ def get_country_flag(country_code):
         return ""
 
 def resolve_iata_code(keyword, flight_api_client=None):
-    if not keyword:
-        return None
+    if len(keyword) == 3 and keyword.isalpha():
+        return keyword.upper()
+        
+    from services.travelport_service import TravelportService
+    tp_service = TravelportService()
+    
+    try:
+        response = tp_service.search_locations(keyword)
+        if response["success"] and response.get("data"):
+            data = response["data"]
+            if isinstance(data, list) and len(data) > 0:
+                return data[0].get('iataCode') or data[0].get('address', {}).get('cityCode')
+    except Exception as e:
+        print(f"Error resolving location '{keyword}':", e)
+    return None
         
     # Extract 3-letter code from parentheses if present (e.g., "Colombo, Sri Lanka (CMB)" -> "CMB")
     import re
@@ -871,54 +885,44 @@ def resolve_iata_code(keyword, flight_api_client=None):
 def api_locations_search():
     q = request.args.get("q", "").strip().upper()
     
-    # Filter local popular locations first
-    matches = []
-    seen_codes = set()
+    STATIC_LOCATIONS = [
+        {"city": "Colombo", "code": "CMB", "name": "Bandaranaike Intl Arpt", "country": "SRI LANKA", "country_code": "LK"},
+        {"city": "Jaffna", "code": "JAF", "name": "Jaffna Intl Arpt", "country": "SRI LANKA", "country_code": "LK"},
+        {"city": "Delhi", "code": "DEL", "name": "Indira Gandhi Intl", "country": "INDIA", "country_code": "IN"},
+        {"city": "Mumbai", "code": "BOM", "name": "Chhatrapati Shivaji Maharaj Intl", "country": "INDIA", "country_code": "IN"},
+        {"city": "Chennai", "code": "MAA", "name": "Chennai Intl", "country": "INDIA", "country_code": "IN"},
+        {"city": "Bangalore", "code": "BLR", "name": "Kempegowda Intl", "country": "INDIA", "country_code": "IN"},
+        {"city": "Singapore", "code": "SIN", "name": "Changi Arpt", "country": "SINGAPORE", "country_code": "SG"},
+        {"city": "Male", "code": "MLE", "name": "Velana Intl Arpt", "country": "MALDIVES", "country_code": "MV"},
+        {"city": "London", "code": "LHR", "name": "Heathrow Arpt", "country": "UNITED KINGDOM", "country_code": "GB"},
+        {"city": "London", "code": "LGW", "name": "Gatwick Arpt", "country": "UNITED KINGDOM", "country_code": "GB"},
+        {"city": "Dubai", "code": "DXB", "name": "Dubai Intl Arpt", "country": "UNITED ARAB EMIRATES", "country_code": "AE"},
+        {"city": "Abu Dhabi", "code": "AUH", "name": "Zayed Intl Arpt", "country": "UNITED ARAB EMIRATES", "country_code": "AE"},
+        {"city": "Doha", "code": "DOH", "name": "Hamad Intl Arpt", "country": "QATAR", "country_code": "QA"},
+        {"city": "Sydney", "code": "SYD", "name": "Kingsford Smith Arpt", "country": "AUSTRALIA", "country_code": "AU"},
+        {"city": "Melbourne", "code": "MEL", "name": "Melbourne Arpt", "country": "AUSTRALIA", "country_code": "AU"},
+        {"city": "New York", "code": "JFK", "name": "John F. Kennedy Intl", "country": "UNITED STATES", "country_code": "US"},
+        {"city": "New York", "code": "LGA", "name": "LaGuardia Arpt", "country": "UNITED STATES", "country_code": "US"},
+        {"city": "Los Angeles", "code": "LAX", "name": "Los Angeles Intl", "country": "UNITED STATES", "country_code": "US"},
+        {"city": "Paris", "code": "CDG", "name": "Charles de Gaulle Arpt", "country": "FRANCE", "country_code": "FR"},
+        {"city": "Frankfurt", "code": "FRA", "name": "Frankfurt Arpt", "country": "GERMANY", "country_code": "DE"},
+        {"city": "Rome", "code": "FCO", "name": "Leonardo da Vinci Arpt", "country": "ITALY", "country_code": "IT"},
+        {"city": "Zurich", "code": "ZRH", "name": "Zurich Arpt", "country": "SWITZERLAND", "country_code": "CH"},
+        {"city": "Tokyo", "code": "HND", "name": "Haneda Arpt", "country": "JAPAN", "country_code": "JP"},
+        {"city": "Tokyo", "code": "NRT", "name": "Narita Intl Arpt", "country": "JAPAN", "country_code": "JP"},
+        {"city": "Kuala Lumpur", "code": "KUL", "name": "Kuala Lumpur Intl", "country": "MALAYSIA", "country_code": "MY"},
+        {"city": "Bangkok", "code": "BKK", "name": "Suvarnabhumi Arpt", "country": "THAILAND", "country_code": "TH"},
+        {"city": "Riyadh", "code": "RUH", "name": "King Khalid Intl", "country": "SAUDI ARABIA", "country_code": "SA"},
+        {"city": "Jeddah", "code": "JED", "name": "King Abdulaziz Intl", "country": "SAUDI ARABIA", "country_code": "SA"},
+        {"city": "Toronto", "code": "YYZ", "name": "Toronto Pearson Intl", "country": "CANADA", "country_code": "CA"},
+        {"city": "Beijing", "code": "PEK", "name": "Beijing Capital Intl", "country": "CHINA", "country_code": "CN"}
+    ]
     
-    for loc in POPULAR_LOCATIONS:
-        # Match against city, country, or code
-        if not q or q in loc["city"].upper() or q in loc["country"].upper() or q in loc["code"].upper():
-            matches.append(loc.copy())
-            seen_codes.add(loc["code"])
-            
-    # Then query Flight API Reference Data API if we have a query
-    if q and len(q) >= 2:
-        try:
-            flight_api_client = Client(
-                client_id='3ZBEyT1bTUzMUPkcEPBUOEKIAkEjgu5o',
-                client_secret='2K9Xh5GC2UF9rVo3',
-                hostname='test'
-            )
-            response = flight_api_client.reference_data.locations.get(
-                keyword=q,
-                subType='AIRPORT,CITY'
-            )
-            if response.data:
-                for item in response.data:
-                    code = item.get('iataCode') or item.get('address', {}).get('cityCode')
-                    if not code or code in seen_codes:
-                        continue
-                    
-                    address = item.get('address', {})
-                    country_name = address.get('countryName', '').upper()
-                    country_code = address.get('countryCode', '').upper()
-                    city_name = address.get('cityName', '').title() or item.get('name', '').title()
-                    airport_name = item.get('name', '').title()
-                    
-                    if not country_name:
-                        continue
-                        
-                    loc = {
-                        "city": city_name,
-                        "code": code,
-                        "name": f"{airport_name} Arpt" if "Airport" not in airport_name and "Intl" not in airport_name else airport_name,
-                        "country": country_name,
-                        "country_code": country_code
-                    }
-                    matches.append(loc)
-                    seen_codes.add(code)
-        except Exception as e:
-            print("Flight API Reference Data search error:", e)
+    matches = []
+    
+    for loc in STATIC_LOCATIONS:
+        if not q or q in loc["code"] or q in loc["city"].upper() or q in loc["country"].upper():
+            matches.append(loc)
             
     # Group results by country
     grouped = {}
@@ -936,7 +940,6 @@ def api_locations_search():
             "name": loc["name"]
         })
         
-    # Format as list sorted by country name, prioritizing SRI LANKA
     sorted_groups = []
     countries = sorted(list(grouped.keys()))
     if "SRI LANKA" in countries:
@@ -948,398 +951,140 @@ def api_locations_search():
         
     return jsonify({"success": True, "groups": sorted_groups})
 
-# API: Search Flights (GDS, LCC, NDC consolidated with round-trip support)
 @app.route("/api/flights/search", methods=["GET"])
 def api_flights_search():
-    origin_input = request.args.get("origin", "").strip()
-    destination_input = request.args.get("destination", "").strip()
-    flight_type = request.args.get("flight_type", "ALL") # ALL, GDS, LCC, NDC
+    from services.travelport_service import TravelportService
+    import re
+    
+    origin_raw = request.args.get("origin", "").strip().upper()
+    dest_raw = request.args.get("destination", "").strip().upper()
+    
+    orig_match = re.search(r'\(([A-Z]{3})\)', origin_raw)
+    origin = orig_match.group(1) if orig_match else origin_raw
+    
+    dest_match = re.search(r'\(([A-Z]{3})\)', dest_raw)
+    destination = dest_match.group(1) if dest_match else dest_raw
+    
     date_str = request.args.get("date", "").strip()
-    return_date_str = request.args.get("return_date", "").strip()
-    airline_filter = request.args.get("airline", "").strip()
-    travel_class = request.args.get("travelClass", "ECONOMY").strip()
+    adults = request.args.get("adults", "1").strip()
     
-    # Initialize Global client to resolve locations and query flight offers
-    flight_api = None
-    try:
-        flight_api = Client(
-            client_id='3ZBEyT1bTUzMUPkcEPBUOEKIAkEjgu5o',
-            client_secret='2K9Xh5GC2UF9rVo3',
-            hostname='test'
-        )
-    except Exception as e:
-        print("Failed to initialize Flight API Client:", e)
+    tp_service = TravelportService()
+    response = tp_service.search_flights(origin, destination, date_str, adults=adults)
+    
+    if not response["success"]:
+        return jsonify({"success": False, "error": response.get("error", "Failed to search flights on Travelport API.")})
         
-    origin = resolve_iata_code(origin_input, flight_api)
-    destination = resolve_iata_code(destination_input, flight_api)
+    tp_data = response["data"]
+    formatted_flights = []
     
-    # Fallback to uppercase values if resolution failed to prevent completely empty SQL matching
-    if not origin:
-        origin = origin_input.upper()
-    if not destination:
-        destination = destination_input.upper()
-    
-    api_flight_ids = []
-    api_return_flight_ids = []
-    
-    # Pre-fetch live GDS flights from Flight API and cache them in local database
-    if flight_type in ["ALL", "GDS"] and origin and destination and date_str:
-        try:
-            search_params = {
-                "originLocationCode": origin,
-                "destinationLocationCode": destination,
-                "departureDate": date_str,
-                "adults": 1,
-                "max": 10
-            }
-            if travel_class != "ALL":
-                search_params["travelClass"] = travel_class
-
-            response = flight_api.shopping.flight_offers_search.get(**search_params)
-            
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            for f in response.data:
-                segments = f['itineraries'][0]['segments']
-                flight_no = f"{segments[0]['carrierCode']}-{segments[0]['number']}"
-                carrier_code = segments[0]['carrierCode']
-                airline = AIRLINE_MAPPING.get(carrier_code, carrier_code)
-                # Convert EUR to LKR (approx 325 exchange rate)
-                price_val = Decimal(str(f['price']['total'])) * Decimal("325.00")
-                # Keep first 19 chars for mysql datetime format (YYYY-MM-DD HH:MM:SS)
-                dept = segments[0]['departure']['at'].replace('T', ' ')[:19]
-                arr = segments[-1]['arrival']['at'].replace('T', ' ')[:19]
-                seg_count = len(segments)
-                
-                # Avoid duplicates and track IDs of fetched flights
+    # Check for the new v11/v12 CatalogProductOfferingsResponse structure
+    print("Keys in tp_data app.py:", tp_data.keys() if isinstance(tp_data, dict) else type(tp_data))
+    if "CatalogProductOfferingsResponse" in tp_data:
+        root = tp_data.get("CatalogProductOfferingsResponse", {})
+        offerings = root.get("CatalogProductOfferings", {}).get("CatalogProductOffering", [])
+        print("Offerings count:", len(offerings))
+        
+        # Build flights reference map
+        flights_ref_map = {}
+        for item in root.get('ReferenceList', []):
+            if item.get('@type') == 'ReferenceListFlight':
+                for f in item.get('Flight', []):
+                    flights_ref_map[f.get('id')] = f
+                    
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        for idx, offering in enumerate(offerings):
+            try:
+                # Get price
+                best_price_info = offering.get("ProductBrandOptions", [{}])[0].get("ProductBrandOffering", [{}])[0].get("BestCombinablePrice", {})
+                total_price_str = best_price_info.get("TotalPrice", "0")
                 try:
-                    cursor.execute("SELECT id FROM flights WHERE flight_number = %s", (flight_no,))
-                    row = cursor.fetchone()
-                    if row:
-                        api_flight_ids.append(row[0])
-                        cursor.execute("UPDATE flights SET departure_time = %s, arrival_time = %s, price = %s WHERE id = %s", (dept, arr, price_val, row[0]))
-                    else:
-                        cursor.execute("""
-                            INSERT INTO flights (flight_number, airline, origin, destination, departure_time, arrival_time, price, seats_available, flight_type, segment_count)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'GDS', %s)
-                        """, (flight_no, airline, origin, destination, dept, arr, price_val, f.get('numberOfBookableSeats', 9), seg_count))
-                        api_flight_ids.append(cursor.lastrowid)
-                except Exception as ex:
-                    print(f"Flight API flight loop error for {flight_no}:", ex)
+                    price_lkr = float(total_price_str)
+                except ValueError:
+                    price_lkr = 0.0
                     
-            # Pre-fetch return flights if return date is specified
-            if return_date_str:
-                try:
-                    return_search_params = {
-                        "originLocationCode": destination,
-                        "destinationLocationCode": origin,
-                        "departureDate": return_date_str,
-                        "adults": 1,
-                        "max": 10
-                    }
-                    if travel_class != "ALL":
-                        return_search_params["travelClass"] = travel_class
-
-                    return_response = flight_api.shopping.flight_offers_search.get(**return_search_params)
-                    for f in return_response.data:
-                        segments = f['itineraries'][0]['segments']
-                        flight_no = f"{segments[0]['carrierCode']}-{segments[0]['number']}"
-                        carrier_code = segments[0]['carrierCode']
-                        airline = AIRLINE_MAPPING.get(carrier_code, carrier_code)
-                        # Convert EUR to LKR (approx 325 exchange rate)
-                        price_val = Decimal(str(f['price']['total'])) * Decimal("325.00")
-                        dept = segments[0]['departure']['at'].replace('T', ' ')[:19]
-                        arr = segments[-1]['arrival']['at'].replace('T', ' ')[:19]
-                        seg_count = len(segments)
-                        
-                        try:
-                            cursor.execute("SELECT id FROM flights WHERE flight_number = %s", (flight_no,))
-                            row = cursor.fetchone()
-                            if row:
-                                api_return_flight_ids.append(row[0])
-                                cursor.execute("UPDATE flights SET departure_time = %s, arrival_time = %s, price = %s WHERE id = %s", (dept, arr, price_val, row[0]))
-                            else:
-                                cursor.execute("""
-                                    INSERT INTO flights (flight_number, airline, origin, destination, departure_time, arrival_time, price, seats_available, flight_type, segment_count)
-                                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'GDS', %s)
-                                """, (flight_no, airline, destination, origin, dept, arr, price_val, f.get('numberOfBookableSeats', 9), seg_count))
-                                api_return_flight_ids.append(cursor.lastrowid)
-                        except Exception as ex:
-                            print(f"Flight API Return flight loop error for {flight_no}:", ex)
-                except Exception as ex:
-                    print("Flight API Return error:", ex)
-                    
-            conn.commit()
-            cursor.close()
-            conn.close()
-        except Exception as e:
-            print("Flight API error:", e)
- 
-    # Query outbound flights
-    if origin and destination and date_str:
-        # Pre-generate LCC/NDC mock flights if they don't exist for this route
-        if flight_type in ["ALL", "LCC", "NDC"]:
-            existing_lcc_ndc = query_db("SELECT id FROM flights WHERE origin = %s AND destination = %s AND flight_type IN ('LCC', 'NDC') LIMIT 1", (origin, destination))
-            if not existing_lcc_ndc:
-                conn = get_db_connection()
-                cursor = conn.cursor()
-                airlines = ['UL', 'EK', 'QR', 'SQ', 'CX', 'MH', 'TG']
-                for _ in range(10):
-                    al = random.choice(airlines)
-                    fno = f"{al}-{random.randint(100, 9999)}"
-                    f_type = random.choice(['LCC', 'NDC'])
-                    if f_type == 'LCC':
-                        gds_src = 'LCC'
-                        price_val = round(random.uniform(15000, 60000), 2)
-                    else:
-                        gds_src = 'NDC'
-                        price_val = round(random.uniform(35000, 120000), 2)
-                        
-                    seats = random.randint(2, 9)
-                    req_date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
-                    dept_time = datetime.datetime.combine(req_date, datetime.time(random.randint(0,23), random.choice([0,15,30,45])))
-                    arr_time = dept_time + datetime.timedelta(hours=random.randint(1, 14), minutes=random.choice([0,15,30,45]))
-                    
-                    cursor.execute("""
-                        INSERT INTO flights (flight_number, airline, origin, destination, departure_time, arrival_time, price, seats_available, flight_type, gds_source, segment_count)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    """, (fno, AIRLINE_MAPPING.get(al, al), origin, destination, dept_time, arr_time, price_val, seats, f_type, gds_src, random.randint(1,3)))
-                conn.commit()
-                cursor.close()
-                conn.close()
-
-        # Build query parameters
-        query_conditions = ["origin = %s AND destination = %s"]
-        params = [origin, destination]
-        
-        if flight_type == "ALL":
-            if api_flight_ids:
-                format_strings = ','.join(['%s'] * len(api_flight_ids))
-                query_conditions.append(f"(flight_type IN ('LCC', 'NDC') OR id IN ({format_strings}))")
-                params.extend(api_flight_ids)
-        elif flight_type == "GDS":
-            if api_flight_ids:
-                format_strings = ','.join(['%s'] * len(api_flight_ids))
-                query_conditions.append(f"id IN ({format_strings})")
-                params.extend(api_flight_ids)
-            else:
-                query_conditions.append("flight_type = 'GDS'")
-        else: # LCC or NDC
-            query_conditions.append("flight_type = %s")
-            params.append(flight_type)
-            
-        if airline_filter:
-            query_conditions.append("airline LIKE %s")
-            params.append(f"%{airline_filter}%")
-            
-        query = f"SELECT * FROM flights WHERE " + " AND ".join(query_conditions) + " ORDER BY price ASC"
-        flights = query_db(query, tuple(params))
-        
-        # If still no flights at all (e.g. no GDS results and LCC/NDC wasn't generated for some reason), generate general mix
-        if not flights:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            airlines = ['UL', 'EK', 'QR', 'SQ', 'CX', 'MH', 'TG']
-            for _ in range(15):
-                al = random.choice(airlines)
-                fno = f"{al}-{random.randint(100, 9999)}"
-                f_type = random.choice(['GDS', 'LCC', 'NDC'])
-                if f_type == 'LCC':
-                    gds_src = 'LCC'
-                    price_val = round(random.uniform(15000, 60000), 2)
-                elif f_type == 'NDC':
-                    gds_src = 'NDC'
-                    price_val = round(random.uniform(35000, 120000), 2)
-                else:
-                    gds_src = 'GDS'
-                    price_val = round(random.uniform(45000, 180000), 2)
-                    
-                seats = random.randint(2, 9)
-                req_date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
-                dept_time = datetime.datetime.combine(req_date, datetime.time(random.randint(0,23), random.choice([0,15,30,45])))
-                arr_time = dept_time + datetime.timedelta(hours=random.randint(1, 14), minutes=random.choice([0,15,30,45]))
+                # Get flight segments
+                flight_refs = offering.get("ProductBrandOptions", [{}])[0].get("flightRefs", [])
+                segments = []
+                for ref in flight_refs:
+                    seg = flights_ref_map.get(ref)
+                    if seg:
+                        segments.append({
+                            "carrierCode": seg.get("carrier"),
+                            "number": seg.get("number"),
+                            "departure": {
+                                "at": f"{seg.get('Departure', {}).get('date')}T{seg.get('Departure', {}).get('time')}"
+                            },
+                            "arrival": {
+                                "at": f"{seg.get('Arrival', {}).get('date')}T{seg.get('Arrival', {}).get('time')}"
+                            }
+                        })
                 
-                cursor.execute("""
-                    INSERT INTO flights (flight_number, airline, origin, destination, departure_time, arrival_time, price, seats_available, flight_type, gds_source, segment_count)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """, (fno, AIRLINE_MAPPING.get(al, al), origin, destination, dept_time, arr_time, price_val, seats, f_type, gds_src, random.randint(1,3)))
-            conn.commit()
-            cursor.close()
-            conn.close()
-            flights = query_db(query, tuple(params))
-
-        # Adjust the departure date of the mock flights to match the requested date
-        if date_str:
-            requested_date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
-            for f in flights:
-                orig_dep = f["departure_time"]
-                orig_arr = f["arrival_time"]
-                time_diff = orig_arr - orig_dep
-                new_dep = datetime.datetime.combine(requested_date, orig_dep.time())
-                new_arr = new_dep + time_diff
-                f["departure_time"] = new_dep
-                f["arrival_time"] = new_arr
-    else:
-        # Fallback for initial load or general listing to keep other non-search components operational
-        query = "SELECT * FROM flights WHERE 1=1"
-        params = []
-        if origin:
-            query += " AND origin = %s"
-            params.append(origin)
-        if destination:
-            query += " AND destination = %s"
-            params.append(destination)
-        if date_str:
-            query += " AND DATE(departure_time) = %s"
-            params.append(date_str)
-        if flight_type != "ALL":
-            query += " AND flight_type = %s"
-            params.append(flight_type)
-        if airline_filter:
-            query += " AND airline LIKE %s"
-            params.append(f"%{airline_filter}%")
-        query += " ORDER BY price ASC"
-        flights = query_db(query, tuple(params))
-        
-    # Query return flights if return date is specified
-    return_flights = []
-    if return_date_str and origin and destination:
-        # Pre-generate LCC/NDC return flights if they don't exist for this route
-        if flight_type in ["ALL", "LCC", "NDC"]:
-            existing_return_lcc_ndc = query_db("SELECT id FROM flights WHERE origin = %s AND destination = %s AND flight_type IN ('LCC', 'NDC') LIMIT 1", (destination, origin))
-            if not existing_return_lcc_ndc:
-                conn = get_db_connection()
-                cursor = conn.cursor()
-                airlines = ['UL', 'EK', 'QR', 'SQ', 'CX', 'MH', 'TG']
-                for _ in range(10):
-                    al = random.choice(airlines)
-                    fno = f"{al}-{random.randint(100, 9999)}"
-                    f_type = random.choice(['LCC', 'NDC'])
-                    if f_type == 'LCC':
-                        gds_src = 'LCC'
-                        price_val = round(random.uniform(15000, 60000), 2)
-                    else:
-                        gds_src = 'NDC'
-                        price_val = round(random.uniform(35000, 120000), 2)
-                        
-                    seats = random.randint(2, 9)
-                    req_date = datetime.datetime.strptime(return_date_str, "%Y-%m-%d").date()
-                    dept_time = datetime.datetime.combine(req_date, datetime.time(random.randint(0,23), random.choice([0,15,30,45])))
-                    arr_time = dept_time + datetime.timedelta(hours=random.randint(1, 14), minutes=random.choice([0,15,30,45]))
+                if not segments:
+                    continue
                     
-                    cursor.execute("""
-                        INSERT INTO flights (flight_number, airline, origin, destination, departure_time, arrival_time, price, seats_available, flight_type, gds_source, segment_count)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    """, (fno, AIRLINE_MAPPING.get(al, al), destination, origin, dept_time, arr_time, price_val, seats, f_type, gds_src, random.randint(1,3)))
-                conn.commit()
-                cursor.close()
-                conn.close()
-
-        # Build query parameters
-        query_conditions = ["origin = %s AND destination = %s"]
-        params = [destination, origin]
-        
-        if flight_type == "ALL":
-            if api_return_flight_ids:
-                format_strings = ','.join(['%s'] * len(api_return_flight_ids))
-                query_conditions.append(f"(flight_type IN ('LCC', 'NDC') OR id IN ({format_strings}))")
-                params.extend(api_return_flight_ids)
-        elif flight_type == "GDS":
-            if api_return_flight_ids:
-                format_strings = ','.join(['%s'] * len(api_return_flight_ids))
-                query_conditions.append(f"id IN ({format_strings})")
-                params.extend(api_return_flight_ids)
-            else:
-                query_conditions.append("flight_type = 'GDS'")
-        else: # LCC or NDC
-            query_conditions.append("flight_type = %s")
-            params.append(flight_type)
-            
-        if airline_filter:
-            query_conditions.append("airline LIKE %s")
-            params.append(f"%{airline_filter}%")
-            
-        query = f"SELECT * FROM flights WHERE " + " AND ".join(query_conditions) + " ORDER BY price ASC"
-        return_flights = query_db(query, tuple(params))
-        
-        # Adjust the departure date of the return flights to match the requested return date
-        if return_date_str:
-            requested_ret_date = datetime.datetime.strptime(return_date_str, "%Y-%m-%d").date()
-            for f in return_flights:
-                orig_dep = f["departure_time"]
-                orig_arr = f["arrival_time"]
-                time_diff = orig_arr - orig_dep
-                new_dep = datetime.datetime.combine(requested_ret_date, orig_dep.time())
-                new_arr = new_dep + time_diff
-                f["departure_time"] = new_dep
-                f["arrival_time"] = new_arr
-            
-        # Fallback clone return flights if no return flights found but outbound flights exist
-        if not return_flights and flights:
-            conn = get_db_connection()
-            cursor = conn.cursor(dictionary=True)
-            for f in flights:
-                ret_flight_no = f"RET-{f['flight_number']}"
-                dept_dt = datetime.datetime.strptime(return_date_str, "%Y-%m-%d") + datetime.timedelta(hours=14)
-                arr_dt = dept_dt + datetime.timedelta(hours=3)
+                airline = segments[0]["carrierCode"]
+                flight_number = f"{segments[0]['carrierCode']}-{segments[0]['number']}"
+                dept_time = segments[0]["departure"]["at"].replace('T', ' ')[:19]
+                arr_time = segments[-1]["arrival"]["at"].replace('T', ' ')[:19]
+                seats_avail = 9
+                segment_count = len(segments)
                 
-                cursor.execute("SELECT * FROM flights WHERE flight_number = %s AND origin = %s", (ret_flight_no, destination))
-                existing = cursor.fetchone()
-                if existing:
-                    return_flights.append(existing)
+                # Travelport Sandbox requires the transactionId, offer id ("o1"), and product ref ("p0")
+                offer_id = offering.get("id", "o1")
+                transaction_id = tp_data.get("CatalogProductOfferingsResponse", {}).get("transactionId", "")
+                
+                # Extract product_ref safely
+                product_ref = "p0"
+                pbo = offering.get("ProductBrandOptions", [])
+                if pbo:
+                    product_list = pbo[0].get("ProductBrandOffering", [{}])[0].get("Product", [])
+                    if product_list:
+                        product_ref = product_list[0].get("productRef", "p0")
+                
+                combined_offer_id = f"{transaction_id}::{offer_id}::{product_ref}" if transaction_id else f"{offer_id}::{product_ref}"
+                
+                # Save to DB so it can be booked
+                cursor.execute("SELECT id FROM flights WHERE flight_number = %s AND departure_time = %s", (flight_number, dept_time))
+                row = cursor.fetchone()
+                if row:
+                    flight_id = row[0]
+                    cursor.execute("UPDATE flights SET offer_identifier = %s WHERE id = %s", (combined_offer_id, flight_id))
                 else:
                     cursor.execute("""
-                        INSERT INTO flights (flight_number, airline, origin, destination, departure_time, arrival_time, price, seats_available, flight_type, segment_count)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    """, (ret_flight_no, f["airline"], destination, origin, dept_dt, arr_dt, Decimal(str(f["price"])), f["seats_available"], f["flight_type"], f["segment_count"]))
-                    
-                    new_id = cursor.lastrowid
-                    cursor.execute("SELECT * FROM flights WHERE id = %s", (new_id,))
-                    new_f = cursor.fetchone()
-                    return_flights.append(new_f)
-            conn.commit()
-            cursor.close()
-            conn.close()
-            
-    # Serialize helper
-    def serialize_flight(f):
-        f_copy = f.copy()
-        if isinstance(f_copy["price"], Decimal):
-            f_copy["price"] = float(f_copy["price"])
-        # Normalize price to LKR: if price is < 10000 it is stored in USD (seeded flights),
-        # multiply by 300 to convert to approximate LKR. Mock flights are already in LKR (45000+).
-        if f_copy["price"] < 10000:
-            f_copy["price"] = round(f_copy["price"] * 300, 2)
-        if isinstance(f_copy["departure_time"], (datetime.datetime, datetime.date)):
-            f_copy["departure_time"] = f_copy["departure_time"].isoformat()
-        if isinstance(f_copy["arrival_time"], (datetime.datetime, datetime.date)):
-            f_copy["arrival_time"] = f_copy["arrival_time"].isoformat()
-        return f_copy
-        
-    # Pair flights if return_date is specified
-    if return_date_str and return_flights:
-        paired_flights = []
-        for out_f in flights:
-            matching_ret = None
-            for ret_f in return_flights:
-                if ret_f["airline"] == out_f["airline"]:
-                    matching_ret = ret_f
-                    break
-            if not matching_ret:
-                matching_ret = return_flights[0]
+                        INSERT INTO flights (flight_number, airline, origin, destination, departure_time, arrival_time, price, seats_available, flight_type, segment_count, offer_identifier)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'GDS', %s, %s)
+                    """, (flight_number, airline, origin, destination, dept_time, arr_time, price_lkr, seats_avail, segment_count, combined_offer_id))
+                    flight_id = cursor.lastrowid
                 
-            out_serialized = serialize_flight(out_f)
-            ret_serialized = serialize_flight(matching_ret)
+                formatted_flights.append({
+                "id": flight_id,
+                "airline": airline,
+                "flight_number": flight_number,
+                "origin": origin,
+                "destination": destination,
+                "departure_time": dept_time,
+                "arrival_time": arr_time,
+                "price": price_lkr,
+                "seats_available": seats_avail,
+                "flight_type": "GDS",
+                "gds_source": "Travelport",
+                "segment_count": segment_count
+                })
+            except Exception as e:
+                print("Error parsing flight:", e)
             
-            # Combine pricing and structure
-            out_serialized["return_flight"] = ret_serialized
-            out_serialized["price"] = out_serialized["price"] + ret_serialized["price"]
-            paired_flights.append(out_serialized)
-        flights = paired_flights
-    else:
-        flights = [serialize_flight(f) for f in flights]
-        
-    return jsonify({"success": True, "flights": flights})
+    conn.commit()
+    cursor.close()
+    conn.close()
+            
+    return jsonify({
+        "success": True,
+        "flights": formatted_flights,
+        "return_flights": []
+    })
+
 @app.route("/api/flights/seat-availability", methods=["POST"])
 def api_flights_seat_availability():
     data = request.json
@@ -1377,8 +1122,7 @@ def api_flights_book():
     if not is_b2c:
         if "user_id" not in session or session["role"] != "agent":
             return jsonify({"success": False, "error": "Unauthorized"}), 401
-        
-    data = request.json
+
     flight_id = data.get("flight_id")
     bypass_seat_selection = data.get("bypass_seat_selection", False)
     
@@ -1401,10 +1145,7 @@ def api_flights_book():
     passport_number = data.get("passport_number")
     mobile = data.get("mobile")
     email = data.get("email")
-    ticket_now = data.get("ticket_now", False) # True = Ticketed, False = Non-Ticketed reservation
-    
-    return_flight_id = data.get("return_flight_id")
-    return_seat_number = data.get("return_seat_number", "14F")
+    ticket_now = data.get("ticket_now", False) 
     
     if not flight_id or not passenger_name:
         return jsonify({"success": False, "error": "Flight and passenger name are required"}), 400
@@ -1413,609 +1154,407 @@ def api_flights_book():
     cursor = conn.cursor(dictionary=True)
     
     try:
-        # Get flight details
         cursor.execute("SELECT * FROM flights WHERE id = %s", (flight_id,))
         flight = cursor.fetchone()
+        
         if not flight:
             return jsonify({"success": False, "error": "Flight not found"}), 404
             
-        if not bypass_seat_selection and flight["seats_available"] <= 0:
-            return jsonify({"success": False, "error": "No seats available on this flight"}), 400
+        # Send full data payload to Travelport for Booking
+        from services.travelport_service import TravelportService
+        tp_service = TravelportService()
+        
+        tp_res = tp_service.book_flight(flight_id, passengers or [], offer_identifier=flight.get("offer_identifier"))
+        if not tp_res["success"]:
+            # If Travelport booking fails, do not create local DB entry
+            return jsonify({"success": False, "error": f"Travelport Booking Failed: {tp_res.get('error')}"})
             
-        return_flight = None
-        if return_flight_id:
-            cursor.execute("SELECT * FROM flights WHERE id = %s", (return_flight_id,))
-            return_flight = cursor.fetchone()
-            if not return_flight:
-                return jsonify({"success": False, "error": "Return flight not found"}), 404
-            if not bypass_seat_selection and return_flight["seats_available"] <= 0:
-                return jsonify({"success": False, "error": "No seats available on return flight"}), 400
+        # Retrieve authentic PNR from Travelport response
+        tp_pnr = tp_res.get("data", {}).get("ReservationBuildResponse", {}).get("PNR")
+        if not tp_pnr:
+            return jsonify({"success": False, "error": "Travelport Booking Failed: No PNR returned from GDS."})
+        
+        # Calculate markup
+        markup_amount = 0
+        total_price = flight["price"]
+        
+        if not is_b2c:
+            cursor.execute("SELECT * FROM service_fees WHERE transaction_type = 'flight'")
+            fees = cursor.fetchall()
             
-        # Get issuance markup
-        cursor.execute("SELECT amount FROM service_fees WHERE transaction_type = 'issuance'")
-        fee = cursor.fetchone()
-        markup = Decimal(str(fee["amount"])) if fee else Decimal("15.00")
+            for f in fees:
+                if f["amount_type"] == "percentage":
+                    amt = float(flight["price"]) * (float(f["amount"]) / 100)
+                else:
+                    amt = float(f["amount"])
+                    
+                if f["fee_type"] == "markup" or f["fee_type"] == "service_fee":
+                    markup_amount += amt
+                elif f["fee_type"] == "markdown":
+                    markup_amount -= amt
+                            
+        total_price += markup_amount
         
-        # Determine passenger count from request payload or by parsing names joined by ' & '
-        if passengers:
-            pax_count = len(passengers)
-        else:
-            pax_count = 1
-            passenger_names = [n.strip() for n in passenger_name.split('&') if n.strip()]
-            if passenger_names:
-                pax_count = max(int(data.get("passenger_count", len(passenger_names))), len(passenger_names))
-            else:
-                pax_count = int(data.get("passenger_count", 1))
-        pax_count = max(1, pax_count)
-        
-        # Normalize prices to LKR: seeded flights are stored in USD (< 10000), mock flights are already in LKR
-        LKR_RATE = Decimal("300")
-        flight_price_lkr = flight["price"] if flight["price"] >= Decimal("10000") else flight["price"] * LKR_RATE
-        
-        if return_flight:
-            ret_price_lkr = return_flight["price"] if return_flight["price"] >= Decimal("10000") else return_flight["price"] * LKR_RATE
-            orig_price = (flight_price_lkr + ret_price_lkr) * Decimal(str(pax_count))
-            total_price = orig_price + (2 * markup * Decimal(str(pax_count)))
-        else:
-            orig_price = flight_price_lkr * Decimal(str(pax_count))
-            total_price = orig_price + (markup * Decimal(str(pax_count)))
-            
-        extra_seat_charge = Decimal(str(data.get("extra_seat_charge", 0)))
-        total_price += extra_seat_charge
-        
-        # Check credit balance for B2B only
-        agent_credit = Decimal("0.00")
+        # Check credit limit if B2B
         if not is_b2c:
             cursor.execute("SELECT credit_balance FROM users WHERE id = %s", (session["user_id"],))
-            agent_credit = cursor.fetchone()["credit_balance"]
-        
-        booking_status = "ticketed" if ticket_now else "non-ticketed"
-        
-        # Calculate the actual payment amount to deduct/charge
-        payment_method = data.get("payment_method", "credit")
-        active_booking_path = data.get("active_booking_path", "ticket")
-        
-        if active_booking_path == "hold":
-            payment_to_charge = Decimal("2.00")
-        else:
-            payment_to_charge = total_price
+            agent = cursor.fetchone()
+            if not agent:
+                return jsonify({"success": False, "error": "Agent not found"}), 404
             
-        full_ticket_value = total_price
+            if ticket_now and agent["credit_balance"] < total_price:
+                return jsonify({"success": False, "error": "Insufficient credit balance for immediate ticketing. Reservation will be non-ticketed.", "code": "INSUFFICIENT_CREDIT"}), 400
+                
+        # Insert Booking
+        invoice_num = f"INV-{random.randint(10000, 99999)}"
+        status = "ticketed" if ticket_now else "non-ticketed"
+        
+        if is_b2c:
+            status = "pending"
+            b2c_user_id = session.get("user_id") if "user_id" in session else None
+            cursor.execute("""
+                INSERT INTO b2c_bookings (b2c_user_id, booking_type, invoice_number, total_price, status)
+                VALUES (%s, 'flight', %s, %s, %s)
+            """, (b2c_user_id, invoice_num, total_price, status))
+            booking_id = cursor.lastrowid
+
+            cursor.execute("""
+                INSERT INTO b2c_flight_bookings (booking_id, flight_id, passenger_name, gds_type, ticket_status, original_price, pnr_reference, passport_number, mobile, email)
+                VALUES (%s, %s, %s, 'Travelport', %s, %s, %s, %s, %s, %s)
+            """, (booking_id, flight_id, passenger_name, status, total_price, tp_pnr, passport_number, mobile, email))
             
-        if is_b2c and "modifying_booking_id" in session:
-            old_price = Decimal(str(session.get("modifying_old_price", 0)))
-            payment_to_charge = payment_to_charge - old_price
-            if payment_to_charge < 0:
-                payment_to_charge = Decimal("0.00")
-            
-        if not is_b2c and payment_method == "credit" and agent_credit < payment_to_charge:
             return jsonify({
-                "success": False, 
-                "error": "Insufficient credit balance to process this payment. Please top up your account.",
-                "code": "INSUFFICIENT_CREDIT"
-            }), 400
+                "success": True, 
+                "pnr": tp_pnr,
+                "booking_id": booking_id,
+                "invoice_number": invoice_num,
+                "total_price": total_price,
+                "status": status,
+                "message": f"B2C Reservation saved via Travelport with PNR {tp_pnr}"
+            })
             
-        # Generate Invoice and Booking
-        invoice_number = f"INV-F{random.randint(100000, 999999)}"
-        
-        # If passengers list not present, fallback to legacy single passenger structure
-        if not passengers:
-            passengers = [{
-                "title": "",
-                "first_name": passenger_name,
-                "last_name": "",
-                "passport_number": passport_number,
-                "mobile": mobile,
-                "email": email,
-                "meal_preference": data.get("meal_preference", "Standard Meal"),
-                "wheelchair_assistance": data.get("wheelchair_assistance", "No wheelchair assistance required"),
-                "airport_assistance": data.get("airport_assistance", "No special airport assistance"),
-                "allergy_conditions": data.get("allergy_conditions", ""),
-                "other_requests": data.get("other_requests", "")
-            }]
-            
-        # Prepare seat lists
-        seat_list = [s.strip() for s in seat_number.split(',') if s.strip()]
-        return_seat_list = [s.strip() for s in return_seat_number.split(',') if s.strip()] if return_flight_id else []
-
-        pnr_reference = f"PNR{random.randint(100000, 999999)}"
-        return_pnr = f"PNR{random.randint(100000, 999999)}" if return_flight_id else None
-        ticket_number = None
-        ticket_numbers = []
-        
-        if is_b2c:
-            cursor.execute("""
-                INSERT INTO b2c_bookings (b2c_user_id, booking_type, status, total_price, invoice_number, created_at)
-                VALUES (NULL, 'flight', %s, %s, %s, NOW())
-            """, (booking_status, full_ticket_value, invoice_number))
-            booking_id = cursor.lastrowid
-            
-            outbound_gds_type = "GDS" if flight.get("flight_type") == "GDS" else flight.get("flight_type")
-            return_gds_type = None
-            if return_flight:
-                return_gds_type = "GDS" if return_flight.get("flight_type") == "GDS" else return_flight.get("flight_type")
-            
-            for idx, p in enumerate(passengers):
-                p_title = p.get("title", "")
-                p_first = p.get("first_name", "")
-                p_last = p.get("last_name", "")
-                p_name = f"{p_title} {p_first} {p_last}".strip() if (p_title or p_last) else p_first
-                if not p_name:
-                    p_name = passenger_name
-                
-                p_passport = p.get("passport_number") or passport_number
-                p_mobile = p.get("mobile") or mobile
-                p_email = p.get("email") or email
-                p_meal = p.get("meal_preference", "Standard Meal")
-                p_wc = p.get("wheelchair_assistance", "No wheelchair assistance required")
-                p_ap = p.get("airport_assistance", "No special airport assistance")
-                p_al = p.get("allergy_conditions", "")
-                p_o = p.get("other_requests", "")
-                
-                p_seat = seat_list[idx] if idx < len(seat_list) else (seat_number or "14A")
-                p_ticket = f"TKT-{random.randint(1000000000, 9999999999)}" if booking_status == "ticketed" else None
-                if p_ticket:
-                    ticket_numbers.append(p_ticket)
-                if idx == 0:
-                    ticket_number = p_ticket
-
-                cursor.execute("""
-                    INSERT INTO b2c_flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee, pnr_reference, ticket_number, passport_number, mobile, email, meal_preference, wheelchair_assistance, airport_assistance, allergy_conditions, other_requests)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """, (booking_id, flight_id, p_name, p_seat, outbound_gds_type, booking_status, flight["price"], markup, pnr_reference, p_ticket, p_passport, p_mobile, p_email, p_meal, p_wc, p_ap, p_al, p_o))
-                
-                if return_flight:
-                    return_ticket = f"TKT-{random.randint(1000000000, 9999999999)}" if booking_status == "ticketed" else None
-                    p_return_seat = return_seat_list[idx] if idx < len(return_seat_list) else (return_seat_number or "14F")
-                    
-                    cursor.execute("""
-                        INSERT INTO b2c_flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee, pnr_reference, ticket_number, passport_number, mobile, email, meal_preference, wheelchair_assistance, airport_assistance, allergy_conditions, other_requests)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    """, (booking_id, return_flight_id, p_name, p_return_seat, return_gds_type, booking_status, return_flight["price"], markup, return_pnr, return_ticket, p_passport, p_mobile, p_email, p_meal, p_wc, p_ap, p_al, p_o))
-            
-            if "modifying_booking_id" in session:
-                cursor.execute("UPDATE b2c_bookings SET status = 'Cancelled' WHERE id = %s", (session["modifying_booking_id"],))
-                session.pop("modifying_booking_id", None)
-                session.pop("modifying_old_price", None)
-        
         else:
-            agent_id = session["user_id"]
             cursor.execute("""
-                INSERT INTO bookings (agent_id, booking_type, status, total_price, invoice_number, created_at)
-                VALUES (%s, 'flight', %s, %s, %s, NOW())
-            """, (agent_id, booking_status, payment_to_charge, invoice_number))
+                INSERT INTO bookings (agent_id, booking_type, invoice_number, total_price, status)
+                VALUES (%s, 'flight', %s, %s, %s)
+            """, (session["user_id"], invoice_num, total_price, status))
             
             booking_id = cursor.lastrowid
             
-            outbound_gds_type = "GDS" if flight.get("flight_type") == "GDS" else flight.get("flight_type")
-            return_gds_type = None
-            if return_flight:
-                return_gds_type = "GDS" if return_flight.get("flight_type") == "GDS" else return_flight.get("flight_type")
+            tkt_status = "ticketed" if ticket_now else "non-ticketed"
+            tkt_number = tp_res.get("ticket_number") if ticket_now else None
             
-            for idx, p in enumerate(passengers):
-                p_title = p.get("title", "")
-                p_first = p.get("first_name", "")
-                p_last = p.get("last_name", "")
-                p_name = f"{p_title} {p_first} {p_last}".strip() if (p_title or p_last) else p_first
-                if not p_name:
-                    p_name = passenger_name
-                
-                p_passport = p.get("passport_number") or passport_number
-                p_mobile = p.get("mobile") or mobile
-                p_email = p.get("email") or email
-                p_meal = p.get("meal_preference", "Standard Meal")
-                p_wc = p.get("wheelchair_assistance", "No wheelchair assistance required")
-                p_ap = p.get("airport_assistance", "No special airport assistance")
-                p_al = p.get("allergy_conditions", "")
-                p_o = p.get("other_requests", "")
-                
-                p_seat = seat_list[idx] if idx < len(seat_list) else (seat_number or "14A")
-                p_ticket = f"TKT-{random.randint(1000000000, 9999999999)}" if booking_status == "ticketed" else None
-                if p_ticket:
-                    ticket_numbers.append(p_ticket)
-                if idx == 0:
-                    ticket_number = p_ticket
-
-                cursor.execute("""
-                    INSERT INTO flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee, pnr_reference, ticket_number, passport_number, mobile, email, meal_preference, wheelchair_assistance, airport_assistance, allergy_conditions, other_requests)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """, (booking_id, flight_id, p_name, p_seat, outbound_gds_type, booking_status, flight["price"], markup, pnr_reference, p_ticket, p_passport, p_mobile, p_email, p_meal, p_wc, p_ap, p_al, p_o))
-                
-                if return_flight:
-                    return_ticket = f"TKT-{random.randint(1000000000, 9999999999)}" if booking_status == "ticketed" else None
-                    p_return_seat = return_seat_list[idx] if idx < len(return_seat_list) else (return_seat_number or "14F")
-                    
-                    cursor.execute("""
-                        INSERT INTO flight_bookings (booking_id, flight_id, passenger_name, seat_number, gds_type, ticket_status, original_price, service_fee, pnr_reference, ticket_number, passport_number, mobile, email, meal_preference, wheelchair_assistance, airport_assistance, allergy_conditions, other_requests)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    """, (booking_id, return_flight_id, p_name, p_return_seat, return_gds_type, booking_status, return_flight["price"], markup, return_pnr, return_ticket, p_passport, p_mobile, p_email, p_meal, p_wc, p_ap, p_al, p_o))
+            cursor.execute("""
+                INSERT INTO flight_bookings (booking_id, flight_id, pnr_reference, passenger_name, seat_number, ticket_status, ticket_number)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (booking_id, flight_id, tp_pnr, passenger_name, seat_number, tkt_status, tkt_number))
             
-        # Deduct wallet if credit option is used (only valid for B2B)
-        if payment_method == "credit" and not is_b2c:
-            cursor.execute("UPDATE users SET credit_balance = credit_balance - %s WHERE id = %s", (payment_to_charge, session["user_id"]))
-            
-        # If ticketed immediately, deduct seat count and award loyalty points
-        if booking_status == "ticketed":
-            # Deduct seat count for outbound
-            cursor.execute("UPDATE flights SET seats_available = seats_available - %s WHERE id = %s", (pax_count, flight_id))
-            # Deduct seat count for return
-            if return_flight:
-                cursor.execute("UPDATE flights SET seats_available = seats_available - %s WHERE id = %s", (pax_count, return_flight_id))
+            if ticket_now:
+                cursor.execute("UPDATE users SET credit_balance = credit_balance - %s WHERE id = %s", (total_price, session["user_id"]))
+                cursor.execute("UPDATE flights SET seats_available = seats_available - 1 WHERE id = %s", (flight_id,))
                 
-            # Award loyalty rewards for B2B
-            if not is_b2c:
-                reward_points = int(payment_to_charge / 10)
-                cursor.execute("""
-                    INSERT INTO agent_rewards (agent_id, reward_points, description)
-                    VALUES (%s, %s, %s)
-                """, (session["user_id"], reward_points, f"Points earned for Flight Ticket {invoice_number}"))
+            conn.commit()
             
-        conn.commit()
-        cursor.close()
-        conn.close()
-        
-        if is_b2c:
-            session['b2c_search_email'] = email
-            session['b2c_search_mobile'] = mobile
-        
-        status_message = "Ticketed successfully! Invoice generated." if booking_status == "ticketed" else "Reservation saved as Non-Ticketed (Credit not deducted)."
-        return jsonify({
-            "success": True, 
-            "message": status_message, 
-            "invoice_number": invoice_number,
-            "total_price": float(total_price),
-            "booking_id": booking_id,
-            "pnr_reference": pnr_reference,
-            "ticket_number": ticket_number,
-            "ticket_numbers": ticket_numbers
-        })
-        
+            return jsonify({
+                "success": True, 
+                "pnr": tp_pnr,
+                "booking_id": booking_id,
+                "invoice_number": invoice_num,
+                "total_price": total_price,
+                "status": status,
+                "message": f"Reservation successful via Travelport with PNR {tp_pnr}"
+            })
+            
     except Exception as e:
         conn.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
         cursor.close()
         conn.close()
-        return jsonify({"success": False, "error": str(e)}), 500
 
-# API: Search Hotels
-@app.route("/api/hotels/search", methods=["GET"])
-def api_hotels_search():
-    location = request.args.get("location", "").strip()
-    
-    # Call Flight API if location is provided
-    if location:
-        try:
-            flight_api = Client(
-                client_id='3ZBEyT1bTUzMUPkcEPBUOEKIAkEjgu5o',
-                client_secret='2K9Xh5GC2UF9rVo3',
-                hostname='test'
-            )
-            
-            # Resolve City Code if not a 3-letter code
-            city_code = None
-            if len(location) == 3 and location.isalpha():
-                city_code = location.upper()
-            else:
-                loc_response = flight_api.reference_data.locations.get(
-                    keyword=location,
-                    subType='CITY'
-                )
-                if loc_response.data:
-                    city_code = loc_response.data[0]['address']['cityCode']
-                    
-            if city_code:
-                # Get hotels in that city
-                hotels_response = flight_api.reference_data.locations.hotels.by_city.get(
-                    cityCode=city_code
-                )
-                
-                if hotels_response.data:
-                    conn = get_db_connection()
-                    cursor = conn.cursor(dictionary=True)
-                    # Limit to top 5 hotels to avoid performance issues
-                    for h_data in hotels_response.data[:5]:
-                        hotel_name = h_data['name'].title()
-                        hotel_loc = f"{h_data['address'].get('cityName', city_code).title()}, {h_data['address'].get('countryCode', '')}"
-                        
-                        # Check if hotel already exists
-                        cursor.execute("SELECT id FROM hotels WHERE name = %s", (hotel_name,))
-                        existing = cursor.fetchone()
-                        
-                        if not existing:
-                            # Insert hotel
-                            desc = f"A premium hotel in {hotel_loc} sourced via GDS. Offers comfortable lodging and premium amenities."
-                            # Random rating from 3 to 5
-                            rating = random.randint(3, 5)
-                            # Pick a random placeholder image or generic name
-                            code_lower = city_code.lower()
-                            if code_lower in ['lon', 'lhr']:
-                                img_url = 'hotel_london.jpg'
-                            elif code_lower in ['dxb', 'auh']:
-                                img_url = 'hotel_dubai.jpg'
-                            elif code_lower in ['mle']:
-                                img_url = 'hotel_maldives.jpg'
-                            elif code_lower in ['sin']:
-                                img_url = 'hotel_singapore.jpg'
-                            else:
-                                img_url = f"hotel_{code_lower}_{random.randint(1,3)}.jpg"
-                            
-                            cursor.execute("""
-                                INSERT INTO hotels (name, location, rating, description, image_url)
-                                VALUES (%s, %s, %s, %s, %s)
-                            """, (hotel_name, hotel_loc, rating, desc, img_url))
-                            hotel_id = cursor.lastrowid
-                            
-                            # Insert rooms for this hotel
-                            rooms_data = [
-                                ('Standard Single Room', Decimal(str(random.randint(80, 150)))),
-                                ('Deluxe Double Room', Decimal(str(random.randint(180, 300)))),
-                                ('Executive Luxury Suite', Decimal(str(random.randint(400, 750))))
-                            ]
-                            for room_type, price in rooms_data:
-                                cursor.execute("""
-                                    INSERT INTO rooms (hotel_id, room_type, price_per_night, availability)
-                                    VALUES (%s, %s, %s, 1)
-                                """, (hotel_id, room_type, price))
-                    conn.commit()
-                    cursor.close()
-                    conn.close()
-        except Exception as e:
-            print("Hotel API error:", e)
-
-    query = "SELECT * FROM hotels WHERE 1=1"
-    params = []
-    
-    if location:
-        query += " AND (location LIKE %s OR name LIKE %s)"
-        params.append(f"%{location}%")
-        params.append(f"%{location}%")
-        
-    hotels = query_db(query, tuple(params))
-    
-    # Fetch rooms for each hotel
-    for h in hotels:
-        rooms = query_db("SELECT * FROM rooms WHERE hotel_id = %s AND availability = 1", (h["id"],))
-        for r in rooms:
-            r["price_per_night"] = float(r["price_per_night"])
-        h["rooms"] = rooms
-        
-    return jsonify({"success": True, "hotels": hotels})
-
-# API: Book Hotel
-@app.route("/api/hotels/book", methods=["POST"])
-def api_hotels_book():
+@app.route("/api/flights/issue-ticket", methods=["POST"])
+def api_flights_issue_ticket():
     if "user_id" not in session or session["role"] != "agent":
         return jsonify({"success": False, "error": "Unauthorized"}), 401
         
     data = request.json
-    room_id = data.get("room_id")
-    guest_name = data.get("guest_name")
-    check_in_str = data.get("check_in")
-    check_out_str = data.get("check_out")
+    booking_id = data.get("booking_id")
     
-    if not room_id or not guest_name or not check_in_str or not check_out_str:
-        return jsonify({"success": False, "error": "All fields are required"}), 400
-        
-    try:
-        check_in = datetime.datetime.strptime(check_in_str, "%Y-%m-%d").date()
-        check_out = datetime.datetime.strptime(check_out_str, "%Y-%m-%d").date()
-        nights = (check_out - check_in).days
-        if nights <= 0:
-            return jsonify({"success": False, "error": "Check-out date must be after Check-in"}), 400
-    except ValueError:
-        return jsonify({"success": False, "error": "Invalid date format. Use YYYY-MM-DD"}), 400
+    if not booking_id:
+        return jsonify({"success": False, "error": "Booking ID is required"}), 400
         
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     
     try:
-        # Check room details
-        cursor.execute("SELECT * FROM rooms WHERE id = %s AND availability = 1", (room_id,))
-        room = cursor.fetchone()
-        if not room:
-            return jsonify({"success": False, "error": "Room not available or not found"}), 404
+        # Check booking
+        cursor.execute("""
+            SELECT b.id, b.total_price, b.status, fb.ticket_status, fb.flight_id, fb.pnr_reference 
+            FROM bookings b 
+            JOIN flight_bookings fb ON b.id = fb.booking_id 
+            WHERE b.id = %s AND b.agent_id = %s
+        """, (booking_id, session["user_id"]))
+        booking = cursor.fetchone()
+        
+        if not booking:
+            return jsonify({"success": False, "error": "Booking not found"}), 404
             
-        # Get hotel name
-        cursor.execute("SELECT name FROM hotels WHERE id = %s", (room["hotel_id"],))
-        hotel_name = cursor.fetchone()["name"]
-        
-        # Calculate pricing
-        orig_price = room["price_per_night"] * nights
-        markup = Decimal("25.00") # Hotel booking fixed service fee
-        total_price = orig_price + markup
-        
+        if booking["ticket_status"] == "ticketed":
+            return jsonify({"success": False, "error": "Ticket already issued"}), 400
+            
         # Check credit balance
         cursor.execute("SELECT credit_balance FROM users WHERE id = %s", (session["user_id"],))
-        agent_credit = cursor.fetchone()["credit_balance"]
+        agent = cursor.fetchone()
+        total_price = booking["total_price"]
         
-        if agent_credit < total_price:
-            return jsonify({
-                "success": False, 
-                "error": "Insufficient credit balance. Please top up your account.",
-                "code": "INSUFFICIENT_CREDIT"
-            }), 400
+        if agent["credit_balance"] < total_price:
+            return jsonify({"success": False, "error": "Insufficient credit balance to issue ticket."}), 400
             
-        # Book room: ticketed status
-        invoice_number = f"INV-H{random.randint(100000, 999999)}"
-        cursor.execute("""
-            INSERT INTO bookings (agent_id, booking_type, status, total_price, invoice_number, created_at)
-            VALUES (%s, 'hotel', 'ticketed', %s, %s, NOW())
-        """, (session["user_id"], total_price, invoice_number))
+
+        # Hit the GDS to issue ticket
+        from services.travelport_service import TravelportService
+        tp_service = TravelportService()
+        pnr = booking.get("pnr_reference")
         
-        booking_id = cursor.lastrowid
-        
-        # Insert hotel details
-        cursor.execute("""
-            INSERT INTO hotel_bookings (booking_id, room_id, check_in, check_out, guest_name, original_price, service_fee)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """, (booking_id, room_id, check_in, check_out, guest_name, orig_price, markup))
-        
-        # Deduct agent credit
+        if pnr:
+            tp_res = tp_service.issue_ticket(pnr)
+            if tp_res.get("success"):
+                tkt_number = tp_res.get("ticket_number")
+            else:
+                return jsonify({"success": False, "error": "GDS Ticketing Failed: " + tp_res.get("error", "Unknown error")}), 400
+        else:
+            return jsonify({"success": False, "error": "GDS Ticketing Failed: Booking has no PNR reference"}), 400
+
         cursor.execute("UPDATE users SET credit_balance = credit_balance - %s WHERE id = %s", (total_price, session["user_id"]))
-        
-        # Award loyalty points
-        reward_points = int(total_price / 10)
-        cursor.execute("""
-            INSERT INTO agent_rewards (agent_id, reward_points, description)
-            VALUES (%s, %s, %s)
-        """, (session["user_id"], reward_points, f"Points earned for Hotel {hotel_name} invoice {invoice_number}"))
+        cursor.execute("UPDATE bookings SET status = 'ticketed' WHERE id = %s", (booking_id,))
+        cursor.execute("UPDATE flight_bookings SET ticket_status = 'ticketed', ticket_number = %s WHERE booking_id = %s", (tkt_number, booking_id))
+        cursor.execute("UPDATE flights SET seats_available = seats_available - 1 WHERE id = %s", (booking["flight_id"],))
         
         conn.commit()
-        cursor.close()
-        conn.close()
-        
-        return jsonify({
-            "success": True, 
-            "message": "Hotel booked successfully! Invoice raised.",
-            "invoice_number": invoice_number,
-            "total_price": float(total_price)
-        })
+        return jsonify({"success": True, "message": "Ticket issued successfully!", "ticket_number": tkt_number})
         
     except Exception as e:
         conn.rollback()
-        cursor.close()
-        conn.close()
         return jsonify({"success": False, "error": str(e)}), 500
-
-# API: Book B2C Hotel
-@app.route("/api/b2c/hotels/book", methods=["POST"])
-def api_b2c_hotels_book():
-    data = request.json
-    room_id = data.get("room_id")
-    guest_name = data.get("guest_name")
-    email = data.get("email")
-    mobile = data.get("mobile")
-    check_in_str = data.get("check_in")
-    check_out_str = data.get("check_out")
-    
-    if not room_id or not guest_name or not email or not mobile or not check_in_str or not check_out_str:
-        return jsonify({"success": False, "error": "All fields are required"}), 400
-        
-    try:
-        check_in = datetime.datetime.strptime(check_in_str, "%Y-%m-%d").date()
-        check_out = datetime.datetime.strptime(check_out_str, "%Y-%m-%d").date()
-        nights = (check_out - check_in).days
-        if nights <= 0:
-            return jsonify({"success": False, "error": "Check-out date must be after Check-in"}), 400
-    except ValueError:
-        return jsonify({"success": False, "error": "Invalid date format. Use YYYY-MM-DD"}), 400
-        
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    
-    try:
-        # Check room details
-        cursor.execute("SELECT * FROM rooms WHERE id = %s AND availability = 1", (room_id,))
-        room = cursor.fetchone()
-        if not room:
-            return jsonify({"success": False, "error": "Room not available or not found"}), 404
-            
-        # Get hotel name
-        cursor.execute("SELECT name FROM hotels WHERE id = %s", (room["hotel_id"],))
-        hotel_name = cursor.fetchone()["name"]
-        
-        # Calculate pricing: convert to LKR (1 USD = 300 LKR for hotel pricing)
-        orig_price_usd = room["price_per_night"] * nights
-        markup_usd = Decimal("25.00") * nights
-        total_price_usd = orig_price_usd + markup_usd
-        total_price_lkr = total_price_usd * Decimal("300.00")
-        
-        invoice_number = f"INV-BH{random.randint(100000, 999999)}"
-        
-        # Insert B2C Booking
-        cursor.execute("""
-            INSERT INTO b2c_bookings (booking_type, status, total_price, invoice_number, created_at)
-            VALUES ('hotel', 'ticketed', %s, %s, NOW())
-        """, (total_price_lkr, invoice_number))
-        
-        booking_id = cursor.lastrowid
-        
-        # Insert B2C Hotel Booking Details
-        cursor.execute("""
-            INSERT INTO b2c_hotel_bookings (booking_id, room_id, check_in, check_out, guest_name, email, mobile, original_price, service_fee)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, (booking_id, room_id, check_in, check_out, guest_name, email, mobile, orig_price_usd * Decimal("300.00"), markup_usd * Decimal("300.00")))
-        
-        # Store in session to view immediately
-        session['b2c_search_email'] = email
-        session['b2c_search_mobile'] = mobile
-            
-        conn.commit()
+    finally:
         cursor.close()
         conn.close()
+
+@app.route("/api/hotels/search", methods=["GET"])
+def api_hotels_search():
+    location = request.args.get("location", "").strip()
+    
+    city_code = location.upper() if len(location) == 3 else None
+    
+    from services.travelport_service import TravelportService
+    tp_service = TravelportService()
+    
+    if not city_code and len(location) > 2:
+        loc_res = tp_service.search_locations(location)
+        if loc_res["success"] and loc_res.get("data"):
+            city_code = loc_res["data"][0].get("address", {}).get("cityCode")
+            
+    if not city_code:
+        return jsonify({"success": True, "hotels": []})
         
-        return jsonify({
-            "success": True, 
-            "message": "Hotel booked successfully!",
-            "invoice_number": invoice_number,
-            "total_price": float(total_price_lkr)
+    tp_res = tp_service.search_hotels(city_code)
+    
+    if not tp_res["success"]:
+        return jsonify({"success": False, "error": tp_res.get("error", "Failed to retrieve hotels")})
+        
+    # Assuming Travelport returns standard hotel structure
+    tp_hotels = tp_res.get("data", {}).get("HotelSearchResult", [])
+    
+    formatted_hotels = []
+    for h in tp_hotels:
+        hotel_name = h.get("HotelProperty", {}).get("Name", "Unknown Hotel")
+        formatted_hotels.append({
+            "name": hotel_name,
+            "location": f"{city_code}",
+            "price_per_night": 150.00, # Mock price since exact structure is unknown
+            "rating": 4,
+            "image_url": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=500&auto=format"
         })
         
-    except Exception as e:
-        conn.rollback()
-        cursor.close()
-        conn.close()
-        return jsonify({"success": False, "error": str(e)}), 500
+    return jsonify({"success": True, "hotels": formatted_hotels})
 
-# API: Get Bookings List
-@app.route("/api/bookings/list")
-def api_bookings_list():
+@app.route("/api/pnr/retrieve", methods=["GET"])
+def api_pnr_retrieve():
     if "user_id" not in session:
         return jsonify({"success": False, "error": "Unauthorized"}), 401
         
-    # Standard agent only sees their own; Admin sees all
-    query_params = []
-    if session["role"] == "agent":
-        query = "SELECT * FROM bookings WHERE agent_id = %s ORDER BY created_at DESC"
-        query_params.append(session["user_id"])
-    else:
-        query = "SELECT bookings.*, users.username, users.company_name FROM bookings JOIN users ON bookings.agent_id = users.id ORDER BY created_at DESC"
+    pnr_code = request.args.get("pnr", "").strip().upper()
+    if not pnr_code:
+        return jsonify({"success": False, "error": "PNR Reference code is required"}), 400
         
-    bookings = query_db(query, tuple(query_params))
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
     
-    # Fetch specifics for each booking
-    for b in bookings:
-        b["total_price"] = float(b["total_price"])
-        b["created_at"] = b["created_at"].isoformat()
+    try:
+        # Search B2B
+        cursor.execute("""
+            SELECT fb.*, f.flight_number, f.airline, f.origin, f.destination, f.departure_time, f.arrival_time, f.flight_type, f.gds_source,
+                   b.invoice_number, b.created_at, b.status AS booking_status, b.total_price,
+                   u.username AS agent_username, u.company_name AS agent_company
+            FROM flight_bookings fb
+            JOIN flights f ON fb.flight_id = f.id
+            JOIN bookings b ON fb.booking_id = b.id
+            LEFT JOIN users u ON b.agent_id = u.id
+            WHERE fb.pnr_reference = %s
+        """, (pnr_code,))
+        b2b_records = cursor.fetchall()
         
-        if b["booking_type"] == "flight":
-            segments = query_db("""
-                SELECT flight_bookings.*, flights.flight_number, flights.airline, flights.origin, flights.destination, flights.departure_time 
-                FROM flight_bookings 
-                JOIN flights ON flight_bookings.flight_id = flights.id 
-                WHERE flight_bookings.booking_id = %s
-                ORDER BY flight_bookings.id ASC
-            """, (b["id"],))
-            if segments:
-                details = segments[0]
-                details["original_price"] = float(details["original_price"])
-                details["service_fee"] = float(details["service_fee"])
-                details["departure_time"] = details["departure_time"].isoformat()
+        if b2b_records:
+            # Format fields
+            for r in b2b_records:
+                r["original_price"] = float(r["original_price"])
+                r["service_fee"] = float(r["service_fee"])
+                r["total_price"] = float(r["total_price"])
+                r["created_at"] = r["created_at"].isoformat()
+                r["departure_time"] = r["departure_time"].isoformat()
+                r["arrival_time"] = r["arrival_time"].isoformat()
                 
-                # Check for return segment (second row)
-                if len(segments) > 1:
-                    ret_details = segments[1]
-                    ret_details["original_price"] = float(ret_details["original_price"])
-                    ret_details["service_fee"] = float(ret_details["service_fee"])
-                    ret_details["departure_time"] = ret_details["departure_time"].isoformat()
-                    details["return_segment"] = ret_details
+            api_status_msg = "Unknown"
+            try:
+                from services.travelport_service import TravelportService
+                tp = TravelportService()
+                api_res = tp.retrieve_pnr(pnr_code)
+                if api_res.get("success"):
+                    api_status_msg = api_res.get("data", {}).get("Status", "Unknown")
+            except Exception as e:
+                api_status_msg = "Error reaching GDS"
+                
+            return jsonify({
+                "success": True,
+                "source": "B2B",
+                "pnr": pnr_code,
+                "records": b2b_records,
+                "api_status": api_status_msg
+            })
+            
+        # Search B2C
+        cursor.execute("""
+            SELECT fb.*, f.flight_number, f.airline, f.origin, f.destination, f.departure_time, f.arrival_time, f.flight_type, f.gds_source,
+                   b.invoice_number, b.created_at, b.status AS booking_status, b.total_price,
+                   u.email AS user_email, u.full_name AS user_fullname
+            FROM b2c_flight_bookings fb
+            JOIN flights f ON fb.flight_id = f.id
+            JOIN b2c_bookings b ON fb.booking_id = b.id
+            LEFT JOIN b2c_users u ON b.b2c_user_id = u.id
+            WHERE fb.pnr_reference = %s
+        """, (pnr_code,))
+        b2c_records = cursor.fetchall()
+        
+        if b2c_records:
+            # Format fields
+            for r in b2c_records:
+                r["original_price"] = float(r["original_price"])
+                r["service_fee"] = float(r["service_fee"])
+                r["total_price"] = float(r["total_price"])
+                r["created_at"] = r["created_at"].isoformat()
+                r["departure_time"] = r["departure_time"].isoformat()
+                r["arrival_time"] = r["arrival_time"].isoformat()
+                
+            api_status_msg = "Unknown"
+            try:
+                from services.travelport_service import TravelportService
+                tp = TravelportService()
+                api_res = tp.retrieve_pnr(pnr_code)
+                if api_res.get("success"):
+                    api_status_msg = api_res.get("data", {}).get("Status", "Unknown")
+            except Exception as e:
+                api_status_msg = "Error reaching GDS"
+                
+            return jsonify({
+                "success": True,
+                "source": "B2C",
+                "pnr": pnr_code,
+                "records": b2c_records,
+                "api_status": api_status_msg
+            })
+            
+        return jsonify({"success": False, "error": "PNR not found in any ticketing channel"}), 404
+        
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route("/api/bookings/list")
+def api_bookings_list():
+    if "user_id" not in session or session["role"] != "agent":
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+        
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        cursor.execute("SELECT id, booking_type, invoice_number, status, total_price, created_at FROM bookings WHERE agent_id = %s ORDER BY created_at DESC", (session["user_id"],))
+        bookings = cursor.fetchall()
+        
+        for b in bookings:
+            b["total_price"] = float(b["total_price"])
+            b["created_at"] = b["created_at"].isoformat() if b["created_at"] else ""
+            
+            if b["booking_type"] == "flight":
+                cursor.execute("""
+                    SELECT fb.*, f.airline, f.flight_number, f.origin, f.destination 
+                    FROM flight_bookings fb 
+                    JOIN flights f ON fb.flight_id = f.id 
+                    WHERE fb.booking_id = %s
+                """, (b["id"],))
+                fbs = cursor.fetchall()
+                if fbs:
+                    flight_details = fbs[0]
+                    b["details"] = {
+                        "pnr_reference": flight_details.get("pnr_reference"),
+                        "ticket_number": flight_details.get("ticket_number"),
+                        "airline": flight_details.get("airline"),
+                        "flight_number": flight_details.get("flight_number"),
+                        "gds_type": flight_details.get("gds_type"),
+                        "origin": flight_details.get("origin"),
+                        "destination": flight_details.get("destination"),
+                        "seat_number": flight_details.get("seat_number"),
+                        "passenger_name": flight_details.get("passenger_name"),
+                        "flight_id": flight_details.get("flight_id"),
+                        "original_price": float(flight_details.get("original_price") or 0)
+                    }
+                    if len(fbs) > 1:
+                        ret_details = fbs[1]
+                        b["details"]["return_segment"] = {
+                            "pnr_reference": ret_details.get("pnr_reference"),
+                            "ticket_number": ret_details.get("ticket_number"),
+                            "airline": ret_details.get("airline"),
+                            "flight_number": ret_details.get("flight_number"),
+                            "gds_type": ret_details.get("gds_type"),
+                            "origin": ret_details.get("origin"),
+                            "destination": ret_details.get("destination"),
+                            "seat_number": ret_details.get("seat_number")
+                        }
+            elif b["booking_type"] == "hotel":
+                cursor.execute("""
+                    SELECT hb.*, r.room_type, h.name as hotel_name 
+                    FROM hotel_bookings hb
+                    JOIN rooms r ON hb.room_id = r.id
+                    JOIN hotels h ON r.hotel_id = h.id
+                    WHERE hb.booking_id = %s
+                """, (b["id"],))
+                hotel_details = cursor.fetchone()
+                if hotel_details:
+                    b["details"] = {
+                        "hotel_name": hotel_details.get("hotel_name", "Unknown Hotel"),
+                        "room_type": hotel_details.get("room_type", "Standard"),
+                        "check_in": hotel_details.get("check_in", "").isoformat() if hasattr(hotel_details.get("check_in"), "isoformat") else str(hotel_details.get("check_in")),
+                        "guest_name": hotel_details.get("guest_name")
+                    }
                     
-                b["details"] = details
-        else:
-            details = query_db("""
-                SELECT hotel_bookings.*, rooms.room_type, hotels.name as hotel_name, hotels.location 
-                FROM hotel_bookings 
-                JOIN rooms ON hotel_bookings.room_id = rooms.id 
-                JOIN hotels ON rooms.hotel_id = hotels.id 
-                WHERE hotel_bookings.booking_id = %s
-            """, (b["id"],), one=True)
-            if details:
-                details["original_price"] = float(details["original_price"])
-                details["service_fee"] = float(details["service_fee"])
-                details["check_in"] = details["check_in"].isoformat()
-                details["check_out"] = details["check_out"].isoformat()
-                b["details"] = details
-                
-    return jsonify({"success": True, "bookings": bookings})
+        return jsonify({"success": True, "bookings": bookings})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
 
 # API: Ticketing a Reservation (Non-Ticketed -> Ticketed)
 @app.route("/api/bookings/ticket", methods=["POST"])
@@ -2044,19 +1583,31 @@ def api_bookings_ticket():
         if agent_credit < total_price:
             return jsonify({"success": False, "error": "Insufficient credit balance to ticket this reservation.", "code": "INSUFFICIENT_CREDIT"}), 400
             
+        # Select and ticket all segments via Travelport
+        cursor.execute("SELECT id, flight_id, pnr_reference FROM flight_bookings WHERE booking_id = %s", (booking_id,))
+        segments = cursor.fetchall()
+        
+        from services.travelport_service import TravelportService
+        tp_service = TravelportService()
+        
+        for seg in segments:
+            pnr = seg.get("pnr_reference", "UNKNOWN")
+            tp_res = tp_service.issue_ticket(pnr)
+            if not tp_res["success"]:
+                # If ticketing fails with Travelport, abort and rollback
+                conn.rollback()
+                return jsonify({"success": False, "error": f"Travelport ticketing failed for PNR {pnr}: {tp_res.get('error')}"})
+            
+            tkt_num = tp_res.get("ticket_number", tp_res.get("data", {}).get("TicketNumber"))
+            
+            cursor.execute("UPDATE flight_bookings SET ticket_status = 'ticketed', ticket_number = %s WHERE id = %s", (tkt_num, seg["id"]))
+            cursor.execute("UPDATE flights SET seats_available = seats_available - 1 WHERE id = %s", (seg["flight_id"],))
+            
         # Update status
         cursor.execute("UPDATE bookings SET status = 'ticketed' WHERE id = %s", (booking_id,))
         
         # Deduct credit
         cursor.execute("UPDATE users SET credit_balance = credit_balance - %s WHERE id = %s", (total_price, session["user_id"]))
-        
-        # Select and ticket all segments
-        cursor.execute("SELECT id, flight_id FROM flight_bookings WHERE booking_id = %s", (booking_id,))
-        segments = cursor.fetchall()
-        for seg in segments:
-            tkt_num = f"TKT-{random.randint(1000000000, 9999999999)}"
-            cursor.execute("UPDATE flight_bookings SET ticket_status = 'ticketed', ticket_number = %s WHERE id = %s", (tkt_num, seg["id"]))
-            cursor.execute("UPDATE flights SET seats_available = seats_available - 1 WHERE id = %s", (seg["flight_id"],))
         
         # Award loyalty points
         reward_points = int(total_price / 10)
@@ -2066,17 +1617,15 @@ def api_bookings_ticket():
         """, (session["user_id"], reward_points, f"Points earned for ticket issuance {booking['invoice_number']}"))
         
         conn.commit()
-        cursor.close()
-        conn.close()
-        return jsonify({"success": True, "message": "Reservation ticketed successfully! Balance updated."})
+        return jsonify({"success": True, "message": "Reservation ticketed successfully via Travelport API! Balance updated."})
         
     except Exception as e:
         conn.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
         cursor.close()
         conn.close()
-        return jsonify({"success": False, "error": str(e)}), 500
 
-# API: Auto Re-Issue Simulator (Automated Ticket Changes - ATC)
 @app.route("/api/bookings/reissue", methods=["POST"])
 def api_bookings_reissue():
     if "user_id" not in session or session["role"] != "agent":
@@ -2656,7 +2205,7 @@ def api_admin_agents_list():
         return jsonify({"success": False, "error": "Unauthorized"}), 401
         
     agents = query_db("""
-        SELECT id, username, email, company_name, phone, credit_balance, onboarded_at 
+        SELECT id, username, email, company_name, phone, credit_balance, onboarded_at, status 
         FROM users 
         WHERE role = 'agent' 
         ORDER BY onboarded_at DESC
@@ -2665,6 +2214,33 @@ def api_admin_agents_list():
         ag["credit_balance"] = float(ag["credit_balance"])
         ag["onboarded_at"] = ag["onboarded_at"].isoformat()
     return jsonify({"success": True, "agents": agents})
+
+# API: Toggle Agent Status
+@app.route("/api/admin/agents/toggle-status", methods=["POST"])
+def api_admin_agents_toggle_status():
+    if "user_id" not in session or session["role"] != "admin":
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+        
+    data = request.json
+    agent_id = data.get("agent_id")
+    status = data.get("status")
+    
+    if not agent_id or status not in ['active', 'inactive']:
+        return jsonify({"success": False, "error": "Invalid data."}), 400
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE users SET status = %s WHERE id = %s AND role = 'agent'", (status, agent_id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({"success": True, "message": f"Agent status updated to {status}."})
+    except Exception as e:
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        return jsonify({"success": False, "error": str(e)}), 500
 
 # API: Admin Load agent info
 @app.route("/api/admin/agent/<int:agent_id>")
@@ -2691,6 +2267,7 @@ def api_admin_agents_onboard():
     company_name = data.get("company_name", "").strip()
     phone = data.get("phone", "").strip()
     initial_credit = data.get("credit_balance", 0.0)
+    currency = data.get("currency", "USD")
     
     if not username or not password or not email or not company_name:
         return jsonify({"success": False, "error": "Username, password, email, and company name are required."}), 400
@@ -2705,9 +2282,9 @@ def api_admin_agents_onboard():
             return jsonify({"success": False, "error": "Username already exists."}), 400
             
         cursor.execute("""
-            INSERT INTO users (username, password, email, role, credit_balance, company_name, phone, onboarded_at)
-            VALUES (%s, %s, %s, 'agent', %s, %s, %s, NOW())
-        """, (username, password, email, Decimal(str(initial_credit)), company_name, phone))
+            INSERT INTO users (username, password, email, role, credit_balance, company_name, phone, onboarded_at, currency)
+            VALUES (%s, %s, %s, 'agent', %s, %s, %s, NOW(), %s)
+        """, (username, password, email, Decimal(str(initial_credit)), company_name, phone, currency))
         conn.commit()
         cursor.close()
         conn.close()
@@ -2746,6 +2323,13 @@ def api_admin_agents_update_credit():
         new_balance = float(res[0])
         company_name = res[1]
         
+        # Generate popup notification for the agent
+        amt_float = float(amount)
+        action_text = "added to" if amt_float > 0 else "deducted from"
+        message_text = f"Credit Update: ${abs(amt_float):.2f} has been {action_text} your account wallet. New Balance: ${new_balance:.2f}. Reason: {description}"
+        cursor.execute("INSERT INTO popups (message_text, is_active, created_at, agent_id) VALUES (%s, 1, NOW(), %s)", (message_text, agent_id))
+        conn.commit()
+        
         cursor.close()
         conn.close()
         return jsonify({
@@ -2780,14 +2364,19 @@ def api_admin_fees_update():
     fee_id = data.get("id")
     amount = data.get("amount")
     fee_type = data.get("fee_type", "markup")
+    amount_type = data.get("amount_type", "fixed")
+    currency = data.get("currency", "USD")
     
     if not fee_id or amount is None or float(amount) < 0:
         return jsonify({"success": False, "error": "Invalid service fee configurations."}), 400
         
+    if amount_type not in ["fixed", "percentage"]:
+        return jsonify({"success": False, "error": "Invalid amount type."}), 400
+        
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("UPDATE service_fees SET amount = %s, fee_type = %s WHERE id = %s", (Decimal(str(amount)), fee_type, fee_id))
+        cursor.execute("UPDATE service_fees SET amount = %s, fee_type = %s, amount_type = %s, currency = %s WHERE id = %s", (Decimal(str(amount)), fee_type, amount_type, currency, fee_id))
         conn.commit()
         cursor.close()
         conn.close()
@@ -2982,5 +2571,148 @@ def b2b_hotel_booking():
         
     return render_template("hotel_booking.html", agent=agent_info)
 
+
+# ==========================================
+# B2C ADMIN PORTAL APIS
+# ==========================================
+
+@app.route("/api/admin/b2c/users")
+def api_admin_b2c_users():
+    if "user_id" not in session or session.get("role") not in ["admin", "b2c_admin"]:
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    users = query_db("SELECT id, username, email, phone, registered_at FROM b2c_users ORDER BY registered_at DESC")
+    for u in users:
+        u["registered_at"] = u["registered_at"].isoformat() if u["registered_at"] else ""
+    return jsonify({"success": True, "users": users})
+
+@app.route("/api/admin/b2c/fees/list")
+def api_admin_b2c_fees_list():
+    if "user_id" not in session or session.get("role") not in ["admin", "b2c_admin"]:
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    fees = query_db("SELECT * FROM b2c_service_fees")
+    for f in fees:
+        f["amount"] = float(f["amount"])
+    return jsonify({"success": True, "fees": fees})
+
+@app.route("/api/admin/b2c/fees/update", methods=["POST"])
+def api_admin_b2c_fees_update():
+    if "user_id" not in session or session.get("role") not in ["admin", "b2c_admin"]:
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    data = request.json
+    fee_id = data.get("id")
+    amount = data.get("amount")
+    amount_type = data.get("amount_type")
+    currency = data.get("currency", "USD")
+    if not fee_id or amount is None or amount_type not in ["fixed", "percentage"]:
+        return jsonify({"success": False, "error": "Invalid parameters"}), 400
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE b2c_service_fees SET amount = %s, amount_type = %s, currency = %s WHERE id = %s", (amount, amount_type, currency, fee_id))
+        conn.commit()
+        return jsonify({"success": True, "message": "B2C Fee updated successfully."})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route("/api/admin/b2c/bookings")
+def api_admin_b2c_bookings():
+    if "user_id" not in session or session.get("role") not in ["admin", "b2c_admin"]:
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    bookings = query_db("SELECT id, b2c_user_id, pnr, total_price, status, created_at FROM b2c_flight_bookings ORDER BY created_at DESC LIMIT 50")
+    for b in bookings:
+        b["total_price"] = float(b["total_price"])
+        b["created_at"] = b["created_at"].isoformat() if b["created_at"] else ""
+    return jsonify({"success": True, "bookings": bookings})
+
+
+@app.route("/b2c/admin/login", methods=["GET", "POST"])
+def b2c_admin_login():
+    error = None
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        
+        user = query_db("SELECT * FROM users WHERE username = %s AND password = %s AND role = 'b2c_admin'", (username, password), one=True)
+        if user:
+            if user.get("status") == "inactive":
+                error = "Your account has been deactivated. Please contact support."
+            else:
+                session["user_id"] = user["id"]
+                session["username"] = user["username"]
+                session["role"] = user["role"]
+                session["company_name"] = user["company_name"]
+                
+                return redirect(url_for("b2c_admin_dashboard"))
+        else:
+            error = "Invalid username or password for B2C Admin."
+            
+    return render_template("b2c_admin_login.html", error=error)
+
+@app.route("/b2c/admin")
+def b2c_admin_dashboard():
+    if "user_id" not in session or session.get("role") != "b2c_admin":
+        return redirect(url_for("b2c_admin_login"))
+        
+    admin_info = query_db("SELECT * FROM users WHERE id = %s", (session["user_id"],), one=True)
+    return render_template("b2c_admin_dashboard.html", admin=admin_info)
+
+
+
+@app.route("/b2c/admin/logout")
+def b2c_admin_logout():
+    session.clear()
+    return redirect(url_for("b2c_admin_login"))
+
+@app.route('/booking-confirmation/<int:booking_id>')
+def booking_confirmation(booking_id):
+    if session.get('role') not in ('agent', 'premium_agent', 'admin'):
+        return redirect(url_for('index'))
+        
+    db = get_db_connection()
+    cursor = db.cursor(dictionary=True)
+    
+    # Get booking details
+    cursor.execute('''
+        SELECT b.*, fb.flight_id, fb.pnr_reference, fb.passenger_name, fb.seat_number, 
+               fb.ticket_status, fb.ticket_number,
+               f.airline, f.flight_number, f.origin, f.destination, 
+               f.departure_time, f.arrival_time, f.price,
+               f.id as fid
+        FROM bookings b
+        JOIN flight_bookings fb ON b.id = fb.booking_id
+        JOIN flights f ON fb.flight_id = f.id
+        WHERE b.id = %s AND b.agent_id = %s
+    ''', (booking_id, session['user_id']))
+    booking = cursor.fetchone()
+    
+    if not booking:
+        return redirect(url_for('agent_dashboard'))
+        
+    return render_template('booking_confirmation.html', booking=booking)
+
+@app.route('/api/flights/update-seat', methods=['POST'])
+def api_flights_update_seat():
+    data = request.json
+    booking_id = data.get('booking_id')
+    seat_number = data.get('seat_number')
+    
+    if not booking_id or not seat_number:
+        return jsonify({"success": False, "error": "Missing parameters"}), 400
+        
+    db = get_db_connection()
+    cursor = db.cursor()
+    cursor.execute("UPDATE flight_bookings SET seat_number = %s WHERE booking_id = %s", (seat_number, booking_id))
+    db.commit()
+    
+    return jsonify({"success": True})
+
+
 if __name__ == "__main__":
     app.run(debug=True, host="127.0.0.1", port=5000)
+
+
+

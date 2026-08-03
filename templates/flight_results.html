@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flight Search Results - Flight Hub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
             --bg-color: #ffffff;
@@ -2312,6 +2313,10 @@
             document.getElementById('book-email').value = allEmails.join(', ');
         }
 
+        window.tempBookingId = null;
+        window.tempBookingDone = false;
+        window.tempBookingId = null;
+        window.tempBookingDone = false;
         let currentStep = 1;
 
         function goToStep(stepNum) {
@@ -2354,6 +2359,17 @@
         function finalizeGoToStep(stepNum) {
             if (stepNum === 2 && currentStep === 1) {
                 if (!validateStep1()) return;
+                // Directly submit booking instead of going to seat map
+                submitTemporaryBooking();
+                return;
+            }
+
+            
+            if (stepNum === 3) {
+                if (!window.tempBookingDone) {
+                    submitTemporaryBooking();
+                    return;
+                }
             }
             
             document.getElementById('booking-step-1').style.display = 'none';
@@ -2396,6 +2412,11 @@
             if (stepNum === 1) progressLine.style.width = '0%';
             else if (stepNum === 2) progressLine.style.width = '50%';
             else if (stepNum === 3) {
+                if (!window.tempBookingDone) {
+                    submitTemporaryBooking();
+                    return;
+                }
+
                 progressLine.style.width = '100%';
                 populateBookingSummary();
             }
@@ -2874,9 +2895,25 @@ function printReceipt() {
 
         function downloadTicket() {
             if (!window.currentBookingData) return;
-            document.getElementById('success-receipt-modal').style.display = 'none';
-            generateEticket(window.currentBookingData.data, window.currentBookingData.payload);
-            document.getElementById('eticket-modal').style.display = 'flex';
+            // The receipt modal contains the e-ticket
+            const element = document.querySelector('#success-receipt-modal > div');
+            
+            // We temporarily hide the buttons before generating PDF
+            const buttonsDiv = element.querySelector('div[style*="display: flex; gap: 12px"]');
+            if (buttonsDiv) buttonsDiv.style.display = 'none';
+            
+            const opt = {
+                margin:       0.5,
+                filename:     'E-Ticket-Receipt.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Restore buttons after download
+                if (buttonsDiv) buttonsDiv.style.display = 'flex';
+            });
         }
 
         function closeEticketModal() {
@@ -2894,7 +2931,7 @@ function printReceipt() {
         }
 
         function generateEticket(data, payload) {
-            document.getElementById('eticket-pnr').innerText = data.pnr_reference || '-';
+            document.getElementById('eticket-pnr').innerText = data.pnr || data.pnr_reference || '-';
             if (payload.passenger_name) {
                 const names = payload.passenger_name.split(' & ');
                 let formattedPax = '';
@@ -3365,7 +3402,7 @@ function printReceipt() {
             const routeInfo = document.getElementById('summary-cities').innerText;
             const totalPrice = document.getElementById('summary-total-price').innerText;
             const payMethodDisplay = paymentMethod === 'card' ? 'Corporate Credit Card' : 'Agency Credit Wallet';
-            
+                    
             const ticketInfo = ticketNow ? `\n🎫 *Ticket Number:* ${ticketNum}` : '';
             const messageText = `✈️ *SYSTEM FRD Airline - Ticket Confirmation* ✈️\n\nThank you for selecting our service for your travel partner.\n\nHere are your travel details:\n👤 *Passenger:* ${payload.passenger_name}\n🎫 *PNR Reference:* ${pnrRef}${ticketInfo}\n🎟 *Status:* ${ticketNow ? 'TICKETED' : 'HOLD'}\n🧳 *Route:* ${routeInfo}\n💺 *Seat(s):* ${seatDisplay}\n💳 *Payment Method:* ${payMethodDisplay}\n💰 *Total Amount:* ${totalPrice}\n\nThank you for selecting our service for your travel partner. We wish you a safe and wonderful flight! ✈️🌟`;
             
@@ -3378,64 +3415,82 @@ function printReceipt() {
         }
 
         function executeCreditBookingSubmit() {
-            if (!pendingBookingPayload) return;
+            if (!window.tempBookingId) return;
             
             closeCreditConfirmModal();
             
             const submitBtn = document.getElementById('book-submit-btn');
             submitBtn.disabled = true;
-            submitBtn.innerText = "Processing transaction...";
+            submitBtn.innerText = "Issuing Ticket...";
             
-            fetch('/api/flights/book', {
+            fetch('/api/flights/issue-ticket', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(pendingBookingPayload)
+                body: JSON.stringify({ booking_id: window.tempBookingId })
             })
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    showSuccessReceipt(data, pendingBookingPayload);
+                    window.currentBookingData.data.ticket_number = data.ticket_number;
+                    window.currentBookingData.payload.ticket_now = true;
+                    showSuccessReceipt(window.currentBookingData.data, window.currentBookingData.payload);
                 } else {
-                    showErrorModal("Error confirming booking: " + data.error);
+                    showErrorModal("Error issuing ticket: " + data.error);
                 }
             })
             .catch(err => {
                 console.error(err);
-                showErrorModal("Client/Network Error: " + err.message + "\n\nPlease check the console for more details.");
+                showErrorModal("Client/Network Error: " + err.message);
             })
             .finally(() => {
                 submitBtn.disabled = false;
-                const ticketNow = document.getElementById('book-ticket-now').value === 'true';
-                if (ticketNow) {
-                    submitBtn.innerText = "Book Ticket Now";
-                } else {
-                    submitBtn.innerText = "Hold Booking (Free)";
-                }
+                submitBtn.innerText = "Book Ticket Now";
             });
         }
 
         function submitBooking(event) {
             event.preventDefault();
-            
+            if (!window.tempBookingId) return;
+
+            // Fetch the agent's available credit balance
+            fetch('/api/agent/credit')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const creditBalance = data.credit_balance;
+                    const priceText = document.getElementById('summary-total-price').innerText;
+                    const priceNum = parseFloat(priceText.replace(/[^0-9.]/g, ''));
+                    const remaining = creditBalance - priceNum;
+                    
+                    document.getElementById('confirm-wallet-balance').innerText = 'LKR ' + Math.round(creditBalance).toLocaleString();
+                    document.getElementById('confirm-wallet-deduct').innerText = 'LKR ' + Math.round(priceNum).toLocaleString();
+                    
+                    const remainingEl = document.getElementById('confirm-wallet-remaining');
+                    remainingEl.innerText = 'LKR ' + Math.round(remaining).toLocaleString();
+                    if (remaining < 0) {
+                        remainingEl.style.color = '#ef4444';
+                        alert("Warning: Insufficient credit balance to process this ticket placement. Please top up your wallet.");
+                        return;
+                    } else {
+                        remainingEl.style.color = '#16a34a';
+                    }
+                    
+                    document.getElementById('credit-confirm-modal').style.display = 'flex';
+                } else {
+                    alert("Error retrieving credit balance: " + data.error);
+                }
+            })
+            .catch(err => {
+                alert("Error communicating with agent wallet server.");
+            });
+        }
+
+        function submitTemporaryBooking() {
             const outboundId = parseInt(document.getElementById('book-outbound-id').value);
             const returnIdVal = document.getElementById('book-return-id').value;
             const returnId = returnIdVal ? parseInt(returnIdVal) : null;
-            const ticketNow = document.getElementById('book-ticket-now').value === 'true';
-            
-            const paymentMethod = document.querySelector('input[name="payment_method_option"]:checked').value;
-            if (paymentMethod === 'card') {
-                const cardName = document.getElementById('card-name').value.trim();
-                const cardNum = document.getElementById('card-number').value.trim();
-                const cardExp = document.getElementById('card-expiry').value.trim();
-                const cardCvv = document.getElementById('card-cvv').value.trim();
-                
-                if (!cardName || !cardNum || !cardExp || !cardCvv) {
-                    alert("Please fill in all Payment Gateway Bank details (Card Holder, Card Number, Expiry, and CVV/CVC).");
-                    return;
-                }
-            }
             
             const passengers = [];
             const outSeatsArr = (document.getElementById('book-seat').value || '').split(',').map(s => s.trim()).filter(Boolean);
@@ -3472,8 +3527,6 @@ function printReceipt() {
                 const seat = outSeatsArr[i - 1] || '14A';
                 const return_seat = retSeatsArr[i - 1] || '14F';
                 
-                const fullName = `${title} ${first} ${last}`.trim();
-                
                 passengers.push({
                     title,
                     first_name: first,
@@ -3498,13 +3551,13 @@ function printReceipt() {
 
             const payload = {
                 flight_id: outboundId,
-                ticket_now: ticketNow,
-                payment_method: paymentMethod,
+                ticket_now: false,
+                payment_method: 'credit',
                 passengers: passengers,
                 seat_number: document.getElementById('book-seat').value,
                 bypass_seat_selection: window.bypassSeatSelection || false,
                 extra_seat_charge: window.extraSeatCharge || 0,
-                // Hidden inputs sync legacy/backwards-compatible global inputs if any legacy backend endpoint relies on them
+                // Hidden inputs sync legacy
                 passenger_name: document.getElementById('book-pax-name').value,
                 passport_number: document.getElementById('book-passport').value,
                 mobile: document.getElementById('book-phone').value,
@@ -3521,74 +3574,43 @@ function printReceipt() {
                 payload.return_seat_number = document.getElementById('book-return-seat').value;
             }
             
-            if (paymentMethod === 'credit' && ticketNow) {
-                // Fetch the agent's available credit balance from our new API endpoint
-                fetch('/api/agent/credit')
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        const creditBalance = data.credit_balance;
-                        const priceText = document.getElementById('summary-total-price').innerText;
-                        const priceNum = parseFloat(priceText.replace(/[^0-9.]/g, ''));
-                        const remaining = creditBalance - priceNum;
-                        
-                        document.getElementById('confirm-wallet-balance').innerText = 'LKR ' + Math.round(creditBalance).toLocaleString();
-                        document.getElementById('confirm-wallet-deduct').innerText = 'LKR ' + Math.round(priceNum).toLocaleString();
-                        
-                        const remainingEl = document.getElementById('confirm-wallet-remaining');
-                        remainingEl.innerText = 'LKR ' + Math.round(remaining).toLocaleString();
-                        if (remaining < 0) {
-                            remainingEl.style.color = '#ef4444';
-                            alert("Warning: Insufficient credit balance to process this ticket placement. Please top up your wallet.");
-                            return;
-                        } else {
-                            remainingEl.style.color = '#16a34a';
-                        }
-                        
-                        // Store payload globally and show confirm modal
-                        pendingBookingPayload = payload;
-                        document.getElementById('credit-confirm-modal').style.display = 'flex';
-                    } else {
-                        alert("Error retrieving credit balance: " + data.error);
-                    }
-                })
-                .catch(err => {
-                    alert("Error communicating with agent wallet server.");
-                });
-            } else {
-                // Otherwise submit card or non-ticket hold immediately
-                const submitBtn = document.getElementById('book-submit-btn');
-                submitBtn.disabled = true;
-                submitBtn.innerText = "Processing transaction...";
-                
-                fetch('/api/flights/book', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        showSuccessReceipt(data, payload);
-                    } else {
-                        showErrorModal("Error confirming booking: " + data.error);
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    showErrorModal("Client/Network Error: " + err.message + "\n\nPlease check the console for more details.");
-                })
-                .finally(() => {
-                    submitBtn.disabled = false;
-                    if (ticketNow) {
-                        submitBtn.innerText = "Book Ticket Now";
-                    } else {
-                        submitBtn.innerText = "Hold Booking (Free)";
-                    }
-                });
-            }
+            const contBtn = document.querySelector('.btn-continue');
+            const originalText = contBtn.innerText;
+            contBtn.innerText = 'Creating Reservation...';
+            contBtn.disabled = true;
+
+            fetch('/api/flights/book', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/booking-confirmation/' + data.booking_id;
+                } else {
+                    showErrorModal("Error creating temporary booking: " + data.error);
+                }
+            })
+            .catch(err => {
+                showErrorModal("Client/Network Error: " + err.message);
+            })
+            .finally(() => {
+                contBtn.innerText = originalText;
+                contBtn.disabled = false;
+            });
+        }
+        
+        function printEticketTemporary() {
+            document.getElementById('booking-modal').style.display = 'none';
+            showSuccessReceipt(window.currentBookingData.data, window.currentBookingData.payload);
+            setTimeout(() => {
+                document.getElementById('success-receipt-modal').classList.add('printable-modal');
+                window.print();
+                document.getElementById('success-receipt-modal').classList.remove('printable-modal');
+                document.getElementById('success-receipt-modal').style.display = 'none';
+                document.getElementById('booking-modal').style.display = 'flex';
+            }, 500);
         }
     </script>
 </body>
